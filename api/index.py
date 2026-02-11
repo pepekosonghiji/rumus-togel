@@ -24,7 +24,7 @@ def get_valid_keys():
 # --- KONFIGURASI & TABEL ---
 TARGET_POOLS = {
     'CAMBODIA': 'p3501', 'SYDNEY LOTTO': 'p2262', 'SINGAPORE': 'p2664',
-    'BUSAN POOLS': 'p16063', 'HONGKONG LOTTO': 'p2263'
+    'BUSAN POOLS': 'p16063', 'HONGKONG LOTTO': 'p2263', 'WUHAN': 'p28615',
 }
 
 TABEL_INDEKS = {'0':'5', '1':'6', '2':'7', '3':'8', '4':'9', '5':'0', '6':'1', '7':'2', '8':'3', '9':'4'}
