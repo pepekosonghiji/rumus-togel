@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analisis Data Pools Pro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.85)), 
+                        url('https://alpha.ajaib.co.id/wp-content/uploads/2025/01/anonymous.webp');
+            background-size: 120px auto; 
+            background-repeat: repeat;
+            background-attachment: fixed;
+            color: white; 
+            display: flex; 
+            justify-content: center; 
+            padding: 20px; 
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .card { 
+            background: rgba(20, 20, 20, 0.75); 
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            padding: 30px; 
+            border-radius: 25px; 
+            width: 100%; 
+            max-width: 450px; 
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6); 
+            text-align: center;
+        }
+
+        h2 { 
+            color: #00e5ff; 
+            text-shadow: 0 0 15px rgba(0, 229, 255, 0.6); 
+            margin-bottom: 25px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        /* Perbaikan Dropdown */
+        select { 
+            width: 100%; 
+            padding: 15px; 
+            margin: 10px 0; 
+            border-radius: 12px; 
+            font-size: 16px;
+            box-sizing: border-box;
+            background: rgba(40, 40, 40, 0.9); 
+            color: #ffffff; 
+            border: 1px solid rgba(0, 229, 255, 0.3);
+            outline: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 20px;
+        }
+
+        select option {
+            background-color: #1a1a1a;
+            color: #ffffff;
+        }
+
+        button { 
+            width: 100%; 
+            padding: 15px; 
+            margin: 10px 0; 
+            border-radius: 12px; 
+            font-size: 16px;
+            background: linear-gradient(45deg, #00b4d8, #00e5ff); 
+            color: #000; 
+            font-weight: 800;
+            border: none;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        #result { 
+            background: rgba(0, 0, 0, 0.5); 
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 25px;
+            border: 1px solid rgba(0, 229, 255, 0.3);
+            display: none;
+            text-align: left;
+        }
+
+        .res-section {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+        }
+
+        .copy-btn {
+            background: rgba(0, 229, 255, 0.1);
+            color: #00e5ff;
+            border: 1px solid rgba(0, 229, 255, 0.3);
+            padding: 4px 10px;
+            font-size: 12px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .badge-copied { color: #00ff88; font-size: 11px; display: none; margin-left: 5px; }
+
+        #loading { display: none; margin: 20px 0; color: #00e5ff; font-weight: bold; }
+        .spinner {
+            display: inline-block;
+            width: 15px; height: 15px;
+            border: 3px solid rgba(0, 229, 255, 0.3);
+            border-radius: 50%; border-top-color: #00e5ff;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>Analisis Pools</h2>
+        
+        <form id="analysisForm">
+            <select name="market" id="market">
+                {% for m in markets %}
+                <option value="{{ m }}">{{ m.upper() }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit">MULAI ANALISIS</button>
+        </form>
+        
+        <div id="loading">Memproses Data... <div class="spinner"></div></div>
+        
+        <div id="result">
+            <h3 id="res_market" style="text-align: center; color: #00e5ff; margin-top: 0;"></h3>
+            
+            <div class="res-section" style="text-align: center;">
+                <span style="font-size: 11px; color: #aaa; text-transform: uppercase; display: block;">Last Result</span>
+                <strong id="res_last" style="font-size: 20px;"></strong>
+            </div>
+
+            <div class="res-section">
+                <span style="font-size: 11px; color: #aaa; text-transform: uppercase; display: block;">BBFS 6 Digit</span>
+                <span id="res_bbfs" style="color: #00ff88; font-size: 24px; letter-spacing: 3px; font-weight: bold;"></span>
+                <button class="copy-btn" onclick="copyText('res_bbfs')"><i class="fa-regular fa-copy"></i> Salin</button>
+                <span id="msg_res_bbfs" class="badge-copied">Tersalin!</span>
+            </div>
+
+            <div class="res-section">
+                <span style="font-size: 11px; color: #aaa; text-transform: uppercase; display: block;">Prediksi 4D/3D</span>
+                <span id="res_4d3d" style="color: #fff; font-size: 14px; line-height: 1.6;"></span>
+                <button class="copy-btn" onclick="copyText('res_4d3d')"><i class="fa-regular fa-copy"></i> Salin</button>
+            </div>
+
+            <div class="res-section">
+                <span style="font-size: 11px; color: #aaa; text-transform: uppercase; display: block;">Top 2D Jitu</span>
+                <span id="res_2d" style="color: #00ff88; font-weight: bold;"></span>
+                <button class="copy-btn" onclick="copyText('res_2d')"><i class="fa-regular fa-copy"></i> Salin</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('analysisForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const market = formData.get('market');
+            const resDiv = document.getElementById('result');
+            const loadDiv = document.getElementById('loading');
+            
+            resDiv.style.display = 'none';
+            loadDiv.style.display = 'block';
+
+            try {
+                const response = await fetch('/analyze', { method: 'POST', body: formData });
+                const data = await response.json();
+                
+                loadDiv.style.display = 'none';
+                resDiv.style.display = 'block';
+
+                document.getElementById('res_market').innerText = `HASIL ${data.market}`;
+                document.getElementById('res_last').innerText = data.last;
+                document.getElementById('res_bbfs').innerText = data.bbfs;
+
+                const b = data.bbfs.split('');
+                const p4d = `${b[0]}${b[1]}${b[2]}${b[3]}, ${b[2]}${b[3]}${b[4]}${b[5]}`;
+                const p3d = `${b[0]}${b[1]}${b[2]}, ${b[3]}${b[4]}${b[5]}`;
+                
+                document.getElementById('res_4d3d').innerHTML = `4D: ${p4d}<br>3D: ${p3d}`;
+                document.getElementById('res_2d').innerText = data.jitu;
+
+            } catch (err) {
+                loadDiv.style.display = 'none';
+                alert("Gagal memproses data.");
+            }
+        };
+
+        function copyText(elementId) {
+            const text = document.getElementById(elementId).innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                const msg = document.getElementById('msg_res_bbfs');
+                msg.style.display = 'inline';
+                setTimeout(() => msg.style.display = 'none', 2000);
+            });
+        }
+    </script>
+</body>
+</html>
