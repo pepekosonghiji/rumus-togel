@@ -25,8 +25,12 @@ def get_valid_keys():
 TARGET_POOLS = {
     'CAMBODIA': 'p3501', 'SYDNEY LOTTO': 'p2262', 'SINGAPORE POOLS': 'p2664',
     'BUSAN POOLS': 'p16063', 'HONGKONG LOTTO': 'p2263', 'WUHAN': 'p28615',
-    'SEOUL': 'p28502', 'OSAKA': 'p28422', 'toto macau 4d': 'm17'        
+    'SEOUL': 'p28502', 'OSAKA': 'p28422', 'toto macau 4d': 'm17',
+    'JAPAN POOLS': 'custom_japan' # Tambahan Server Japan
 }
+
+# URL khusus untuk Japan
+JAPAN_URL = "https://tabelupdate.online/data-keluaran-japan/"
 
 TABEL_INDEKS = {'0':'5', '1':'6', '2':'7', '3':'8', '4':'9', '5':'0', '6':'1', '7':'2', '8':'3', '9':'4'}
 TABEL_MISTIK_LAMA = {'1':'0', '2':'5', '3':'8', '4':'7', '6':'9', '0':'1', '5':'2', '8':'3', '7':'4', '9':'6'}
@@ -48,19 +52,26 @@ def get_statistical_data(server_code):
     last_appearance = {str(i): 0 for i in range(10)}
     try:
         with httpx.Client(timeout=30, follow_redirects=True, verify=False) as client:
-            for pg in range(1, 4): 
-                r = client.get(f"{BASE_URL}{server_code}-pool-1?page={pg}", headers=HEADERS)
+            # Routing URL berdasarkan tipe server
+            if server_code == 'custom_japan':
+                r = client.get(JAPAN_URL, headers=HEADERS)
+                soup = BeautifulSoup(r.text, 'html.parser')
+                rows = soup.find('tbody').find_all('tr')
+            else:
+                r = client.get(f"{BASE_URL}{server_code}-pool-1?page=1", headers=HEADERS)
                 soup = BeautifulSoup(r.text, 'html.parser')
                 rows = soup.find('table').find('tbody').find_all('tr')
-                for idx, row in enumerate(rows):
-                    cols = row.find_all('td')
-                    if len(cols) >= 4:
-                        res = re.sub(r'\D', '', cols[3].text.strip())
-                        if len(res) == 4:
-                            all_digits += res
-                            for d in res:
-                                if last_appearance[d] == 0:
-                                    last_appearance[d] = idx + ((pg-1) * 10)
+
+            for idx, row in enumerate(rows):
+                cols = row.find_all('td')
+                if len(cols) >= 4:
+                    res = re.sub(r'\D', '', cols[3].text.strip())
+                    if len(res) == 4:
+                        all_digits += res
+                        for d in res:
+                            if last_appearance[d] == 0:
+                                last_appearance[d] = idx
+            
         freq = Counter(all_digits)
         hot = [x[0] for x in freq.most_common(5)]
         cold = sorted(last_appearance, key=last_appearance.get, reverse=True)[:2]
@@ -71,10 +82,21 @@ def get_statistical_data(server_code):
 def proses_hybrid(server_key):
     try:
         code = TARGET_POOLS[server_key]
+        
+        # LOGIC SCRAPING UNTUK RESULT TERAKHIR
         with httpx.Client(timeout=30, verify=False) as client:
-            raw_res = client.get(f"{BASE_URL}{code}-pool-1", headers=HEADERS).text
-        soup = BeautifulSoup(raw_res, 'html.parser')
-        all_res = [re.sub(r'\D', '', r.find_all('td')[3].text.strip()) for r in soup.find('tbody').find_all('tr') if len(re.sub(r'\D', '', r.find_all('td')[3].text.strip())) == 4]
+            if code == 'custom_japan':
+                raw_res = client.get(JAPAN_URL, headers=HEADERS).text
+                soup = BeautifulSoup(raw_res, 'html.parser')
+                all_res = [re.sub(r'\D', '', r.find_all('td')[3].text.strip()) 
+                           for r in soup.find('tbody').find_all('tr') 
+                           if len(re.sub(r'\D', '', r.find_all('td')[3].text.strip())) == 4]
+            else:
+                raw_res = client.get(f"{BASE_URL}{code}-pool-1", headers=HEADERS).text
+                soup = BeautifulSoup(raw_res, 'html.parser')
+                all_res = [re.sub(r'\D', '', r.find_all('td')[3].text.strip()) 
+                           for r in soup.find('tbody').find_all('tr') 
+                           if len(re.sub(r'\D', '', r.find_all('td')[3].text.strip())) == 4]
         
         if not all_res: return None
         last_res = all_res[0]
@@ -102,8 +124,10 @@ def proses_hybrid(server_key):
         top_4d = []
         
         for _ in range(2):
-            top_3d.append("".join(random.sample(bbfs_str, 3)))
-            top_4d.append("".join(random.sample(bbfs_str, 4)))
+            if len(bbfs_str) >= 3:
+                top_3d.append("".join(random.sample(bbfs_str, 3)))
+            if len(bbfs_str) >= 4:
+                top_4d.append("".join(random.sample(bbfs_str, 4)))
 
         # Shadow BBFS (5 Digit)
         shadow_pool = [TABEL_MISTIK_LAMA.get(d, d) for d in am_hybrid]
@@ -114,15 +138,16 @@ def proses_hybrid(server_key):
             "last": last_res,
             "bbfs": "".join(am_hybrid),
             "shadow": shadow_final,
-            "jitu": f"{am_hybrid[0]}{am_hybrid[1]}, {am_hybrid[2]}{am_hybrid[3]}",
+            "jitu": f"{am_hybrid[0]}{am_hybrid[1]}, {am_hybrid[2]}{am_hybrid[3]}" if len(am_hybrid) >= 4 else "N/A",
             "top3d": ", ".join(top_3d),
             "top4d": ", ".join(top_4d),
-            "posisi": f"Kpl: {am_hybrid[0]} | Ekr: {am_hybrid[1]}"
+            "posisi": f"Kpl: {am_hybrid[0]} | Ekr: {am_hybrid[1]}" if len(am_hybrid) >= 2 else "N/A"
         }
-    except:
+    except Exception as e:
+        print(f"Error Processing: {e}")
         return None
 
-# --- ROUTES (SAMA SEPERTI SEBELUMNYA) ---
+# --- ROUTES ---
 @app.route('/')
 def index():
     return render_template('index.html', markets=TARGET_POOLS.keys(), logged_in=session.get('authorized'))
