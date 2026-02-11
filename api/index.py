@@ -1,23 +1,27 @@
-import os
 from flask import Flask, render_template, request, jsonify, session
 import httpx
 from bs4 import BeautifulSoup
 from datetime import datetime
 from collections import Counter
 import re
+import os
 
-
+# Konfigurasi aplikasi agar mengenali folder templates di luar folder api
 app = Flask(__name__, 
             template_folder=os.path.join(os.path.dirname(__file__), '../templates'))
-app.secret_key = "MAMANG_RAHASIA"
 
-# --- DATABASE KEY (Edit di sini untuk menambah user) ---
+# WAJIB: Kunci rahasia untuk mengaktifkan sistem session/login
+# Di Vercel, ini bisa diisi manual atau lewat Environment Variables
+app.secret_key = os.environ.get("SECRET_KEY", "KUNCI_RAHASIA_MAMANG_2026")
+
+# --- DATABASE KEY (Edit di sini untuk menambah/jual key) ---
 VALID_KEYS = {
     "MAMANG-PRO-2026": "2026-12-31",
     "VIP-ACCESS-01": "2026-06-01",
-    "TRIAL-KEY": "2026-02-20"
+    "TRIAL-KEY": "2026-02-28"
 }
 
+# --- KONFIGURASI TARGET SCRAPING ---
 TARGET_POOLS = {
     'CAMBODIA': 'p3501', 'SYDNEY LOTTO': 'p2262', 'SINGAPORE': 'p2664',
     'BUSAN POOLS': 'p16063', 'HONGKONG LOTTO': 'p2263'
@@ -26,8 +30,13 @@ TARGET_POOLS = {
 TABEL_INDEKS = {'0':'5', '1':'6', '2':'7', '3':'8', '4':'9', '5':'0', '6':'1', '7':'2', '8':'3', '9':'4'}
 TABEL_MISTIK = {'1':'0', '2':'5', '3':'8', '4':'7', '6':'9', '0':'1', '5':'2', '8':'3', '7':'4', '9':'6'}
 TABEL_TAYSEN = {'0':'7', '1':'4', '2':'9', '3':'6', '4':'1', '5':'8', '6':'3', '7':'0', '8':'5', '9':'2'}
-HEADERS = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
+
+HEADERS = {
+    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+}
 BASE_URL = 'https://tgr7grldrc.salamrupiah.com/history/result-mobile/'
+
+# --- FUNGSI HELPER ---
 
 def get_day_name():
     days_indo = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"]
@@ -55,18 +64,34 @@ def proses_hybrid(server_key):
     try:
         code = TARGET_POOLS[server_key]
         target_hari = get_day_name()
+        
         with httpx.Client(timeout=30, follow_redirects=True, verify=False) as client:
             raw_res = client.get(f"{BASE_URL}{code}-pool-1", headers=HEADERS).text
+        
         soup = BeautifulSoup(raw_res, 'html.parser')
-        all_res = [re.sub(r'\D', '', r.find_all('td')[3].text.strip()) for r in soup.find('tbody').find_all('tr') if len(re.sub(r'\D', '', r.find_all('td')[3].text.strip())) == 4]
+        tbody = soup.find('tbody')
+        if not tbody: return None
+
+        all_res = []
+        for r in tbody.find_all('tr'):
+            tds = r.find_all('td')
+            if len(tds) >= 4:
+                clean_val = re.sub(r'\D', '', tds[3].text.strip())
+                if len(clean_val) == 4: all_res.append(clean_val)
+        
         if not all_res: return None
+        
         last_res = all_res[0]
         data_historis = get_data_hybrid(code, target_hari)
+        
+        # Logika Analisis
         taysen_last = [TABEL_TAYSEN.get(d, '0') for d in last_res[-2:]]
         vortex = [d for d in "0123456789" if d not in "".join(all_res[:5])]
         count_h = Counter("".join(data_historis if data_historis else all_res[:15]))
         historis = [d for d in [x[0] for x in count_h.most_common(5)]]
+
         am_hybrid = list(dict.fromkeys(taysen_last + historis + vortex))
+        
         while len(am_hybrid) < 6:
             for d in list(am_hybrid):
                 indeks = TABEL_INDEKS.get(d)
@@ -75,8 +100,11 @@ def proses_hybrid(server_key):
             for n in "0123456789":
                 if n not in am_hybrid: am_hybrid.append(n)
                 if len(am_hybrid) >= 6: break
+                
         return {
-            "market": server_key.upper(), "last": last_res, "bbfs": "".join(am_hybrid[:6]),
+            "market": server_key.upper(),
+            "last": last_res,
+            "bbfs": "".join(am_hybrid[:6]),
             "shadow": "".join(list(dict.fromkeys([TABEL_MISTIK.get(d, d) for d in am_hybrid[:6]]))[:6]),
             "jitu": f"{am_hybrid[0]}{am_hybrid[1]}, {am_hybrid[2]}{am_hybrid[3]}, {am_hybrid[4]}{am_hybrid[5]}",
             "posisi": f"Kepala {am_hybrid[0]} | Ekor {am_hybrid[1]}"
@@ -87,7 +115,7 @@ def proses_hybrid(server_key):
 
 @app.route('/')
 def index():
-    # Mengirim status login ke HTML
+    # Cek status login dari session browser
     is_logged_in = session.get('authorized', False)
     return render_template('index.html', markets=TARGET_POOLS.keys(), logged_in=is_logged_in)
 
@@ -95,20 +123,28 @@ def index():
 def login():
     key = request.form.get('key')
     if key in VALID_KEYS:
-        # Cek Tanggal Expired
+        # Cek apakah key sudah kedaluwarsa
         exp_date = datetime.strptime(VALID_KEYS[key], '%Y-%m-%d')
         if datetime.now() <= exp_date:
-            session.permanent = True # Session tetap aktif meski tab ditutup sementara
+            session.permanent = True
             session['authorized'] = True
             return jsonify({"status": "success"})
-        return jsonify({"status": "error", "message": "Key sudah kedaluwarsa!"}), 403
-    return jsonify({"status": "error", "message": "Key tidak valid!"}), 401
+        return jsonify({"status": "error", "message": "Key sudah kedaluwarsa (Expired)!"}), 403
+    return jsonify({"status": "error", "message": "Key tidak terdaftar!"}), 401
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
+    # Proteksi rute agar tidak bisa diakses tanpa login
     if not session.get('authorized'):
-        return jsonify({"error": "Akses dilarang. Silakan login."}), 403
+        return jsonify({"error": "Sesi tidak valid, silakan login ulang"}), 403
     
     market = request.form.get('market')
+    if not market or market not in TARGET_POOLS:
+        return jsonify({"error": "Pasaran tidak ditemukan"}), 400
+        
     result = proses_hybrid(market)
-    return jsonify(result) if result else jsonify({"error": "Gagal mengambil data"}), 500
+    if result:
+        return jsonify(result)
+    return jsonify({"error": "Gagal mengambil data dari server pusat"}), 500
+
+# Vercel tidak memerlukan app.run()
