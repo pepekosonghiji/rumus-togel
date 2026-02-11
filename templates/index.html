@@ -61,20 +61,37 @@
 
     <script>
         async function handleLogin() {
-            const key = document.getElementById('access-key').value;
-            const resp = await fetch('/login', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                body: `key=${key}`
-            });
-            const data = await resp.json();
-            if(data.status === 'success') {
-                alert("Lisensi Aktif!");
-                location.reload();
-            } else {
-                alert(data.message);
-            }
+    const keyInput = document.getElementById('access-key');
+    const key = keyInput.value.trim();
+    
+    if (!key) {
+        alert("Silakan isi key terlebih dahulu!");
+        return;
+    }
+
+    try {
+        // Gunakan FormData agar Flask request.form.get('key') bisa membaca dengan benar
+        const formData = new FormData();
+        formData.append('key', key);
+
+        const resp = await fetch('/login', {
+            method: 'POST',
+            body: formData // Kirim sebagai form data
+        });
+
+        const data = await resp.json();
+
+        if (resp.ok && data.status === 'success') {
+            alert("Lisensi Berhasil Diaktifkan!");
+            window.location.reload(); // Paksa reload untuk memperbarui session
+        } else {
+            alert(data.message || "Key salah atau tidak valid");
         }
+    } catch (error) {
+        console.error("Error:", error);
+        alert("Terjadi kesalahan koneksi ke server.");
+    }
+}
 
         async function startAnalyze() {
             const market = document.getElementById('market').value;
