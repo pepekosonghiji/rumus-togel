@@ -5,9 +5,16 @@ from datetime import datetime
 from collections import Counter
 import re
 import os
+from flask import Flask, render_template, request, jsonify, session
+from datetime import datetime
 
 app = Flask(__name__, 
             template_folder=os.path.join(os.path.dirname(__file__), '../templates'))
+
+# WAJIB: Gunakan secret key yang kuat agar session tersimpan di browser
+app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY", "MAMANG_RAHASIA_123_ABC")
+# Tambahkan ini agar cookie session tetap tersimpan saat redirect
+app.config['SESSION_COOKIE_NAME'] = 'analisis_session'
 app.secret_key = 'KUNCI_RAHASIA_MAMANG_99' # Ganti bebas untuk keamanan session
 
 # --- SISTEM KEY (Jual key ini ke pembeli) ---
