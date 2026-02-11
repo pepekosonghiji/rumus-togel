@@ -1,25 +1,28 @@
+import os
+import json
 from flask import Flask, render_template, request, jsonify, session
 import httpx
 from bs4 import BeautifulSoup
 from datetime import datetime
 from collections import Counter
 import re
-import os
 
 app = Flask(__name__, 
             template_folder=os.path.join(os.path.dirname(__file__), '../templates'))
 
-# Secret key untuk mengamankan login session
-app.secret_key = "MAMANG_RAHASIA_VIP_2026"
+# Mengambil Secret Key dari environment Vercel
+app.secret_key = os.environ.get("SECRET_KEY", "MAMANG_TECH_2026")
 
-# --- DATABASE KEY ---
-VALID_KEYS = {
-    "VIP-ACCESS-01": "2026-12-31",
-    "MAMANG-PRO-2026": "2026-12-31",
-    "TRIAL-KEY": "2026-02-28"
-}
+# --- DATABASE KEY AMAN (Diambil dari Vercel Settings) ---
+# Kode ini akan membaca data dari Environment Variable bernama 'LIST_KEYS'
+def get_valid_keys():
+    try:
+        keys_raw = os.environ.get("LIST_KEYS", "{}")
+        return json.loads(keys_raw)
+    except:
+        return {}
 
-# --- LOGIKA SCRAPING ASLI (TIDAK DIUBAH) ---
+# --- LOGIKA SCRAPING & TABEL (UTUH) ---
 TARGET_POOLS = {
     'CAMBODIA': 'p3501', 'SYDNEY LOTTO': 'p2262', 'SINGAPORE': 'p2664',
     'BUSAN POOLS': 'p16063', 'HONGKONG LOTTO': 'p2263'
@@ -94,16 +97,21 @@ def index():
 @app.route('/login', methods=['POST'])
 def login():
     key = request.form.get('key')
-    if key in VALID_KEYS:
-        session.permanent = True
-        session['authorized'] = True
-        return jsonify({"status": "success"})
+    valid_keys = get_valid_keys() # Ambil keys dari environment
+    
+    if key in valid_keys:
+        exp_date = datetime.strptime(valid_keys[key], '%Y-%m-%d')
+        if datetime.now() <= exp_date:
+            session.permanent = True
+            session['authorized'] = True
+            return jsonify({"status": "success"})
+        return jsonify({"status": "error", "message": "Lisensi Kedaluwarsa!"}), 403
     return jsonify({"status": "error", "message": "Key Tidak Valid!"}), 401
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
     if not session.get('authorized'):
-        return jsonify({"error": "Unauthorized"}), 403
+        return jsonify({"error": "Sesi berakhir"}), 403
     market = request.form.get('market')
     result = proses_hybrid(market)
-    return jsonify(result) if result else jsonify({"error": "Gagal"}), 500
+    return jsonify(result) if result else jsonify({"error": "Gagal mengambil data"}), 500
