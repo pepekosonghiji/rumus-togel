@@ -23,14 +23,30 @@ def get_valid_keys():
 
 # --- KONFIGURASI & TABEL ---
 TARGET_POOLS = {
-    'CAMBODIA': 'p3501', 'SYDNEY LOTTO': 'p2262', 'SINGAPORE POOLS': 'p2664',
-    'BUSAN POOLS': 'p16063', 'HONGKONG LOTTO': 'p2263', 'WUHAN': 'p28615',
-    'SEOUL': 'p28502', 'OSAKA': 'p28422', 'toto macau 4d': 'm17',
-    'JAPAN POOLS': 'custom_japan' # Tambahan Server Japan
+    # METODE 1: SalamRupiah (Base Server)
+    'CAMBODIA': 'p3501', 
+    'SYDNEY LOTTO': 'p2262', 
+    'HONGKONG LOTTO': 'p2263', 
+    'CHINA POOLS': 'p2670',
+    'CHINA LOTTO': 'p2670',
+    'BUSAN POOLS': 'p16063', 
+    'WUHAN': 'p28615',
+    'SEOUL': 'p28502', 
+    'OSAKA': 'p28422', 
+    'toto macau 4d': 'm17',
+    
+    # METODE 2: TabelUpdate (Khusus Japan)
+    'JAPAN POOLS': 'custom_japan',
+    
+    # METODE 3: NomorKiaJit (HK, SGP, SDY)
+    'HONGKONG POOLS': 'kia_2',
+    'SINGAPORE POOLS': 'kia_3',
+    'SYDNEY POOLS': 'kia_4'
 }
 
-# URL khusus untuk Japan
 JAPAN_URL = "https://tabelupdate.online/data-keluaran-japan/"
+KIAJIT_URL = "https://nomorkiajit.com/hksgpsdy"
+BASE_URL = 'https://tgr7grldrc.salamrupiah.com/history/result-mobile/'
 
 TABEL_INDEKS = {'0':'5', '1':'6', '2':'7', '3':'8', '4':'9', '5':'0', '6':'1', '7':'2', '8':'3', '9':'4'}
 TABEL_MISTIK_LAMA = {'1':'0', '2':'5', '3':'8', '4':'7', '6':'9', '0':'1', '5':'2', '8':'3', '7':'4', '9':'6'}
@@ -38,98 +54,115 @@ TABEL_MISTIK_BARU = {'0':'8', '1':'7', '2':'6', '3':'9', '4':'5', '8':'0', '7':'
 TABEL_TAYSEN = {'0':'7', '1':'4', '2':'9', '3':'6', '4':'1', '5':'8', '6':'3', '7':'0', '8':'5', '9':'2'}
 
 HEADERS = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
-BASE_URL = 'https://tgr7grldrc.salamrupiah.com/history/result-mobile/'
 
-def get_day_name(offset=0):
-    days_indo = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"]
-    target_date = datetime.now() - timedelta(days=offset)
-    return days_indo[target_date.weekday()]
+# --- CORE SCRAPER ENGINE ---
 
-# --- ENGINE ANALISIS ---
-
-def get_statistical_data(server_code):
-    all_digits = ""
-    last_appearance = {str(i): 0 for i in range(10)}
+def fetch_results(code):
+    results = []
     try:
-        with httpx.Client(timeout=30, follow_redirects=True, verify=False) as client:
-            # Routing URL berdasarkan tipe server
-            if server_code == 'custom_japan':
+        with httpx.Client(timeout=30, verify=False, follow_redirects=True) as client:
+            # METODE JAPAN (TabelUpdate)
+            if code == 'custom_japan':
                 r = client.get(JAPAN_URL, headers=HEADERS)
                 soup = BeautifulSoup(r.text, 'html.parser')
                 rows = soup.find('tbody').find_all('tr')
-            else:
-                r = client.get(f"{BASE_URL}{server_code}-pool-1?page=1", headers=HEADERS)
-                soup = BeautifulSoup(r.text, 'html.parser')
-                rows = soup.find('table').find('tbody').find_all('tr')
+                for row in rows:
+                    cols = row.find_all('td')
+                    if len(cols) >= 4:
+                        val = re.sub(r'\D', '', cols[3].text.strip())
+                        if len(val) == 4: results.append(val)
 
-            for idx, row in enumerate(rows):
-                cols = row.find_all('td')
-                if len(cols) >= 4:
-                    res = re.sub(r'\D', '', cols[3].text.strip())
-                    if len(res) == 4:
-                        all_digits += res
-                        for d in res:
-                            if last_appearance[d] == 0:
-                                last_appearance[d] = idx
-            
-        freq = Counter(all_digits)
-        hot = [x[0] for x in freq.most_common(5)]
-        cold = sorted(last_appearance, key=last_appearance.get, reverse=True)[:2]
-        return list(dict.fromkeys(hot + cold))
-    except:
-        return []
+            # METODE KIAJIT (HK/SGP/SDY)
+            elif code.startswith('kia_'):
+                col_idx = int(code.split('_')[1])
+                r = client.get(KIAJIT_URL, headers=HEADERS)
+                soup = BeautifulSoup(r.text, 'html.parser')
+                rows = soup.find('tbody').find_all('tr')
+                for row in rows:
+                    cols = row.find_all('td')
+                    if len(cols) >= 5:
+                        val = re.sub(r'\D', '', cols[col_idx].text.strip())
+                        if len(val) == 4: results.append(val)
+
+            # METODE BASE (SalamRupiah)
+            else:
+                r = client.get(f"{BASE_URL}{code}-pool-1", headers=HEADERS)
+                soup = BeautifulSoup(r.text, 'html.parser')
+                table = soup.find('table')
+                if table:
+                    rows = table.find('tbody').find_all('tr')
+                    for row in rows:
+                        cols = row.find_all('td')
+                        if len(cols) >= 4:
+                            val = re.sub(r'\D', '', cols[3].text.strip())
+                            if len(val) == 4: results.append(val)
+    except Exception as e:
+        print(f"Scraping Error ({code}): {e}")
+    return results
+
+# --- ENGINE ANALISIS LANJUTAN (HOT, SKIP, CORRELATION) ---
+
+def get_statistical_data(server_code):
+    all_res = fetch_results(server_code)
+    if not all_res: return []
+    
+    # Sample 50 data untuk cakupan Correlation harian
+    sample_data = all_res[:50]
+    all_digits = "".join(sample_data)
+    
+    # 1. HOT/COLD ANALYSIS (Frekuensi)
+    freq = Counter(all_digits)
+    hot_numbers = [x[0] for x in freq.most_common(3)]
+    
+    # 2. SKIP SPACING (Mencari angka yang paling lama tidak muncul)
+    last_appearance = {str(i): 99 for i in range(10)}
+    for idx, res in enumerate(sample_data):
+        for d in res:
+            if last_appearance[d] == 99:
+                last_appearance[d] = idx
+    cold_numbers = sorted(last_appearance, key=last_appearance.get, reverse=True)[:2]
+
+    # 3. DAY-TO-DAY CORRELATION (Pola 7 & 14 hari ke belakang)
+    correlation_numbers = []
+    if len(sample_data) > 14:
+        prev_week_1 = sample_data[7]
+        prev_week_2 = sample_data[14]
+        correlation_numbers = list(set(prev_week_1 + prev_week_2))[:2]
+
+    # Penggabungan Unik
+    return list(dict.fromkeys(hot_numbers + cold_numbers + correlation_numbers))
 
 def proses_hybrid(server_key):
     try:
         code = TARGET_POOLS[server_key]
-        
-        # LOGIC SCRAPING UNTUK RESULT TERAKHIR
-        with httpx.Client(timeout=30, verify=False) as client:
-            if code == 'custom_japan':
-                raw_res = client.get(JAPAN_URL, headers=HEADERS).text
-                soup = BeautifulSoup(raw_res, 'html.parser')
-                all_res = [re.sub(r'\D', '', r.find_all('td')[3].text.strip()) 
-                           for r in soup.find('tbody').find_all('tr') 
-                           if len(re.sub(r'\D', '', r.find_all('td')[3].text.strip())) == 4]
-            else:
-                raw_res = client.get(f"{BASE_URL}{code}-pool-1", headers=HEADERS).text
-                soup = BeautifulSoup(raw_res, 'html.parser')
-                all_res = [re.sub(r'\D', '', r.find_all('td')[3].text.strip()) 
-                           for r in soup.find('tbody').find_all('tr') 
-                           if len(re.sub(r'\D', '', r.find_all('td')[3].text.strip())) == 4]
+        all_res = fetch_results(code)
         
         if not all_res: return None
         last_res = all_res[0]
 
-        # Kerucutkan BBFS ke 5-6 digit terkuat
+        # Jalankan Triple Engine
         stat_numbers = get_statistical_data(code)
-        taysen_last = [TABEL_TAYSEN.get(d, '0') for d in last_res[-2:]]
         
-        # Prioritas penggabungan angka
-        combined = list(dict.fromkeys(stat_numbers + taysen_last))
+        # Referensi Taysen dari ekor terakhir
+        taysen_ref = [TABEL_TAYSEN.get(d, '0') for d in last_res[-2:]]
         
-        # KERUCUTKAN: Ambil hanya 6 digit terbaik
+        # Gabungan Final BBFS
+        combined = list(dict.fromkeys(stat_numbers + taysen_ref))
         am_hybrid = combined[:6]
         
-        # Jika kurang dari 5, tambahkan indeks
+        # Penyeimbang Digit (Min 5)
         if len(am_hybrid) < 5:
             for d in list(am_hybrid):
                 idx_val = TABEL_INDEKS.get(d)
                 if idx_val not in am_hybrid: am_hybrid.append(idx_val)
                 if len(am_hybrid) >= 6: break
 
-        # Generate TOP 3D & 4D (Sistem Acak dari BBFS)
+        # Output Generator
         bbfs_str = am_hybrid
-        top_3d = []
-        top_4d = []
-        
-        for _ in range(2):
-            if len(bbfs_str) >= 3:
-                top_3d.append("".join(random.sample(bbfs_str, 3)))
-            if len(bbfs_str) >= 4:
-                top_4d.append("".join(random.sample(bbfs_str, 4)))
+        top_3d = ["".join(random.sample(bbfs_str, 3)) for _ in range(2)]
+        top_4d = ["".join(random.sample(bbfs_str, 4)) for _ in range(2)]
 
-        # Shadow BBFS (5 Digit)
+        # Shadow BBFS (Mistik Lama)
         shadow_pool = [TABEL_MISTIK_LAMA.get(d, d) for d in am_hybrid]
         shadow_final = "".join(list(dict.fromkeys(shadow_pool))[:5])
 
@@ -141,16 +174,17 @@ def proses_hybrid(server_key):
             "jitu": f"{am_hybrid[0]}{am_hybrid[1]}, {am_hybrid[2]}{am_hybrid[3]}" if len(am_hybrid) >= 4 else "N/A",
             "top3d": ", ".join(top_3d),
             "top4d": ", ".join(top_4d),
-            "posisi": f"Kpl: {am_hybrid[0]} | Ekr: {am_hybrid[1]}" if len(am_hybrid) >= 2 else "N/A"
+            "posisi": f"Kpl: {am_hybrid[0]} | Ekr: {am_hybrid[1]}"
         }
     except Exception as e:
-        print(f"Error Processing: {e}")
+        print(f"Hybrid Error: {e}")
         return None
 
 # --- ROUTES ---
+
 @app.route('/')
 def index():
-    return render_template('index.html', markets=TARGET_POOLS.keys(), logged_in=session.get('authorized'))
+    return render_template('index.html', markets=sorted(TARGET_POOLS.keys()), logged_in=session.get('authorized'))
 
 @app.route('/login', methods=['POST'])
 def login():
