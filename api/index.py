@@ -1,16 +1,15 @@
+import os
 from flask import Flask, render_template, request, jsonify, session
 import httpx
 from bs4 import BeautifulSoup
 from datetime import datetime
 from collections import Counter
 import re
-import os
+
 
 app = Flask(__name__, 
             template_folder=os.path.join(os.path.dirname(__file__), '../templates'))
-
-# WAJIB: Kunci rahasia untuk mengamankan fitur login/session
-app.secret_key = os.environ.get("SECRET_KEY", "MAMANG_SUPER_SECRET_2026")
+app.secret_key = "MAMANG_RAHASIA"
 
 # --- DATABASE KEY (Edit di sini untuk menambah user) ---
 VALID_KEYS = {
