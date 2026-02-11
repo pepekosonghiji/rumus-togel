@@ -5,26 +5,20 @@ from datetime import datetime
 from collections import Counter
 import re
 import os
-from flask import Flask, render_template, request, jsonify, session
-from datetime import datetime
 
 app = Flask(__name__, 
             template_folder=os.path.join(os.path.dirname(__file__), '../templates'))
 
-# WAJIB: Gunakan secret key yang kuat agar session tersimpan di browser
-app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY", "MAMANG_RAHASIA_123_ABC")
-# Tambahkan ini agar cookie session tetap tersimpan saat redirect
-app.config['SESSION_COOKIE_NAME'] = 'analisis_session'
-app.secret_key = 'KUNCI_RAHASIA_MAMANG_99' # Ganti bebas untuk keamanan session
+# WAJIB: Kunci rahasia untuk mengamankan fitur login/session
+app.secret_key = os.environ.get("SECRET_KEY", "MAMANG_SUPER_SECRET_2026")
 
-# --- SISTEM KEY (Jual key ini ke pembeli) ---
+# --- DATABASE KEY (Edit di sini untuk menambah user) ---
 VALID_KEYS = {
-    "MAMANG-PRO-2026": "2026-12-31", # Key: Tanggal Expired
+    "MAMANG-PRO-2026": "2026-12-31",
     "VIP-ACCESS-01": "2026-06-01",
-    "TRIAL-KEY": "2026-02-15"
+    "TRIAL-KEY": "2026-02-20"
 }
 
-# --- CONFIG & LOGIKA SCRAPING ---
 TARGET_POOLS = {
     'CAMBODIA': 'p3501', 'SYDNEY LOTTO': 'p2262', 'SINGAPORE': 'p2664',
     'BUSAN POOLS': 'p16063', 'HONGKONG LOTTO': 'p2263'
@@ -40,7 +34,6 @@ def get_day_name():
     days_indo = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"]
     return days_indo[datetime.now().weekday()]
 
-# ... (Fungsi get_data_hybrid dan proses_hybrid tetap sama seperti sebelumnya) ...
 def get_data_hybrid(server_code, target_day):
     filtered = []
     with httpx.Client(timeout=30, follow_redirects=True, verify=False) as client:
@@ -95,7 +88,7 @@ def proses_hybrid(server_key):
 
 @app.route('/')
 def index():
-    # Cek apakah user sudah login lewat session
+    # Mengirim status login ke HTML
     is_logged_in = session.get('authorized', False)
     return render_template('index.html', markets=TARGET_POOLS.keys(), logged_in=is_logged_in)
 
@@ -103,19 +96,20 @@ def index():
 def login():
     key = request.form.get('key')
     if key in VALID_KEYS:
-        # Cek Expired
+        # Cek Tanggal Expired
         exp_date = datetime.strptime(VALID_KEYS[key], '%Y-%m-%d')
         if datetime.now() <= exp_date:
+            session.permanent = True # Session tetap aktif meski tab ditutup sementara
             session['authorized'] = True
             return jsonify({"status": "success"})
-        return jsonify({"status": "error", "message": "Key sudah Expired!"}), 403
-    return jsonify({"status": "error", "message": "Key tidak terdaftar!"}), 401
+        return jsonify({"status": "error", "message": "Key sudah kedaluwarsa!"}), 403
+    return jsonify({"status": "error", "message": "Key tidak valid!"}), 401
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
     if not session.get('authorized'):
-        return jsonify({"error": "Sesi habis, silakan login ulang"}), 403
+        return jsonify({"error": "Akses dilarang. Silakan login."}), 403
     
     market = request.form.get('market')
     result = proses_hybrid(market)
-    return jsonify(result) if result else jsonify({"error": "Gagal proses"}), 500
+    return jsonify(result) if result else jsonify({"error": "Gagal mengambil data"}), 500
