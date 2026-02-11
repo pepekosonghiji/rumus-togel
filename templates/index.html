@@ -3,88 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>POOLS ENGINE - Neural Logic</title>
+    <title>POOLS ENGINE PRO - Neural Logic v3.5</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;900&display=swap" rel="stylesheet">
     <style>
         body { 
-            background-color: #0a0a0a; 
-            background-image: radial-gradient(circle at 50% 50%, #1a3a3a 0%, #000 100%); 
+            background-color: #050505; 
+            background-image: radial-gradient(circle at 50% 10%, #1a2a2a 0%, #000 100%); 
             color: #e0e0e0; 
             font-family: 'Inter', sans-serif; 
         }
         .glass-card { 
-            background: rgba(20, 20, 20, 0.8); 
+            background: rgba(15, 15, 15, 0.85); 
             backdrop-filter: blur(20px); 
-            border: 1px solid rgba(0, 255, 255, 0.15); 
+            border: 1px solid rgba(0, 255, 255, 0.1); 
         }
-        .glow-text {
-            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .glow-cyan { text-shadow: 0 0 15px rgba(6, 182, 212, 0.6); }
+        .glow-green { text-shadow: 0 0 15px rgba(34, 197, 94, 0.6); }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        @keyframes pulse-border {
-            0% { border-color: rgba(6, 182, 212, 0.5); }
-            50% { border-color: rgba(59, 130, 246, 0.8); }
-            100% { border-color: rgba(6, 182, 212, 0.5); }
-        }
-        .animate-pulse-border {
-            animation: pulse-border 2s infinite;
-        }
+        .animate-result { animation: fadeIn 0.5s ease-out forwards; }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
 
-    <div class="glass-card w-full max-w-md p-8 rounded-3xl shadow-2xl border-t-2 border-cyan-500/50">
+    <div class="glass-card w-full max-w-md p-6 rounded-[2.5rem] shadow-2xl border-b-4 border-cyan-900">
         <div class="text-center mb-8">
-            <h1 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 tracking-tighter">POOLS ENGINE <span class="text-xs align-top text-gray-500">v3.0</span></h1>
-            <p class="text-[10px] text-gray-500 tracking-widest uppercase mt-1">Hybrid Logic Prediction</p>
+            <h1 class="text-3xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
+                POOLS ENGINE <span class="text-white">VIP</span>
+            </h1>
+            <div class="flex justify-center items-center gap-2 mt-1">
+                <span class="h-1 w-1 bg-cyan-500 rounded-full animate-pulse"></span>
+                <p class="text-[9px] text-gray-500 tracking-[0.4em] uppercase font-bold">Hybrid statistical AI</p>
+                <span class="h-1 w-1 bg-cyan-500 rounded-full animate-pulse"></span>
+            </div>
         </div>
 
         {% if not logged_in %}
-        <div class="space-y-6">
-            <div class="relative">
-                <input type="text" id="access-key" class="w-full bg-black/50 border border-gray-800 p-4 rounded-xl text-center text-cyan-300 outline-none focus:border-cyan-500 transition-all font-mono" placeholder="ENTER LICENSE KEY">
-            </div>
-            <button onclick="doLogin()" class="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-cyan-900/20">AKTIFKAN LISENSI</button>
+        <div class="space-y-4">
+            <input type="text" id="access-key" 
+                class="w-full bg-black/40 border border-gray-800 p-4 rounded-2xl text-center text-cyan-400 font-mono outline-none focus:border-cyan-500 transition-all shadow-inner" 
+                placeholder="INPUT LICENSE KEY">
+            <button onclick="doLogin()" 
+                class="w-full bg-gradient-to-r from-cyan-600 to-blue-700 hover:from-cyan-500 hover:to-blue-600 text-white font-black py-4 rounded-2xl transition-all shadow-lg active:scale-95 uppercase tracking-widest">
+                Activate System
+            </button>
         </div>
         {% else %}
-        <div class="space-y-6">
+        <div class="space-y-5">
             <div class="relative">
-                <select id="market" class="w-full bg-gray-900/80 p-4 rounded-xl border border-gray-700 text-cyan-400 outline-none appearance-none cursor-pointer focus:border-cyan-500">
+                <select id="market" class="w-full bg-gray-900 border border-gray-800 p-4 rounded-2xl text-cyan-400 font-bold outline-none appearance-none cursor-pointer focus:border-cyan-600 transition-colors">
                     {% for m in markets %} <option value="{{ m }}">{{ m }}</option> {% endfor %}
                 </select>
+                <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-600">▼</div>
             </div>
             
-            <button onclick="doAnalyze()" id="btn-text" class="w-full bg-gradient-to-r from-blue-700 to-cyan-700 p-4 rounded-xl font-black text-white tracking-[0.2em] shadow-lg active:scale-95 transition-transform">PROSES DATA</button>
+            <button onclick="doAnalyze()" id="btn-text" 
+                class="w-full bg-white text-black font-black p-4 rounded-2xl tracking-[0.2em] shadow-lg active:scale-95 transition-all hover:bg-cyan-50">
+                PROSES DATA
+            </button>
             
-            <div id="result-box" class="hidden space-y-4 pt-6 border-t border-gray-800/50 animate-fade-in">
-                <div class="flex justify-between items-center text-xs px-2">
-                    <span class="text-gray-400 italic">Result Terakhir:</span> 
-                    <span id="res-last" class="font-mono font-bold text-cyan-400 bg-cyan-950/30 border border-cyan-500/20 px-3 py-1 rounded-lg">0000</span>
+            <div id="result-box" class="hidden space-y-4 pt-4 border-t border-gray-900">
+                <div class="flex justify-between items-center text-[10px] px-2 font-bold uppercase tracking-wider">
+                    <span class="text-gray-500">Result Terakhir:</span> 
+                    <span id="res-last" class="text-cyan-400 font-mono bg-cyan-950/20 px-2 py-0.5 rounded border border-cyan-800/30">----</span>
                 </div>
 
-                <div class="bg-gradient-to-b from-gray-900 to-black p-5 rounded-2xl border border-cyan-500/30 text-center shadow-inner">
-                    <p class="text-[10px] text-cyan-500 font-bold tracking-[0.3em] mb-2 uppercase">BBFS Campuran</p>
-                    <h2 id="res-bbfs" class="text-5xl font-black text-white glow-text tracking-tighter">------</h2>
+                <div class="bg-gradient-to-br from-gray-900 to-black p-6 rounded-[2rem] border border-cyan-500/20 text-center relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent"></div>
+                    <p class="text-[9px] text-cyan-500 font-black tracking-[0.5em] mb-2 uppercase">BBFS Campuran (6D)</p>
+                    <h2 id="res-bbfs" class="text-5xl font-black text-white glow-cyan tracking-tighter font-mono">------</h2>
+                </div>
+
+                <div class="bg-gradient-to-br from-gray-900/50 to-black p-4 rounded-2xl border border-green-500/20 shadow-lg">
+                    <p class="text-[9px] text-green-500 font-black tracking-widest mb-2 uppercase">Top 3D & 4D Jitu</p>
+                    <div class="flex flex-col gap-1 font-mono">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-500 text-[10px]">3D:</span>
+                            <span id="res-top3d" class="text-green-300 font-bold tracking-widest">---, ---</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-500 text-[10px]">4D:</span>
+                            <span id="res-top4d" class="text-green-500 font-bold tracking-widest">----, ----</span>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
                     <div class="bg-gray-900/40 p-3 rounded-xl border border-gray-800">
-                        <p class="text-[9px] text-yellow-500 mb-1 font-bold uppercase tracking-wider">Shadow BBFS</p>
-                        <span id="res-shadow" class="text-lg font-mono font-bold text-yellow-200">------</span>
+                        <p class="text-[8px] text-yellow-500 font-black uppercase mb-1">Shadow BBFS</p>
+                        <span id="res-shadow" class="text-sm font-mono font-bold text-yellow-100 italic">-----</span>
                     </div>
                     <div class="bg-gray-900/40 p-3 rounded-xl border border-gray-800">
-                        <p class="text-[9px] text-pink-500 mb-1 font-bold uppercase tracking-wider">Angka Larian</p>
-                        <span id="res-larian" class="text-lg font-mono font-bold text-pink-200">-----</span>
+                        <p class="text-[8px] text-pink-500 font-black uppercase mb-1">Larian 2D</p>
+                        <span id="res-larian" class="text-sm font-mono font-bold text-pink-100">----</span>
                     </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="bg-gray-900/40 p-3 rounded-xl border border-gray-800/50">
-                        <p class="text-[9px] text-blue-400 mb-1 font-bold uppercase">Top 2D Jitu</p>
-                        <span id="res-jitu" class="text-sm font-bold text-gray-100">--</span>
+                    <div class="bg-gray-900/40 p-3 rounded-xl border border-gray-800">
+                        <p class="text-[8px] text-blue-400 font-black uppercase mb-1">2D Jitu</p>
+                        <span id="res-jitu" class="text-[11px] font-bold text-gray-200">--</span>
                     </div>
-                    <div class="bg-gray-900/40 p-3 rounded-xl border border-gray-800/50">
-                        <p class="text-[9px] text-blue-400 mb-1 font-bold uppercase">Posisi Kuat</p>
-                        <span id="res-posisi" class="text-[10px] font-bold text-gray-400">--</span>
+                    <div class="bg-gray-900/40 p-3 rounded-xl border border-gray-800">
+                        <p class="text-[8px] text-purple-400 font-black uppercase mb-1">Posisi Kuat</p>
+                        <span id="res-posisi" class="text-[9px] font-bold text-gray-400">--</span>
                     </div>
                 </div>
             </div>
@@ -95,8 +119,11 @@
     <script>
         async function doLogin() {
             const key = document.getElementById('access-key').value;
+            if(!key) return alert("Key cannot be empty!");
+            
             const params = new URLSearchParams();
             params.append('key', key);
+            
             try {
                 const res = await fetch('/login', {
                     method: 'POST',
@@ -110,49 +137,48 @@
                     alert(data.message); 
                 }
             } catch (e) { 
-                alert("Koneksi gagal ke server."); 
+                alert("Server Connection Error"); 
             }
         }
 
         async function doAnalyze() {
             const mkt = document.getElementById('market').value;
             const btn = document.getElementById('btn-text');
+            const resultBox = document.getElementById('result-box');
             
-            // Animasi Loading
             btn.disabled = true;
-            btn.innerText = "CALCULATING...";
-            btn.classList.add('opacity-50');
+            btn.innerText = "ALGORITHMING...";
+            btn.classList.add('animate-pulse', 'bg-cyan-500');
 
             try {
                 const params = new URLSearchParams();
                 params.append('market', mkt);
                 
-                const resp = await fetch('/analyze', { 
-                    method: 'POST', 
-                    body: params 
-                });
-                
+                const resp = await fetch('/analyze', { method: 'POST', body: params });
                 const data = await resp.json();
                 
                 if (data.error) {
-                    alert(data.error);
+                    alert("Error: " + data.error);
                 } else {
-                    document.getElementById('result-box').classList.remove('hidden');
+                    resultBox.classList.remove('hidden');
+                    resultBox.classList.add('animate-result');
                     
-                    // Update UI dengan data dari index.py
+                    // Update Data
                     document.getElementById('res-last').innerText = data.last;
                     document.getElementById('res-bbfs').innerText = data.bbfs;
                     document.getElementById('res-shadow').innerText = data.shadow;
-                    document.getElementById('res-larian').innerText = data.larian;
+                    document.getElementById('res-larian').innerText = data.larian || '-----';
                     document.getElementById('res-jitu').innerText = data.jitu;
+                    document.getElementById('res-top3d').innerText = data.top3d;
+                    document.getElementById('res-top4d').innerText = data.top4d;
                     document.getElementById('res-posisi').innerText = data.posisi;
                 }
             } catch (e) {
-                alert("Gagal mengambil data dari server.");
+                alert("Failed to fetch data. Check your connection.");
             } finally {
                 btn.disabled = false;
                 btn.innerText = "PROSES DATA";
-                btn.classList.remove('opacity-50');
+                btn.classList.remove('animate-pulse', 'bg-cyan-500');
             }
         }
     </script>
