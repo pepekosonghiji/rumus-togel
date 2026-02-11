@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 from collections import Counter
 import re
+import random
 
 app = Flask(__name__, 
             template_folder=os.path.join(os.path.dirname(__file__), '../templates'))
@@ -39,75 +40,36 @@ def get_day_name(offset=0):
     target_date = datetime.now() - timedelta(days=offset)
     return days_indo[target_date.weekday()]
 
-# --- ENGINE ANALISIS TINGKAT LANJUT ---
+# --- ENGINE ANALISIS ---
 
 def get_statistical_data(server_code):
-    """
-    Menggabungkan Metode 1 (Hot/Cold) dan Metode 3 (Skip Spacing)
-    Memindai 50-100 data untuk mencari angka dengan probabilitas kemunculan tertinggi.
-    """
     all_digits = ""
     last_appearance = {str(i): 0 for i in range(10)}
-    
     try:
         with httpx.Client(timeout=30, follow_redirects=True, verify=False) as client:
-            for pg in range(1, 6): # Ambil 5 halaman (~50 result)
+            for pg in range(1, 4): 
                 r = client.get(f"{BASE_URL}{server_code}-pool-1?page={pg}", headers=HEADERS)
                 soup = BeautifulSoup(r.text, 'html.parser')
                 rows = soup.find('table').find('tbody').find_all('tr')
-                
                 for idx, row in enumerate(rows):
                     cols = row.find_all('td')
                     if len(cols) >= 4:
                         res = re.sub(r'\D', '', cols[3].text.strip())
                         if len(res) == 4:
                             all_digits += res
-                            # Catat kapan terakhir angka muncul (Metode Skip Spacing)
                             for d in res:
                                 if last_appearance[d] == 0:
                                     last_appearance[d] = idx + ((pg-1) * 10)
-
-        # Hitung Frekuensi (Hot Numbers)
         freq = Counter(all_digits)
-        # Ambil 3 angka paling Hot
-        hot_numbers = [x[0] for x in freq.most_common(3)]
-        # Ambil 2 angka paling Cold (yang sudah lama tidak keluar / Skip Spacing tinggi)
-        cold_numbers = sorted(last_appearance, key=last_appearance.get, reverse=True)[:2]
-        
-        return list(dict.fromkeys(hot_numbers + cold_numbers))
-    except:
-        return []
-
-def get_day_correlation(server_code):
-    """
-    Metode 2: Mencari korelasi angka pada hari yang sama di minggu-minggu sebelumnya.
-    """
-    target_hari = get_day_name().lower()
-    correlated_digits = ""
-    try:
-        with httpx.Client(timeout=30, verify=False) as client:
-            # Cari di 10 halaman terakhir untuk mencakup 4-8 minggu ke belakang
-            for pg in range(1, 10):
-                r = client.get(f"{BASE_URL}{server_code}-pool-1?page={pg}", headers=HEADERS)
-                soup = BeautifulSoup(r.text, 'html.parser')
-                rows = soup.find('table').find('tbody').find_all('tr')
-                for row in rows:
-                    cols = row.find_all('td')
-                    if len(cols) >= 4 and target_hari in cols[0].text.strip().lower():
-                        val = re.sub(r'\D', '', cols[3].text.strip())
-                        if len(val) == 4:
-                            correlated_digits += val
-        
-        freq = Counter(correlated_digits)
-        return [x[0] for x in freq.most_common(3)]
+        hot = [x[0] for x in freq.most_common(5)]
+        cold = sorted(last_appearance, key=last_appearance.get, reverse=True)[:2]
+        return list(dict.fromkeys(hot + cold))
     except:
         return []
 
 def proses_hybrid(server_key):
     try:
         code = TARGET_POOLS[server_key]
-        
-        # Ambil Result Terakhir
         with httpx.Client(timeout=30, verify=False) as client:
             raw_res = client.get(f"{BASE_URL}{code}-pool-1", headers=HEADERS).text
         soup = BeautifulSoup(raw_res, 'html.parser')
@@ -116,49 +78,50 @@ def proses_hybrid(server_key):
         if not all_res: return None
         last_res = all_res[0]
 
-        # JALANKAN 3 METODE TEKNIS
-        stat_numbers = get_statistical_data(code)       # Hot & Cold (Skip Spacing)
-        day_numbers = get_day_correlation(code)        # Day-to-Day Correlation
-        
-        # Pola Dasar (Taysen dari 2D terakhir)
+        # Kerucutkan BBFS ke 5-6 digit terkuat
+        stat_numbers = get_statistical_data(code)
         taysen_last = [TABEL_TAYSEN.get(d, '0') for d in last_res[-2:]]
         
-        # GABUNGKAN SEMUA METODE (Weighting System)
-        # Urutan prioritas: Hari yang sama > Hot/Cold > Taysen
-        combined_pool = day_numbers + stat_numbers + taysen_last
-        am_hybrid = list(dict.fromkeys(combined_pool))
+        # Prioritas penggabungan angka
+        combined = list(dict.fromkeys(stat_numbers + taysen_last))
+        
+        # KERUCUTKAN: Ambil hanya 6 digit terbaik
+        am_hybrid = combined[:6]
+        
+        # Jika kurang dari 5, tambahkan indeks
+        if len(am_hybrid) < 5:
+            for d in list(am_hybrid):
+                idx_val = TABEL_INDEKS.get(d)
+                if idx_val not in am_hybrid: am_hybrid.append(idx_val)
+                if len(am_hybrid) >= 6: break
 
-        # Pastikan 7 digit untuk BBFS
-        for n in "0123456789":
-            if len(am_hybrid) >= 7: break
-            if n not in am_hybrid: am_hybrid.append(n)
+        # Generate TOP 3D & 4D (Sistem Acak dari BBFS)
+        bbfs_str = am_hybrid
+        top_3d = []
+        top_4d = []
+        
+        for _ in range(2):
+            top_3d.append("".join(random.sample(bbfs_str, 3)))
+            top_4d.append("".join(random.sample(bbfs_str, 4)))
 
-        # Shadow BBFS (Mistik Campuran)
-        shadow_pool = []
-        for d in am_hybrid[:6]:
-            shadow_pool.append(TABEL_MISTIK_LAMA.get(d, d))
-            shadow_pool.append(TABEL_MISTIK_BARU.get(d, d))
-        shadow_final = "".join(list(dict.fromkeys(shadow_pool))[:6])
-
-        # Angka Larian (Selisih & Indeks)
-        selisih = str(abs(int(last_res[2]) - int(last_res[3])))
-        larian = "".join(list(dict.fromkeys([selisih, TABEL_INDEKS.get(selisih), TABEL_TAYSEN.get(selisih)]))[:5])
+        # Shadow BBFS (5 Digit)
+        shadow_pool = [TABEL_MISTIK_LAMA.get(d, d) for d in am_hybrid]
+        shadow_final = "".join(list(dict.fromkeys(shadow_pool))[:5])
 
         return {
             "market": server_key.upper(),
             "last": last_res,
-            "bbfs": "".join(am_hybrid[:7]),
+            "bbfs": "".join(am_hybrid),
             "shadow": shadow_final,
-            "larian": larian,
-            "jitu": f"{am_hybrid[0]}{am_hybrid[1]}, {am_hybrid[2]}{am_hybrid[3]}, {am_hybrid[4]}{am_hybrid[5]}",
-            "posisi": f"Kepala {am_hybrid[0]} | Ekor {am_hybrid[1]}"
+            "jitu": f"{am_hybrid[0]}{am_hybrid[1]}, {am_hybrid[2]}{am_hybrid[3]}",
+            "top3d": ", ".join(top_3d),
+            "top4d": ", ".join(top_4d),
+            "posisi": f"Kpl: {am_hybrid[0]} | Ekr: {am_hybrid[1]}"
         }
-    except Exception as e:
-        print(f"Error detail: {e}")
+    except:
         return None
 
-# --- FLASK ROUTES ---
-
+# --- ROUTES (SAMA SEPERTI SEBELUMNYA) ---
 @app.route('/')
 def index():
     return render_template('index.html', markets=TARGET_POOLS.keys(), logged_in=session.get('authorized'))
@@ -173,16 +136,14 @@ def login():
             session.permanent = True
             session['authorized'] = True
             return jsonify({"status": "success"})
-        return jsonify({"status": "error", "message": "Expired!"}), 403
-    return jsonify({"status": "error", "message": "Invalid Key!"}), 401
+    return jsonify({"status": "error", "message": "Invalid/Expired Key!"}), 401
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
-    if not session.get('authorized'):
-        return jsonify({"error": "Unauthorized"}), 403
+    if not session.get('authorized'): return jsonify({"error": "Unauthorized"}), 403
     market = request.form.get('market')
     result = proses_hybrid(market)
-    return jsonify(result) if result else jsonify({"error": "Server Error"}), 500
+    return jsonify(result) if result else jsonify({"error": "Error"}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
