@@ -3,19 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MAMANG TECH - AI Prediksi Togel </title>
+    <title>MAMANG TECH - AI 2026</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        body { background-color: #0f172a; color: #e2e8f0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #0f172a; color: #e2e8f0; }
         .card { background-color: #1e293b; border: 1px solid #334155; border-radius: 15px; }
-        .btn-primary { background-color: #3b82f6; border: none; font-weight: 600; }
-        .btn-primary:hover { background-color: #2563eb; }
-        .result-box { background-color: #0f172a; border-left: 4px solid #3b82f6; padding: 15px; border-radius: 8px; margin-bottom: 10px; }
-        .badge-custom { font-size: 1.1rem; padding: 8px 15px; border-radius: 10px; background-color: #334155; }
-        .text-neon { color: #38bdf8; text-shadow: 0 0 5px rgba(56, 189, 248, 0.5); }
-        .invest-box { font-size: 0.9rem; color: #94a3b8; word-wrap: break-word; }
-        #loading { display: none; }
+        .result-box { background-color: #0f172a; border-left: 4px solid #3b82f6; padding: 15px; border-radius: 8px; }
+        .badge-custom { font-size: 1.1rem; padding: 10px; background-color: #334155; border-radius: 10px; display: block; text-align: center; font-weight: bold; }
+        .invest-box { font-size: 0.85rem; color: #94a3b8; }
+        .text-neon { color: #38bdf8; text-shadow: 0 0 5px rgba(56, 189, 248, 0.3); }
     </style>
 </head>
 <body>
@@ -23,142 +21,96 @@
 <div class="container py-5">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <div class="text-center mb-4">
-                <h1 class="fw-bold text-neon"><i class="fas fa-robot me-2"></i>MAMANG TECH AI</h1>
-                <p class="text-secondary">Hybrid Analysis: Hot/Cold, Skip Spacing, & Day Correlation</p>
-            </div>
-
             {% if not logged_in %}
-            <div class="card shadow-lg p-4 mb-4">
-                <h4 class="text-center mb-3">Akses Restricted</h4>
+            <div class="card p-4 text-center">
+                <h4 class="mb-3">Akses Restricted</h4>
                 <div class="input-group">
-                    <input type="password" id="key" class="form-control" placeholder="Masukkan Lisensi Key...">
-                    <button class="btn btn-primary" onclick="login()">Buka Akses</button>
+                    <input type="password" id="key" class="form-control" placeholder="License Key...">
+                    <button class="btn btn-primary" onclick="login()">Login</button>
                 </div>
-                <div id="loginMsg" class="mt-2 text-danger text-center small"></div>
+                <div id="loginMsg" class="mt-2 text-danger small"></div>
             </div>
             {% else %}
-            <div class="card shadow-lg p-4 mb-4">
-                <div class="mb-3">
-                    <label class="form-label">Pilih Market / Server</label>
-                    <select id="market" class="form-select form-select-lg">
-                        {% for m in markets %}
-                        <option value="{{ m }}">{{ m }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <button class="btn btn-primary btn-lg w-100" onclick="analyze()" id="btnAnalyze">
-                    <i class="fas fa-microchip me-2"></i>MULAI ANALISA DATA
-                </button>
-                
-                <div id="loading" class="text-center mt-3">
-                    <div class="spinner-border text-neon" role="status"></div>
-                    <p class="mt-2 small">Sedang melakukan Triple-Engine Scraping...</p>
-                </div>
+            <div class="card p-4 mb-4">
+                <h2 class="text-center text-neon fw-bold mb-4">MAMANG TECH AI</h2>
+                <select id="market" class="form-select mb-3">
+                    {% for m in markets %}<option value="{{ m }}">{{ m }}</option>{% endfor %}
+                </select>
+                <button class="btn btn-primary btn-lg w-100" onclick="analyze()" id="btnAnalyze">MULAI ANALISA</button>
             </div>
 
-            <div id="resultCard" class="card shadow-lg p-4" style="display: none;">
-                <h3 id="resMarket" class="text-center text-neon fw-bold mb-4">MARKET NAME</h3>
+            <div id="resultCard" class="card p-4 shadow-lg" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 id="resMarket" class="text-neon fw-bold mb-0"></h3>
+                    <button class="btn btn-sm btn-outline-info" onclick="takeScreenshot()">
+                        <i class="fas fa-camera me-1"></i> Simpan Gambar
+                    </button>
+                </div>
                 
                 <div class="row g-3">
-                    <div class="col-md-6">
-                        <div class="result-box">
-                            <small class="text-secondary d-block">Result Terakhir:</small>
-                            <span id="resLast" class="h4 fw-bold text-white">0000</span>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="result-box">
-                            <small class="text-secondary d-block">Posisi Jitu:</small>
-                            <span id="resPosisi" class="h5 fw-bold text-warning">Kpl: - | Ekr: -</span>
-                        </div>
-                    </div>
+                    <div class="col-6"><div class="result-box"><small class="text-secondary">Result:</small><br><span id="resLast" class="h4 fw-bold"></span></div></div>
+                    <div class="col-6"><div class="result-box"><small class="text-secondary">Posisi:</small><br><span id="resPosisi" class="h5 fw-bold text-warning"></span></div></div>
                 </div>
 
                 <div class="mt-4">
-                    <h5 class="text-neon"><i class="fas fa-layer-group me-2"></i>BBFS Campuran (Utama)</h5>
-                    <div id="resBbfs" class="badge-custom text-white d-inline-block w-100 text-center tracking-widest fw-bold"></div>
+                    <label class="small text-secondary mb-1">BBFS Campuran (Utama)</label>
+                    <div id="resBbfs" class="badge-custom"></div>
                 </div>
 
                 <div class="mt-3">
-                    <h5 class="text-info"><i class="fas fa-ghost me-2"></i>BBFS Shadow (Cadangan)</h5>
-                    <div id="resShadow" class="badge-custom text-white d-inline-block w-100 text-center fw-bold" style="background-color: #1e293b; border: 1px dashed #0ea5e9;"></div>
+                    <label class="small text-secondary mb-1">BBFS Shadow (Cadangan)</label>
+                    <div id="resShadow" class="badge-custom" style="border: 1px dashed #38bdf8;"></div>
                 </div>
 
-                <hr class="my-4 border-secondary">
-
-                <div class="row">
-                    <div class="col-6">
-                        <small class="text-secondary">TOP 3D:</small>
-                        <p id="res3d" class="fw-bold text-white"></p>
-                    </div>
-                    <div class="col-6">
-                        <small class="text-secondary">TOP 4D:</small>
-                        <p id="res4d" class="fw-bold text-white"></p>
-                    </div>
+                <div class="row mt-4">
+                    <div class="col-6"><small class="text-secondary">TOP 3D:</small><p id="res3d" class="fw-bold"></p></div>
+                    <div class="col-6"><small class="text-secondary">TOP 4D:</small><p id="res4d" class="fw-bold"></p></div>
                 </div>
 
-                <div class="mt-4">
-                    <button class="btn btn-sm btn-outline-secondary mb-2" type="button" data-bs-toggle="collapse" data-bs-target="#investSection">
-                        Tampilkan Invest 2D Full (BB)
-                    </button>
-                    <div class="collapse" id="investSection">
-                        <div class="card card-body bg-dark border-secondary">
-                            <h6 class="text-neon small">2D Invest BBFS Utama:</h6>
-                            <p id="res2dMain" class="invest-box"></p>
-                            <h6 class="text-info small mt-2">2D Invest Shadow:</h6>
-                            <p id="res2dShadow" class="invest-box"></p>
-                        </div>
-                    </div>
+                <div class="mt-3 border-top pt-3">
+                    <h6 class="text-neon small">2D Invest BBFS Utama:</h6>
+                    <p id="res2dMain" class="invest-box mb-2"></p>
+                    <h6 class="text-info small">2D Invest Shadow:</h6>
+                    <p id="res2dShadow" class="invest-box"></p>
                 </div>
             </div>
             {% endif %}
-            
-            <p class="text-center mt-5 text-secondary small">&copy; 2026 MAMANG TECH AI. Dilarang menyalahgunakan script ini.</p>
         </div>
     </div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
 <script>
 function login() {
-    const key = $('#key').val();
-    $.post('/login', {key: key}, function(data) {
-        location.reload();
-    }).fail(function(xhr) {
-        $('#loginMsg').text(xhr.responseJSON.message);
-    });
+    $.post('/login', {key: $('#key').val()}, () => location.reload()).fail(r => $('#loginMsg').text(r.responseJSON.message));
 }
 
 function analyze() {
-    const market = $('#market').val();
-    $('#loading').show();
-    $('#resultCard').hide();
-    $('#btnAnalyze').attr('disabled', true);
-
-    $.post('/analyze', {market: market}, function(data) {
-        $('#loading').hide();
-        $('#btnAnalyze').attr('disabled', false);
+    $('#btnAnalyze').attr('disabled', true).text('Processing...');
+    $.post('/analyze', {market: $('#market').val()}, function(d) {
+        $('#btnAnalyze').attr('disabled', false).text('MULAI ANALISA');
         $('#resultCard').fadeIn();
+        $('#resMarket').text(d.market);
+        $('#resLast').text(d.last);
+        $('#resPosisi').text(d.posisi);
+        $('#resBbfs').text(d.bbfs.split('').join(' - '));
+        $('#resShadow').text(d.shadow.split('').join(' - '));
+        $('#res3d').text(d.top3d);
+        $('#res4d').text(d.top4d);
+        $('#res2dMain').text(d.list2d_main);
+        $('#res2dShadow').text(d.list2d_shadow);
+    });
+}
 
-        $('#resMarket').text(data.market);
-        $('#resLast').text(data.last);
-        $('#resPosisi').text(data.posisi);
-        $('#resBbfs').text(data.bbfs.split('').join(' - '));
-        $('#resShadow').text(data.shadow.split('').join(' - '));
-        $('#res3d').text(data.top3d);
-        $('#res4d').text(data.top4d);
-        $('#res2dMain').text(data.list2d_main);
-        $('#res2dShadow').text(data.list2d_shadow);
-    }).fail(function() {
-        alert("Gagal mengambil data. Coba lagi.");
-        $('#loading').hide();
-        $('#btnAnalyze').attr('disabled', false);
+function takeScreenshot() {
+    const el = document.getElementById('resultCard');
+    html2canvas(el, { backgroundColor: "#1e293b", scale: 2 }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `Prediksi_${$('#resMarket').text().replace(/ /g,'_')}.png`;
+        link.href = canvas.toDataURL();
+        link.click();
     });
 }
 </script>
-
 </body>
 </html>
