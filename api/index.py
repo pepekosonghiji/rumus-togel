@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from collections import Counter
 import re
 import random
+from itertools import permutations
 
 app = Flask(__name__, 
             template_folder=os.path.join(os.path.dirname(__file__), '../templates'))
@@ -23,7 +24,6 @@ def get_valid_keys():
 
 # --- KONFIGURASI & TABEL ---
 TARGET_POOLS = {
-    # METODE 1: SalamRupiah (Base Server)
     'CAMBODIA': 'p3501', 
     'SYDNEY LOTTO': 'p2262', 
     'HONGKONG LOTTO': 'p2263', 
@@ -34,11 +34,7 @@ TARGET_POOLS = {
     'SEOUL': 'p28502', 
     'OSAKA': 'p28422', 
     'toto macau 4d': 'm17',
-    
-    # METODE 2: TabelUpdate (Khusus Japan)
     'JAPAN POOLS': 'custom_japan',
-    
-    # METODE 3: NomorKiaJit (HK, SGP, SDY)
     'HONGKONG POOLS': 'kia_2',
     'SINGAPORE POOLS': 'kia_3',
     'SYDNEY POOLS': 'kia_4'
@@ -61,7 +57,6 @@ def fetch_results(code):
     results = []
     try:
         with httpx.Client(timeout=30, verify=False, follow_redirects=True) as client:
-            # METODE JAPAN (TabelUpdate)
             if code == 'custom_japan':
                 r = client.get(JAPAN_URL, headers=HEADERS)
                 soup = BeautifulSoup(r.text, 'html.parser')
@@ -71,8 +66,6 @@ def fetch_results(code):
                     if len(cols) >= 4:
                         val = re.sub(r'\D', '', cols[3].text.strip())
                         if len(val) == 4: results.append(val)
-
-            # METODE KIAJIT (HK/SGP/SDY)
             elif code.startswith('kia_'):
                 col_idx = int(code.split('_')[1])
                 r = client.get(KIAJIT_URL, headers=HEADERS)
@@ -83,8 +76,6 @@ def fetch_results(code):
                     if len(cols) >= 5:
                         val = re.sub(r'\D', '', cols[col_idx].text.strip())
                         if len(val) == 4: results.append(val)
-
-            # METODE BASE (SalamRupiah)
             else:
                 r = client.get(f"{BASE_URL}{code}-pool-1", headers=HEADERS)
                 soup = BeautifulSoup(r.text, 'html.parser')
@@ -97,81 +88,91 @@ def fetch_results(code):
                             val = re.sub(r'\D', '', cols[3].text.strip())
                             if len(val) == 4: results.append(val)
     except Exception as e:
-        print(f"Scraping Error ({code}): {e}")
+        print(f"Scraping Error: {e}")
     return results
 
-# --- ENGINE ANALISIS LANJUTAN (HOT, SKIP, CORRELATION) ---
+# --- ANALISIS KHUSUS & GENERATOR ---
+
+def generate_2d(bbfs_str):
+    """Menghasilkan daftar 2D Full dari angka BBFS"""
+    digits = list(set(bbfs_str))
+    combos = ["".join(p) for p in permutations(digits, 2)]
+    return ", ".join(sorted(combos))
+
+def pola_khusus_cambodia(last_res, stat_numbers):
+    mistik_baru = [TABEL_MISTIK_BARU.get(d, d) for d in last_res]
+    indeks_val = [TABEL_INDEKS.get(d, d) for d in last_res[-2:]]
+    combined = list(dict.fromkeys(stat_numbers + mistik_baru + indeks_val))
+    return combined[:7]
 
 def get_statistical_data(server_code):
     all_res = fetch_results(server_code)
     if not all_res: return []
-    
-    # Sample 50 data untuk cakupan Correlation harian
     sample_data = all_res[:50]
     all_digits = "".join(sample_data)
     
-    # 1. HOT/COLD ANALYSIS (Frekuensi)
     freq = Counter(all_digits)
-    hot_numbers = [x[0] for x in freq.most_common(3)]
+    hot_numbers = [x[0] for x in freq.most_common(4)]
     
-    # 2. SKIP SPACING (Mencari angka yang paling lama tidak muncul)
     last_appearance = {str(i): 99 for i in range(10)}
     for idx, res in enumerate(sample_data):
         for d in res:
             if last_appearance[d] == 99:
                 last_appearance[d] = idx
-    cold_numbers = sorted(last_appearance, key=last_appearance.get, reverse=True)[:2]
+    mid_skip = [d for d, skip in last_appearance.items() if 3 <= skip <= 7]
 
-    # 3. DAY-TO-DAY CORRELATION (Pola 7 & 14 hari ke belakang)
     correlation_numbers = []
     if len(sample_data) > 14:
-        prev_week_1 = sample_data[7]
-        prev_week_2 = sample_data[14]
-        correlation_numbers = list(set(prev_week_1 + prev_week_2))[:2]
+        correlation_numbers = list(set(sample_data[7] + sample_data[14]))
 
-    # Penggabungan Unik
-    return list(dict.fromkeys(hot_numbers + cold_numbers + correlation_numbers))
+    return list(dict.fromkeys(hot_numbers + mid_skip + correlation_numbers))
 
 def proses_hybrid(server_key):
     try:
         code = TARGET_POOLS[server_key]
         all_res = fetch_results(code)
-        
         if not all_res: return None
         last_res = all_res[0]
 
-        # Jalankan Triple Engine
         stat_numbers = get_statistical_data(code)
         
-        # Referensi Taysen dari ekor terakhir
-        taysen_ref = [TABEL_TAYSEN.get(d, '0') for d in last_res[-2:]]
+        if server_key == 'CAMBODIA':
+            am_hybrid = pola_khusus_cambodia(last_res, stat_numbers)
+        else:
+            taysen_ref = [TABEL_TAYSEN.get(d, '0') for d in last_res[-2:]]
+            combined = list(dict.fromkeys(stat_numbers + taysen_ref))
+            am_hybrid = combined[:6]
         
-        # Gabungan Final BBFS
-        combined = list(dict.fromkeys(stat_numbers + taysen_ref))
-        am_hybrid = combined[:6]
-        
-        # Penyeimbang Digit (Min 5)
         if len(am_hybrid) < 5:
             for d in list(am_hybrid):
-                idx_val = TABEL_INDEKS.get(d)
-                if idx_val not in am_hybrid: am_hybrid.append(idx_val)
+                idx_v = TABEL_INDEKS.get(d)
+                if idx_v not in am_hybrid: am_hybrid.append(idx_v)
                 if len(am_hybrid) >= 6: break
 
-        # Output Generator
-        bbfs_str = am_hybrid
-        top_3d = ["".join(random.sample(bbfs_str, 3)) for _ in range(2)]
-        top_4d = ["".join(random.sample(bbfs_str, 4)) for _ in range(2)]
+        bbfs_main = "".join(am_hybrid)
+        
+        # Shadow BBFS Logic
+        shadow_pool = []
+        for d in am_hybrid:
+            shadow_pool.append(TABEL_MISTIK_BARU.get(d, d))
+            shadow_pool.append(TABEL_INDEKS.get(d, d))
+        bbfs_shadow = "".join(list(dict.fromkeys(shadow_pool))[:6])
 
-        # Shadow BBFS (Mistik Lama)
-        shadow_pool = [TABEL_MISTIK_LAMA.get(d, d) for d in am_hybrid]
-        shadow_final = "".join(list(dict.fromkeys(shadow_pool))[:5])
+        # Generate 2D Lists
+        list_2d_main = generate_2d(bbfs_main)
+        list_2d_shadow = generate_2d(bbfs_shadow)
+
+        top_3d = [ "".join(random.sample(am_hybrid, 3)) for _ in range(3) ]
+        top_4d = [ "".join(random.sample(am_hybrid, 4)) for _ in range(3) ]
 
         return {
             "market": server_key.upper(),
             "last": last_res,
-            "bbfs": "".join(am_hybrid),
-            "shadow": shadow_final,
-            "jitu": f"{am_hybrid[0]}{am_hybrid[1]}, {am_hybrid[2]}{am_hybrid[3]}" if len(am_hybrid) >= 4 else "N/A",
+            "bbfs": bbfs_main,
+            "shadow": bbfs_shadow,
+            "list2d_main": list_2d_main,
+            "list2d_shadow": list_2d_shadow,
+            "jitu": f"{am_hybrid[0]}{am_hybrid[1]}, {am_hybrid[2]}{am_hybrid[3]}",
             "top3d": ", ".join(top_3d),
             "top4d": ", ".join(top_4d),
             "posisi": f"Kpl: {am_hybrid[0]} | Ekr: {am_hybrid[1]}"
@@ -181,7 +182,6 @@ def proses_hybrid(server_key):
         return None
 
 # --- ROUTES ---
-
 @app.route('/')
 def index():
     return render_template('index.html', markets=sorted(TARGET_POOLS.keys()), logged_in=session.get('authorized'))
