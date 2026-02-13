@@ -3,202 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MAMANG TECH - AI Prediksi Togel 2026</title>
+    <title>AI PRED v3 - MAMANG TECH</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        /* Tema Dasar Gelap */
-        body { background-color: #0f172a; color: #f8fafc; font-family: 'Segoe UI', sans-serif; }
-        .card { background-color: #1e293b; border: 1px solid #334155; border-radius: 15px; }
-        
-        /* Warna Aksen Hijau Terang */
-        .text-neon-green { color: #22c55e; text-shadow: 0 0 8px rgba(34, 197, 94, 0.2); }
-        .btn-primary { background-color: #22c55e; border: none; color: #000; fw-bold; }
-        .btn-primary:hover { background-color: #16a34a; color: #fff; }
-
-        /* KOTAK ANGKA: Dibuat Putih/Terang agar Angka Hitam terlihat Jelas */
-        .result-box { 
-            background-color: #ffffff; 
-            border-left: 5px solid #22c55e; 
-            padding: 15px; 
-            border-radius: 10px; 
-            color: #000000; /* Angka Hitam */
-        }
-        
-        .badge-angka { 
-            font-size: 1.4rem; 
-            padding: 12px; 
-            background-color: #f1f5f9; /* Abu-abu sangat muda hampir putih */
-            color: #000000; /* Angka Hitam Pekat */
-            border-radius: 12px; 
-            display: block; 
-            text-align: center; 
-            font-weight: 800; 
-            letter-spacing: 3px;
-            border: 2px solid #cbd5e1;
-        }
-
-        .badge-shadow {
-            background-color: #f8fafc;
-            color: #166534; /* Hijau Tua agar kontras di dasar putih */
-            border: 2px dashed #22c55e;
-        }
-
-        /* Bagian Invest */
-        .invest-container {
-            background-color: #0f172a;
-            border: 1px solid #334155;
-            padding: 15px;
-            border-radius: 10px;
-        }
-        .text-invest { color: #86efac; font-size: 0.9rem; line-height: 1.6; }
-        .label-invest { color: #22c55e; font-weight: bold; margin-bottom: 5px; display: block; }
-        
-        #loading { display: none; }
+        body { background-color: #0f172a; color: #fff; font-family: sans-serif; }
+        .card { background-color: #1e293b; border: none; border-radius: 15px; }
+        .text-green { color: #22c55e; }
+        .result-box { background-color: #ffffff; color: #000; border-radius: 10px; padding: 15px; border-left: 5px solid #22c55e; }
+        .badge-angka { background-color: #f8fafc; color: #000; font-size: 1.5rem; font-weight: 800; letter-spacing: 5px; border-radius: 10px; padding: 15px; text-align: center; border: 2px solid #cbd5e1; display: block; }
+        .invest-text { font-size: 0.85rem; color: #86efac; word-break: break-all; }
     </style>
 </head>
 <body>
-
-<div class="container py-5">
+<div class="container py-4">
     <div class="row justify-content-center">
-        <div class="col-md-9 col-lg-7">
-            
+        <div class="col-md-7">
             {% if not logged_in %}
-            <div class="card p-4 shadow-lg text-center">
-                <h4 class="mb-3 text-neon-green">Akses Terkunci</h4>
-                <div class="input-group">
-                    <input type="password" id="key" class="form-control bg-dark text-white" placeholder="Input License Key...">
-                    <button class="btn btn-primary fw-bold" onclick="login()">LOGIN</button>
-                </div>
-                <div id="loginMsg" class="mt-2 text-danger small"></div>
+            <div class="card p-4 text-center">
+                <input type="password" id="key" class="form-control mb-2" placeholder="Input Key...">
+                <button class="btn btn-success w-100" onclick="login()">Buka AI</button>
             </div>
             {% else %}
-
-            <div class="card p-4 mb-4 shadow border-neon">
-                <h2 class="text-center text-neon-green fw-bold mb-4"><i class="fas fa-microchip me-2"></i>MAMANG AI v3</h2>
-                <div class="mb-3">
-                    <label class="form-label small text-secondary">Pilih Market:</label>
-                    <select id="market" class="form-select bg-dark text-white border-secondary">
-                        {% for m in markets %}<option value="{{ m }}">{{ m }}</option>{% endfor %}
-                    </select>
-                </div>
-                <button class="btn btn-primary btn-lg w-100 fw-bold" onclick="analyze()" id="btnAnalyze">MULAI ANALISA DATA</button>
-                
-                <div id="loading" class="text-center mt-3">
-                    <div class="spinner-border text-neon-green" role="status"></div>
-                    <p class="mt-2 small text-neon-green">Scraping 3 Server Data...</p>
-                </div>
+            <div class="card p-4 mb-3">
+                <h3 class="text-center text-green fw-bold mb-4">MAMANG AI ENGINE v3</h3>
+                <select id="market" class="form-select mb-3">
+                    {% for m in markets %}<option value="{{ m }}">{{ m }}</option>{% endfor %}
+                </select>
+                <button class="btn btn-success w-100 fw-bold" onclick="analyze()" id="btnAn">PROSES DATA</button>
             </div>
 
-            <div id="resultCard" class="card p-4 shadow-lg" style="display: none; background-color: #1e293b;">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h3 id="resMarket" class="text-neon-green fw-bold mb-0 text-uppercase">MARKET</h3>
-                    <button class="btn btn-sm btn-success fw-bold" onclick="takeScreenshot()">
-                        <i class="fas fa-download me-1"></i> SIMPAN GAMBAR
-                    </button>
+            <div id="resultCard" class="card p-4 shadow-lg" style="display: none;">
+                <div class="d-flex justify-content-between mb-4">
+                    <h4 id="resMarket" class="text-green fw-bold"></h4>
+                    <button class="btn btn-sm btn-light" onclick="takeSs()">💾 SIMPAN</button>
                 </div>
-                
-                <div class="row g-3 mb-4">
-                    <div class="col-6">
-                        <div class="result-box">
-                            <small class="text-secondary fw-bold">RESULT TERAKHIR:</small><br>
-                            <span id="resLast" class="h2 fw-extrabold">0000</span>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="result-box" style="border-left-color: #3b82f6;">
-                            <small class="text-secondary fw-bold">POSISI JITU:</small><br>
-                            <span id="resPosisi" class="h5 fw-bold text-dark">Kpl: - | Ekr: -</span>
-                        </div>
-                    </div>
+                <div class="row g-2 mb-4">
+                    <div class="col-6"><div class="result-box"><small>LAST:</small><br><span id="resLast" class="h3 fw-bold"></span></div></div>
+                    <div class="col-6"><div class="result-box"><small>POSISI:</small><br><span id="resPosisi" class="fw-bold"></span></div></div>
                 </div>
-
-                <div class="mb-4">
-                    <label class="small text-white fw-bold mb-2 uppercase"><i class="fas fa-star me-1 text-neon-green"></i> BBFS Campuran (Utama)</label>
-                    <div id="resBbfs" class="badge-angka shadow-sm"></div>
+                <div class="mb-3">
+                    <label class="small text-green fw-bold mb-1">BBFS CAMPURAN (MAX 6D)</label>
+                    <div id="resBbfs" class="badge-angka"></div>
                 </div>
-
-                <div class="mb-4">
-                    <label class="small text-white fw-bold mb-2 uppercase"><i class="fas fa-shield-alt me-1 text-neon-green"></i> BBFS Shadow (Cadangan)</label>
-                    <div id="resShadow" class="badge-angka badge-shadow shadow-sm"></div>
+                <div class="mb-3">
+                    <label class="small text-info fw-bold mb-1">BBFS SHADOW (5D)</label>
+                    <div id="resShadow" class="badge-angka" style="border-style: dashed; color: #0369a1;"></div>
                 </div>
-
-                <div class="row mb-4 text-center">
-                    <div class="col-6">
-                        <div class="p-2 border border-secondary rounded">
-                            <small class="text-secondary d-block">TOP 3D</small>
-                            <span id="res3d" class="fw-bold text-white fs-5"></span>
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="p-2 border border-secondary rounded">
-                            <small class="text-secondary d-block">TOP 4D</small>
-                            <span id="res4d" class="fw-bold text-white fs-5"></span>
-                        </div>
-                    </div>
+                <div class="row text-center mb-3">
+                    <div class="col-6 small text-secondary">TOP 3D:<br><span id="res3d" class="text-white fw-bold"></span></div>
+                    <div class="col-6 small text-secondary">TOP 4D:<br><span id="res4d" class="text-white fw-bold"></span></div>
                 </div>
-
-                <div class="invest-container">
-                    <span class="label-invest">2D INVEST BBFS UTAMA:</span>
-                    <div id="res2dMain" class="text-invest mb-3"></div>
-                    
-                    <span class="label-invest" style="color: #38bdf8;">2D INVEST SHADOW:</span>
-                    <div id="res2dShadow" class="text-invest"></div>
+                <div class="p-3 bg-dark rounded">
+                    <small class="text-green fw-bold">INVEST 2D UTAMA:</small>
+                    <div id="res2dM" class="invest-text mb-2"></div>
+                    <small class="text-info fw-bold">INVEST 2D SHADOW:</small>
+                    <div id="res2dS" class="invest-text"></div>
                 </div>
             </div>
             {% endif %}
-
         </div>
     </div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-function login() {
-    const key = $('#key').val();
-    $.post('/login', {key: key}, function() { location.reload(); })
-     .fail(function(xhr) { $('#loginMsg').text(xhr.responseJSON.message); });
-}
-
+function login() { $.post('/login', {key:$('#key').val()}, () => location.reload()); }
 function analyze() {
-    const market = $('#market').val();
-    $('#loading').show();
-    $('#resultCard').hide();
-    $('#btnAnalyze').attr('disabled', true);
-
-    $.post('/analyze', {market: market}, function(data) {
-        $('#loading').hide();
-        $('#btnAnalyze').attr('disabled', false);
-        $('#resultCard').fadeIn();
-
-        $('#resMarket').text(data.market);
-        $('#resLast').text(data.last);
-        $('#resPosisi').text(data.posisi);
-        $('#resBbfs').text(data.bbfs.split('').join(' - '));
-        $('#resShadow').text(data.shadow.split('').join(' - '));
-        $('#res3d').text(data.top3d);
-        $('#res4d').text(data.top4d);
-        $('#res2dMain').text(data.list2d_main);
-        $('#res2dShadow').text(data.list2d_shadow);
+    $('#btnAn').text('SINKRONISASI...').attr('disabled', true);
+    $.post('/analyze', {market:$('#market').val()}, function(d) {
+        $('#btnAn').text('PROSES DATA').attr('disabled', false);
+        $('#resultCard').show();
+        $('#resMarket').text(d.market);
+        $('#resLast').text(d.last);
+        $('#resPosisi').text(d.posisi);
+        $('#resBbfs').text(d.bbfs.split('').join(' - '));
+        $('#resShadow').text(d.shadow.split('').join(' - '));
+        $('#res3d').text(d.top3d);
+        $('#res4d').text(d.top4d);
+        $('#res2dM').text(d.list2d_main);
+        $('#res2dS').text(d.list2d_shadow);
     });
 }
-
-function takeScreenshot() {
-    const element = document.getElementById('resultCard');
-    html2canvas(element, {
-        backgroundColor: "#1e293b",
-        scale: 3, // Skala tinggi agar angka sangat tajam
-        logging: false,
-        useCORS: true
-    }).then(canvas => {
-        const link = document.createElement('a');
-        link.download = `PREDIKSI_${$('#resMarket').text().replace(/ /g, '_')}.png`;
-        link.href = canvas.toDataURL("image/png");
-        link.click();
+function takeSs() {
+    html2canvas(document.getElementById('resultCard'), {backgroundColor:'#1e293b', scale:3}).then(c => {
+        const a = document.createElement('a');
+        a.download = 'PREDIKSI_AI.png';
+        a.href = c.toDataURL();
+        a.click();
     });
 }
 </script>
-
 </body>
 </html>
