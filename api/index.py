@@ -20,10 +20,9 @@ TABEL_INDEKS = {'0':'5', '1':'6', '2':'7', '3':'8', '4':'9', '5':'0', '6':'1', '
 TABEL_MISTIK_BARU = {'0':'8', '1':'7', '2':'6', '3':'9', '4':'5', '8':'0', '7':'1', '6':'2', '9':'3', '5':'4'}
 
 TARGET_POOLS = {
-    'CAMBODIA': 'p3501', 'SYDNEY LOTTO': 'p2262', 'HONGKONG LOTTO': 'p2263',
-    'CHINA POOLS': 'p2670', 'BUSAN POOLS': 'p16063', 'WUHAN': 'p28615',
+    'CAMBODIA': 'p3501', 'SYDNEY LOTTO': 'p2262', 'HONGKONG LOTTO': 'p2263','BUSAN POOLS': 'p16063', 'WUHAN': 'p28615',
     'JAPAN POOLS': 'custom_japan', 'HONGKONG POOLS': 'kia_2',
-    'SINGAPORE POOLS': 'kia_3', 'SYDNEY POOLS': 'kia_4'
+    'SINGAPORE POOLS': 'kia_3', 'SYDNEY POOLS': 'kia_4','OREGON 03': 'p12521'
 }
 
 HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36'}
