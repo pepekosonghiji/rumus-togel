@@ -28,7 +28,7 @@ TARGET_POOLS = {
 
 HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
 
-# --- CORE ENGINE ---
+# --- CORE ANALYTICS ENGINE ---
 
 def fetch_results(code):
     results = []
@@ -37,7 +37,7 @@ def fetch_results(code):
             if code == 'custom_japan':
                 r = client.get("https://tabelupdate.online/data-keluaran-japan/")
                 rows = BeautifulSoup(r.text, 'html.parser').select('tbody tr')
-                for row in rows[:30]:
+                for row in rows[:25]:
                     tds = row.find_all('td')
                     if len(tds) >= 4:
                         val = re.sub(r'\D', '', tds[3].text.strip())
@@ -46,7 +46,7 @@ def fetch_results(code):
                 idx = int(code.split('_')[1])
                 r = client.get("https://nomorkiajit.com/hksgpsdy")
                 rows = BeautifulSoup(r.text, 'html.parser').select('tbody tr')
-                for row in rows[:30]:
+                for row in rows[:25]:
                     tds = row.find_all('td')
                     if len(tds) >= 5:
                         val = re.sub(r'\D', '', tds[idx].text.strip())
@@ -54,7 +54,7 @@ def fetch_results(code):
             else:
                 r = client.get(f"https://tgr7grldrc.salamrupiah.com/history/result-mobile/{code}-pool-1")
                 rows = BeautifulSoup(r.text, 'html.parser').select('table tbody tr')
-                for row in rows[:30]:
+                for row in rows[:25]:
                     tds = row.find_all('td')
                     if len(tds) >= 4:
                         val = re.sub(r'\D', '', tds[3].text.strip())
@@ -62,36 +62,50 @@ def fetch_results(code):
     except: pass
     return results
 
-def get_dynamic_sync(all_res):
-    if not all_res: return [str(random.randint(0,9)) for _ in range(6)]
+def get_dynamic_sync_5digit(all_res):
+    if not all_res: return [str(i) for i in random.sample(range(10), 5)]
+    
+    # 1. Hot Numbers (Frekuensi Tinggi 15 Putaran)
+    flat_data = "".join(all_res[:15])
+    counts = Counter(flat_data)
+    hot_nums = [x[0] for x in counts.most_common(3)]
+    
+    # 2. Taysen & Mistik Sync dari Result Terakhir
     last_res = all_res[0]
-    base_pool = []
-    for num in last_res:
-        base_pool.append(TABEL_MISTIK_BARU.get(num, num))
-        base_pool.append(TABEL_TAYSEN.get(num, num))
-    flat_data = "".join(all_res[:10])
-    hot_nums = [x[0] for x in Counter(flat_data).most_common(4)]
-    final_bbfs = list(dict.fromkeys(base_pool + hot_nums))
-    return final_bbfs[:6]
+    mb_pattern = TABEL_MISTIK_BARU.get(last_res[1], last_res[1]) # Mistik Baru dari Kop
+    taysen_pattern = TABEL_TAYSEN.get(last_res[3], last_res[3])  # Taysen dari Ekor
+    
+    final_pool = list(dict.fromkeys(hot_nums + [mb_pattern, taysen_pattern]))
+    
+    # 3. Filler jika belum 5 digit
+    if len(final_pool) < 5:
+        all_freq = [x[0] for x in counts.most_common(10)]
+        for f in all_freq:
+            if f not in final_pool: final_pool.append(f)
+            if len(final_pool) == 5: break
+            
+    return sorted(final_pool[:5])
 
 def hitung_investasi_2d(all_res):
     if not all_res: return ["00", "11", "22", "33"]
     kepala_list = [res[2] for res in all_res[:15]]
     ekor_list = [res[3] for res in all_res[:15]]
-    top_kepala = [x[0] for x in Counter(kepala_list).most_common(2)]
-    top_ekor = [x[0] for x in Counter(ekor_list).most_common(2)]
-    last_ekor = all_res[0][3]
-    invest_set = set()
-    has_twin = any(res[2] == res[3] for res in all_res[:5])
-    if not has_twin: invest_set.add(last_ekor + last_ekor)
-    for k in top_kepala:
-        for e in top_ekor:
-            invest_set.add(k + e)
-    result_invest = sorted(list(invest_set))[:4]
-    while len(result_invest) < 4:
-        rand = str(random.randint(0,9))
-        if (rand+rand) not in result_invest: result_invest.append(rand+rand)
-    return result_invest
+    top_k = Counter(kepala_list).most_common(2)
+    top_e = Counter(ekor_list).most_common(2)
+    
+    invest = set()
+    # Deteksi Twin jika 5 putaran belum ada kembar
+    has_twin = any(r[2] == r[3] for r in all_res[:5])
+    if not has_twin: invest.add(all_res[0][3] + all_res[0][3])
+    
+    for k in top_k:
+        for e in top_e: invest.add(k[0] + e[0])
+    
+    res_list = sorted(list(invest))[:4]
+    while len(res_list) < 4:
+        r = str(random.randint(0,9))
+        if (r+r) not in res_list: res_list.append(r+r)
+    return res_list
 
 # --- ROUTES ---
 
@@ -111,16 +125,16 @@ def analyze():
     if not session.get('authorized'): return jsonify({"error": "Unauthorized"}), 403
     market = request.form.get('market')
     all_res = fetch_results(TARGET_POOLS.get(market))
-    if not all_res: all_res = ["".join([str(random.randint(0,9)) for _ in range(4)]) for _ in range(10)]
+    if not all_res: all_res = ["0000"]*10
     
-    am_base = get_dynamic_sync(all_res)
+    am_base = get_dynamic_sync_5digit(all_res)
     raw_2d = ["".join(p) for p in permutations(am_base, 2)]
     
     return jsonify({
-        "market": market, "last": all_res[0], "bbfs": "".join(am_base),
-        "shadow": "".join([TABEL_INDEKS.get(d, d) for d in am_base])[:5],
-        "list2d_main": ", ".join(sorted(list(set(raw_2d))[:25])),
-        "posisi": f"Kpl: {am_base[0]} | Ekr: {am_base[-1]}"
+        "market": market, "last": all_res[0], 
+        "bbfs": " ".join(am_base),
+        "list2d": ", ".join(sorted(list(set(raw_2d))[:20])),
+        "posisi": f"KPL: {am_base[0]} | EKR: {am_base[-1]}"
     })
 
 @app.route('/analyze-invest', methods=['POST'])
