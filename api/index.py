@@ -23,7 +23,7 @@ TARGET_POOLS = {
     'CAMBODIA': 'p3501', 'SYDNEY LOTTO': 'p2262', 'HONGKONG LOTTO': 'p2263',
     'BUSAN POOLS': 'p16063', 'WUHAN': 'p28615', 'JAPAN POOLS': 'custom_japan', 
     'HONGKONG POOLS': 'kia_2', 'SINGAPORE POOLS': 'kia_3', 
-    'SYDNEY POOLS': 'kia_4', 'OREGON 03': 'p12521'
+    'SYDNEY POOLS': 'kia_4', 'OREGON 03': 'p12521','LOSANGELMID':'p24506'
 }
 
 HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
