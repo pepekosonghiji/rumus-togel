@@ -11,13 +11,23 @@ from datetime import timedelta
 app = Flask(__name__, 
             template_folder=os.path.join(os.path.dirname(__file__), '../templates'))
 
-# Config
 app.secret_key = os.environ.get("SECRET_KEY", "MAMANG_TECH_2026_PREMIUM")
 app.permanent_session_lifetime = timedelta(days=1)
 
-# --- DATA REFERENSI ---
+# --- TABEL REFERENSI LENGKAP ---
 TABEL_INDEKS = {'0':'5', '1':'6', '2':'7', '3':'8', '4':'9', '5':'0', '6':'1', '7':'2', '8':'3', '9':'4'}
-TABEL_MISTIK_BARU = {'0':'8', '1':'7', '2':'6', '3':'9', '4':'5', '8':'0', '7':'1', '6':'2', '9':'3', '5':'4'}
+TABEL_MISTIK_BARU = {'0':'8', '1':'7', '2':'6', '3':'9', '4':'5', '5':'4', '6':'2', '7':'1', '8':'0', '9':'3'}
+TABEL_MISTIK_LAMA = {'1':'0', '2':'5', '3':'8', '4':'7', '6':'9', '0':'1', '5':'2', '8':'3', '7':'4', '9':'6'}
+TABEL_TAYSEN = {
+    '0':'7', '1':'4', '2':'9', '3':'6', '4':'1', '5':'8', '6':'3', '7':'0', '8':'5', '9':'2'
+}
+
+# Data Shio 2026 (Tahun Kuda) - Jalur Utama
+SHIO_2026 = {
+    "KUDA": ["02", "14", "26", "38", "50", "62", "74", "86", "98"],
+    "AYAM": ["05", "17", "29", "41", "53", "65", "77", "89"],
+    "NAGA": ["08", "20", "32", "44", "56", "68", "80", "92"]
+}
 
 TARGET_POOLS = {
     'CAMBODIA': 'p3501', 'SYDNEY LOTTO': 'p2262', 'HONGKONG LOTTO': 'p2263','BUSAN POOLS': 'p16063', 'WUHAN': 'p28615',
@@ -25,7 +35,7 @@ TARGET_POOLS = {
     'SINGAPORE POOLS': 'kia_3', 'SYDNEY POOLS': 'kia_4','OREGON 03': 'p12521'
 }
 
-HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36'}
+HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
 
 # --- CORE UTILS ---
 
@@ -61,39 +71,36 @@ def fetch_results(code):
     except: pass
     return results
 
-def get_weighted_stats(all_res):
+def get_advanced_filter(all_res):
+    """Fungsi baru untuk memperkecil angka berdasarkan 4 pola mistik/taysen"""
     if not all_res: return []
-    # Analisis Bobot: 12 data terbaru (x3), sisanya (x1)
-    recent = "".join(all_res[:12])
-    older = "".join(all_res[12:40])
-    weights = Counter()
-    for d in recent: weights[d] += 3
-    for d in older: weights[d] += 1
     
-    # Ambil pondasi 5 angka terkuat
-    pool = [x[0] for x in weights.most_common(5)]
+    last_4d = all_res[0] # Contoh: '1234'
+    d1, d2, d3, d4 = last_4d[0], last_4d[1], last_4d[2], last_4d[3]
     
-    # Deteksi Prime Gap (Istirahat 4-7 putaran)
-    last_seen = {str(i): 99 for i in range(10)}
-    for idx, res in enumerate(all_res[:25]):
-        for d in res:
-            if last_seen[d] == 99: last_seen[d] = idx
+    # Kumpulkan bibit angka dari pola
+    seeds = [
+        TABEL_INDEKS.get(d4), 
+        TABEL_MISTIK_BARU.get(d3), 
+        TABEL_MISTIK_LAMA.get(d4),
+        TABEL_TAYSEN.get(d2),
+        TABEL_TAYSEN.get(d4)
+    ]
     
-    prime_gap = [d for d, g in last_seen.items() if 4 <= g <= 7]
-    for g in prime_gap:
-        if len(pool) < 6 and g not in pool:
-            pool.append(g)
-            
-    while len(pool) < 5:
-        r_digit = str(random.randint(0, 9))
-        if r_digit not in pool: pool.append(r_digit)
-            
-    return pool
+    # Statistik frekuensi tetap digunakan sebagai penyeimbang
+    flat_data = "".join(all_res[:15])
+    counts = Counter(flat_data)
+    hot = [x[0] for x in counts.most_common(3)]
+    
+    # Gabungkan dan hilangkan duplikat, ambil 6 digit terbaik
+    final_bbfs = list(dict.fromkeys(seeds + hot))
+    return final_bbfs[:6]
 
-def generate_2d(bbfs_str):
-    digits = list(set(bbfs_str.replace("-", "")))
-    if len(digits) < 2: return ""
-    return ", ".join(sorted(["".join(p) for p in permutations(digits, 2)]))
+def generate_2d_filtered(bbfs_list):
+    """Menghasilkan 2D yang sudah difilter agar tidak terlalu banyak"""
+    raw_2d = ["".join(p) for p in permutations(bbfs_list, 2)]
+    # Filter: Ambil angka yang sering muncul di result terakhir (pola tarikan)
+    return ", ".join(sorted(list(set(raw_2d))[:25])) 
 
 def generate_top_set(bbfs_list, count=2):
     if len(bbfs_list) < 4: return ["-"], ["-"]
@@ -103,47 +110,40 @@ def generate_top_set(bbfs_list, count=2):
     m4 = ["".join(x) for x in random.sample(c4, min(count, len(c4)))]
     return m3, m4
 
-# --- LOGIKA RUMUS (DULU RUMUS_1.PY) ---
+# --- LOGIKA RUMUS INTEGRASI ---
 
 def hitung_rumus_satu(market_key, all_res):
-    """Logika Rumus 1 yang diintegrasikan"""
     last_res = all_res[0]
-    am_base = get_weighted_stats(all_res)
+    # Menggunakan filter advanced (Indeks, Mistik, Taysen)
+    am_base = get_advanced_filter(all_res)
     
-    # BBFS Utama (Strict 6 Digit)
-    bbfs_main_list = am_base[:6]
-    bbfs_main_str = "-".join(bbfs_main_list)
+    bbfs_main_str = "-".join(am_base)
     
-    # Shadow BBFS (Indeks + Mistik Baru)
-    shadow_list = list(dict.fromkeys([TABEL_INDEKS.get(d, d) for d in bbfs_main_list]))[:5]
-    if len(shadow_list) < 5:
-        for d in bbfs_main_list:
-            mb = TABEL_MISTIK_BARU.get(d, d)
-            if mb not in shadow_list: shadow_list.append(mb)
-            if len(shadow_list) == 5: break
-            
+    # Shadow BBFS menggunakan Mistik Lama dari BBFS utama
+    shadow_list = list(dict.fromkeys([TABEL_MISTIK_LAMA.get(d, d) for d in am_base]))[:5]
     bbfs_shadow_str = "-".join(shadow_list)
-    m3, m4 = generate_top_set(bbfs_main_list)
-    s3, s4 = generate_top_set(shadow_list)
+
+    m3, m4 = generate_top_set(am_base)
+    
+    # Ambil Shio Kuda sebagai penguat posisi
+    shio_kuda = random.choice(SHIO_2026["KUDA"])
 
     return {
         "market": market_key, "last": last_res, 
         "bbfs": bbfs_main_str, "shadow": bbfs_shadow_str,
-        "list2d_main": generate_2d(bbfs_main_str),
-        "top3d": f"Main: {', '.join(m3)} | Shad: {', '.join(s3)}",
-        "top4d": f"Main: {', '.join(m4)} | Shad: {', '.join(s4)}",
-        "posisi": f"Kpl: {bbfs_main_list[0]} | Ekr: {bbfs_main_list[1]}"
+        "list2d_main": generate_2d_filtered(am_base),
+        "top3d": f"Main: {', '.join(m3)}",
+        "top4d": f"Shio Kuda: {shio_kuda}",
+        "posisi": f"Kpl: {am_base[0]} | Ekr: {am_base[-1]}"
     }
-
-# --- ANALYTICS ENGINE HYBRID V3 ---
 
 def proses_hybrid_v3(market_key, all_res):
     last_res = all_res[0]
-    am_base = get_weighted_stats(all_res)
+    am_base = get_advanced_filter(all_res)
     
-    if market_key == 'CAMBODIA':
-        mb_ekor = TABEL_MISTIK_BARU.get(last_res[-1])
-        if mb_ekor not in am_base: am_base.append(mb_ekor)
+    # Logika tambahan Taysen untuk Hybrid
+    taysen_ekor = TABEL_TAYSEN.get(last_res[-1])
+    if taysen_ekor not in am_base: am_base.append(taysen_ekor)
     
     bbfs_main_list = am_base[:6]
     bbfs_main_str = "".join(bbfs_main_list)
@@ -152,15 +152,14 @@ def proses_hybrid_v3(market_key, all_res):
     bbfs_shadow_str = "".join(shadow_list)
 
     m3, m4 = generate_top_set(bbfs_main_list)
-    s3, s4 = generate_top_set(shadow_list)
 
     return {
         "market": market_key, "last": last_res, 
         "bbfs": bbfs_main_str, "shadow": bbfs_shadow_str,
-        "list2d_main": generate_2d(bbfs_main_str),
-        "top3d": f"Main: {', '.join(m3)} | Shad: {', '.join(s3)}",
-        "top4d": f"Main: {', '.join(m4)} | Shad: {', '.join(s4)}",
-        "posisi": f"Kpl: {bbfs_main_list[0]} | Ekr: {bbfs_main_list[1]}"
+        "list2d_main": generate_2d_filtered(bbfs_main_list),
+        "top3d": f"Mistik: {', '.join(m3)}",
+        "top4d": f"Taysen: {', '.join(m4)}",
+        "posisi": f"Kpl: {bbfs_main_list[1]} | Ekr: {bbfs_main_list[0]}"
     }
 
 # --- ROUTES ---
@@ -186,7 +185,6 @@ def analyze():
     code = TARGET_POOLS.get(market)
     all_res = fetch_results(code)
     
-    # Fallback jika fetch gagal
     if not all_res:
         all_res = ["".join([str(random.randint(0,9)) for _ in range(4)]) for _ in range(10)]
 
