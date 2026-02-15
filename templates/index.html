@@ -3,74 +3,197 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MAMANG TECH V6.0</title>
+    <title>MAMANG TECH V6.5 | ABSOLUTE ANALYTICS</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #020617; --neon: #22d3ee; --shadow: #f472b6; --accent: #f59e0b; }
-        body { background: var(--bg); color: #f8fafc; font-family: 'Rajdhani'; background-image: radial-gradient(circle, #0f172a 0%, #020617 100%); min-height: 100vh; }
-        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 20px; }
-        .neon-text { font-family: 'Orbitron'; background: linear-gradient(to right, var(--neon), #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 700; }
-        .label-tech { font-size: 0.6rem; text-transform: uppercase; color: #94a3b8; letter-spacing: 2px; font-weight: 700; display: block; margin-bottom: 5px; }
-        .box-pos { background: rgba(0,0,0,0.4); border: 1px solid #334155; border-radius: 10px; padding: 10px; text-align: center; }
-        .num-main { font-family: 'Orbitron'; font-size: 1.5rem; color: #fff; text-shadow: 0 0 10px var(--neon); }
-        .btn-run { background: linear-gradient(135deg, #0891b2, #4f46e5); border: none; color: white; font-weight: bold; padding: 12px; border-radius: 10px; width: 100%; font-family: 'Orbitron'; }
-        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.95); } }
-        .animate-pulse { animation: pulse 2s infinite; }
+        :root { 
+            --bg: #020617; 
+            --neon: #22d3ee; 
+            --shadow: #f472b6; 
+            --accent: #f59e0b; 
+            --glass: rgba(15, 23, 42, 0.8);
+        }
+        
+        body { 
+            background: var(--bg); 
+            color: #f8fafc; 
+            font-family: 'Rajdhani', sans-serif; 
+            background-image: radial-gradient(circle at top, #1e293b 0%, #020617 100%); 
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .glass { 
+            background: var(--glass); 
+            backdrop-filter: blur(15px); 
+            border: 1px solid rgba(255,255,255,0.1); 
+            border-radius: 24px; 
+            padding: 25px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6); 
+        }
+
+        .neon-text { 
+            font-family: 'Orbitron', sans-serif; 
+            background: linear-gradient(to right, var(--neon), #818cf8); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            font-weight: 700; 
+        }
+
+        .label-tech { 
+            font-size: 0.65rem; 
+            text-transform: uppercase; 
+            color: #94a3b8; 
+            letter-spacing: 2.5px; 
+            font-weight: 700; 
+            display: block; 
+            margin-bottom: 8px; 
+        }
+
+        .box-pos { 
+            background: rgba(0,0,0,0.5); 
+            border: 1px solid rgba(255,255,255,0.1); 
+            border-radius: 12px; 
+            padding: 12px; 
+            text-align: center;
+            transition: 0.3s;
+        }
+
+        .num-main { 
+            font-family: 'Orbitron', sans-serif; 
+            font-size: 1.8rem; 
+            color: #fff; 
+            letter-spacing: 4px;
+            text-shadow: 0 0 15px var(--neon); 
+        }
+
+        .btn-run { 
+            background: linear-gradient(135deg, #0891b2, #4f46e5); 
+            border: none; 
+            color: white; 
+            font-weight: bold; 
+            padding: 15px; 
+            border-radius: 15px; 
+            width: 100%; 
+            font-family: 'Orbitron';
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.4s;
+        }
+
+        .btn-run:hover { 
+            box-shadow: 0 0 25px var(--neon); 
+            transform: translateY(-3px); 
+        }
+
+        .btn-run:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        @keyframes pulse-red { 
+            0%, 100% { box-shadow: 0 0 5px #ef4444; } 
+            50% { box-shadow: 0 0 20px #ef4444; } 
+        }
+
+        .alert-twin { 
+            border: 1px solid #ef4444; 
+            background: rgba(239, 68, 68, 0.15); 
+            animation: pulse-red 2s infinite; 
+        }
+
+        .badge-info-tech {
+            background: rgba(34, 211, 238, 0.1);
+            border: 1px solid var(--neon);
+            color: var(--neon);
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
-<div class="container py-4">
-    <div class="text-center mb-4">
-        <h1 class="neon-text">MAMANG TECH V6.0</h1>
-        <p class="text-secondary small">ABSOLUTE POSITION & TWIN ANALYTICS</p>
+
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="neon-text mb-0">MAMANG TECH</h1>
+        <p class="text-secondary small fw-bold">ULTIMATE V6.5 • ABSOLUTE POSITION SYNC</p>
     </div>
 
     {% if not logged_in %}
-    <div class="col-md-4 mx-auto glass text-center">
-        <input type="password" id="key" class="form-control bg-dark text-white border-0 mb-3 text-center" placeholder="LICENSE KEY">
-        <button class="btn btn-run" onclick="login()">AUTHENTICATE</button>
+    <div class="col-md-5 mx-auto glass text-center">
+        <label class="label-tech mb-3">System Authorization Required</label>
+        <input type="password" id="key" class="form-control bg-dark text-white border-0 py-3 mb-3 text-center" placeholder="ENTER LICENSE KEY">
+        <button class="btn btn-run" onclick="login()">AUTHENTICATE SYSTEM</button>
     </div>
     {% else %}
-    <div class="col-md-6 mx-auto">
-        <div class="glass mb-3">
-            <select id="market" class="form-select bg-dark text-white border-0 mb-3">
+    <div class="col-lg-7 mx-auto">
+        <div class="glass mb-4">
+            <label class="label-tech">Select Active Server</label>
+            <select id="market" class="form-select bg-dark text-white border-0 py-3 mb-4 shadow-none">
                 {% for m in markets %}<option value="{{m}}">{{m}}</option>{% endfor %}
             </select>
-            <button class="btn btn-run" onclick="run()" id="btnGo">START DEEP ANALYZE</button>
+            <button class="btn btn-run" onclick="run()" id="btnGo">START DEEP ANALYSIS</button>
         </div>
 
         <div id="resultArea" style="display:none;">
-            <div class="glass mb-3 border-danger">
-                <div class="text-center mb-3">
-                    <span id="vTwinStatus" class="badge bg-danger animate-pulse mb-2"></span>
-                    <div id="vTwinPicks" class="h4 text-white fw-bold" style="letter-spacing: 5px; font-family: 'Orbitron';"></div>
-                    <small class="text-secondary">REKOMENDASI JAGA TWIN</small>
+            <div class="glass mb-3 text-center" style="border-bottom: 3px solid var(--neon);">
+                <span class="label-tech">ANALYSIS COMPLETE FOR</span>
+                <h2 id="vMarketHeader" class="neon-text mb-3" style="font-size: 2.2rem; letter-spacing: 2px;"></h2>
+                <div class="d-flex justify-content-center gap-2">
+                    <span class="badge-info-tech">KEMARIN: <span id="vLast"></span></span>
+                    <span class="badge-info-tech">7 HARI LALU: <span id="vWeekly"></span></span>
                 </div>
             </div>
 
-            <div class="glass mb-3 border-info">
+            <div id="twinBox" class="glass mb-3 alert-twin text-center">
+                <span class="label-tech" style="color: #ef4444;">TWIN PROBABILITY STATUS</span>
+                <h4 id="vTwinStatus" class="fw-bold text-white mb-2"></h4>
+                <div id="vTwinPicks" class="num-main" style="font-size: 1.6rem; color: #ef4444; text-shadow: none;"></div>
+            </div>
+
+            <div class="glass mb-3">
                 <div class="row g-2 mb-4">
-                    <div class="col-4 box-pos"><span class="label-tech">2D DEPAN</span><div id="vDepan" class="small text-info fw-bold"></div></div>
-                    <div class="col-4 box-pos"><span class="label-tech">2D TENGAH</span><div id="vTengah" class="small text-info fw-bold"></div></div>
-                    <div class="col-4 box-pos" style="border-color:var(--neon)"><span class="label-tech" style="color:var(--neon)">2D BELAKANG</span><div id="vBelakang" class="small text-white fw-bold"></div></div>
+                    <div class="col-4">
+                        <div class="box-pos h-100">
+                            <span class="label-tech">2D DEPAN</span>
+                            <div id="vDepan" class="text-info fw-bold fs-5"></div>
+                            <small class="text-secondary" style="font-size: 0.6rem;">Modal: 15%</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="box-pos h-100">
+                            <span class="label-tech">2D TENGAH</span>
+                            <div id="vTengah" class="text-info fw-bold fs-5"></div>
+                            <small class="text-secondary" style="font-size: 0.6rem;">Modal: 15%</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="box-pos h-100" style="border-color: var(--neon);">
+                            <span class="label-tech" style="color: var(--neon);">2D BELAKANG</span>
+                            <div id="vBelakang" class="text-white fw-bold fs-5"></div>
+                            <small class="text-secondary" style="font-size: 0.6rem;">Modal: 70%</small>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="p-3 bg-dark rounded border border-info mb-3 text-center">
-                    <span class="label-tech" style="color:var(--neon)">CORE 2D BOM (BELAKANG)</span>
+                <div class="p-4 bg-dark rounded-4 border border-info border-opacity-25 mb-3 text-center">
+                    <span class="label-tech" style="color: var(--neon);">CORE 2D BOM (TARGET UTAMA)</span>
                     <div id="vCore" class="num-main"></div>
+                    <p class="small text-secondary mt-2 mb-0">Tingkat Akurasi: Tinggi (Berdasarkan Weekly Cross-Sync)</p>
                 </div>
 
-                <div class="p-3 bg-dark rounded border border-secondary mb-3 text-center">
-                    <span class="label-tech" style="color:var(--shadow)">SHADOW CADANGAN</span>
-                    <div id="vShadow" class="text-secondary fw-bold" style="font-family: 'Orbitron';"></div>
+                <div class="p-3 bg-dark rounded-4 border border-secondary border-opacity-25 mb-3 text-center">
+                    <span class="label-tech" style="color: var(--shadow);">SHADOW 2D (CADANGAN BELAKANG)</span>
+                    <div id="vShadow" class="fw-bold text-secondary" style="font-family: 'Orbitron'; font-size: 1.2rem; letter-spacing: 3px;"></div>
                 </div>
 
-                <div class="p-2 bg-black rounded text-center">
-                    <span class="label-tech" style="color:var(--accent)">BBFS CADANGAN (ASURANSI)</span>
-                    <div id="vBbfs" class="h4 text-warning fw-bold" style="letter-spacing: 5px; font-family: 'Orbitron';"></div>
+                <div class="p-3 bg-black rounded-4 text-center">
+                    <span class="label-tech" style="color: var(--accent);">BBFS ASURANSI (5-DIGIT)</span>
+                    <div id="vBbfs" class="num-main" style="color: var(--accent); text-shadow: 0 0 10px var(--accent);"></div>
                 </div>
             </div>
+            
+            <p class="text-center text-secondary small">© 2026 MAMANG TECH AI - Analisa Berdasarkan Algoritma Probabilitas.</p>
         </div>
     </div>
     {% endif %}
@@ -78,20 +201,60 @@
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    function login() { $.post('/login', {key:$('#key').val()}, () => location.reload()); }
+    function login() {
+        const key = $('#key').val();
+        $.post('/login', {key: key}, (d) => {
+            location.reload();
+        }).fail(() => {
+            alert('Akses Ditolak! Gunakan License Key yang valid.');
+        });
+    }
+
     function run() {
-        $('#btnGo').prop('disabled', true).text('ANALYZING...');
-        $.post('/analyze', {market: $('#market').val()}, (d) => {
-            $('#btnGo').prop('disabled', false).text('START DEEP ANALYZE');
+        const btn = $('#btnGo');
+        const mkt = $('#market').val();
+        
+        btn.prop('disabled', true).text('SCRAPING DATA ' + mkt + '...');
+        
+        $.post('/analyze', {market: mkt}, (d) => {
+            btn.prop('disabled', false).text('START DEEP ANALYSIS');
+            
+            if(d.error) {
+                alert('Error: ' + d.error);
+                return;
+            }
+
+            // Tampilkan Data Header
+            $('#vMarketHeader').text(d.market);
+            $('#vLast').text(d.last);
+            $('#vWeekly').text(d.weekly);
+
+            // Tampilkan Data Twin
             $('#vTwinStatus').text(d.data.twin_status);
             $('#vTwinPicks').text(d.data.twin_picks);
+            
+            // Sembunyikan/Tampilkan Box Twin berdasarkan urgensi
+            if(d.data.twin_status === "NORMAL") {
+                $('#twinBox').css('opacity', '0.6').css('animation', 'none');
+            } else {
+                $('#twinBox').css('opacity', '1').css('animation', 'pulse-red 2s infinite');
+            }
+
+            // Tampilkan Data Posisi
             $('#vDepan').text(d.data.depan);
             $('#vTengah').text(d.data.tengah);
             $('#vBelakang').text(d.data.belakang);
+
+            // Tampilkan Data Utama
             $('#vCore').text(d.data.core);
             $('#vShadow').text(d.data.shadow);
             $('#vBbfs').text(d.data.bbfs);
-            $('#resultArea').fadeIn();
+
+            // UI Interaction
+            $('#resultArea').hide().fadeIn(800);
+            $('html, body').animate({
+                scrollTop: $("#resultArea").offset().top - 30
+            }, 600);
         });
     }
 </script>
