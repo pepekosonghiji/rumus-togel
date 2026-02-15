@@ -1,25 +1,16 @@
-import os
-import re
-import random
-import httpx
+import os, re, random, httpx
 from flask import Flask, render_template, request, jsonify, session
 from bs4 import BeautifulSoup
 from collections import Counter
-from itertools import permutations
 from datetime import timedelta
 
-app = Flask(__name__, 
-            template_folder=os.path.join(os.path.dirname(__file__), '../templates'))
+app = Flask(__name__, template_folder=os.path.join(os.path.dirname(__file__), '../templates'))
+app.secret_key = os.environ.get("SECRET_KEY", "MAMANG_V5_ULTRA_SHADOW")
 
-app.secret_key = os.environ.get("SECRET_KEY", "MAMANG_TECH_2026_ULTIMATE_V38")
-app.permanent_session_lifetime = timedelta(days=1)
-
-# --- DATABASE POLA TERPADU ---
-TABEL_INDEKS = {'0':'5', '1':'6', '2':'7', '3':'8', '4':'9', '5':'0', '6':'1', '7':'2', '8':'3', '9':'4'}
-TABEL_MB = {'0':'8', '1':'7', '2':'6', '3':'9', '4':'5', '5':'4', '6':'2', '7':'1', '8':'0', '9':'3'}
-TABEL_ML = {'1':'0', '2':'5', '3':'8', '4':'7', '6':'9', '0':'1', '5':'2', '8':'3', '7':'4', '9':'6'}
-TABEL_TAYSEN = {'0':'7', '1':'4', '2':'9', '3':'6', '4':'1', '5':'8', '6':'3', '7':'0', '8':'5', '9':'2'}
-TABEL_PELARIAN = {'01':'95', '02':'35', '03':'85', '04':'05', '05':'40', '06':'51', '07':'57', '08':'04', '09':'33', '10':'18'}
+# --- MASTER DATABASE POLA ---
+ML = {'1':'0', '2':'5', '3':'8', '4':'7', '6':'9', '0':'1', '5':'2', '8':'3', '7':'4', '9':'6'}
+TY = {'0':'7', '1':'4', '2':'9', '3':'6', '4':'1', '5':'8', '6':'3', '7':'0', '8':'5', '9':'2'}
+ID = {'0':'5', '1':'6', '2':'7', '3':'8', '4':'9', '5':'0', '6':'1', '7':'2', '8':'3', '9':'4'}
 
 TARGET_POOLS = {
     'CAMBODIA': 'p3501', 'SYDNEY LOTTO': 'p2262', 'HONGKONG LOTTO': 'p2263',
@@ -30,8 +21,6 @@ TARGET_POOLS = {
 
 HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
 
-# --- CORE LOGIC ---
-
 def fetch_results(code):
     results = []
     try:
@@ -39,7 +28,7 @@ def fetch_results(code):
             if code == 'custom_japan':
                 r = client.get("https://tabelupdate.online/data-keluaran-japan/")
                 rows = BeautifulSoup(r.text, 'html.parser').select('tbody tr')
-                for row in rows[:20]:
+                for row in rows[:30]: # Ambil 30 data untuk analisa mingguan
                     tds = row.find_all('td')
                     if len(tds) >= 4:
                         val = re.sub(r'\D', '', tds[3].text.strip())
@@ -48,7 +37,7 @@ def fetch_results(code):
                 idx = int(code.split('_')[1])
                 r = client.get("https://nomorkiajit.com/hksgpsdy")
                 rows = BeautifulSoup(r.text, 'html.parser').select('tbody tr')
-                for row in rows[:20]:
+                for row in rows[:30]:
                     tds = row.find_all('td')
                     if len(tds) >= 5:
                         val = re.sub(r'\D', '', tds[idx].text.strip())
@@ -56,7 +45,7 @@ def fetch_results(code):
             else:
                 r = client.get(f"https://tgr7grldrc.salamrupiah.com/history/result-mobile/{code}-pool-1")
                 rows = BeautifulSoup(r.text, 'html.parser').select('table tbody tr')
-                for row in rows[:20]:
+                for row in rows[:30]:
                     tds = row.find_all('td')
                     if len(tds) >= 4:
                         val = re.sub(r'\D', '', tds[3].text.strip())
@@ -64,37 +53,45 @@ def fetch_results(code):
     except: pass
     return results
 
-def detect_twin_probability(all_res):
-    if not all_res: return False, []
-    has_twin = any(r[2] == r[3] for r in all_res[:10])
-    if not has_twin:
-        # Rekomendasi 2 pasang twin terkuat dari Hot Number
-        hot = Counter("".join(all_res[:10])).most_common(2)
-        return True, [x[0]+x[0] for x in hot]
-    return False, []
+def process_logic_v5(all_res, market):
+    if len(all_res) < 8: return {"core": [], "shadow": [], "bbfs": []}
 
-def get_ultimate_5digit(all_res):
-    if not all_res: return [str(i) for i in random.sample(range(10), 5)]
-    last_res = all_res[0]
-    # Gabungan pola matematis
-    seeds = {TABEL_INDEKS.get(last_res[3]), TABEL_MB.get(last_res[2]), 
-             TABEL_ML.get(last_res[3]), TABEL_TAYSEN.get(last_res[3])}
-    # Tambah pelarian
-    p = TABEL_PELARIAN.get(last_res[2:], "05")
-    seeds.update([p[0], p[1]])
-    # Statistik Hot
-    hot = [x[0] for x in Counter("".join(all_res[:15])).most_common(5)]
-    final = list(dict.fromkeys(list(seeds) + hot))
-    # Eliminasi Angka Mati (Ekor beruntun)
-    if all_res[0][3] == all_res[1][3]:
-        final = [n for n in final if n != all_res[0][3]]
-    while len(final) < 5:
-        for i in "0123456789":
-            if i not in final: final.append(i)
-            if len(final) == 5: break
-    return sorted(final[:5])
+    daily = all_res[0]   # Result Kemarin
+    weekly = all_res[7]  # Result Minggu Lalu (Hari yang sama)
+    
+    # Karakteristik Market
+    pref = 'ML' if 'SINGAPORE' in market or 'CAMBODIA' in market else 'TY'
+    
+    # --- MENCARI CORE 2D (BOM) ---
+    # Teknik: Persilangan Kepala Kemarin & Mistik Ekor Minggu Lalu
+    core_1 = daily[2] + (ML.get(weekly[3]) if pref == 'ML' else TY.get(weekly[3]))
+    core_2 = (ML.get(daily[2]) if pref == 'ML' else TY.get(daily[2])) + weekly[3]
+    core_3 = weekly[2:] # Replay angka minggu lalu
+    
+    core_list = list(set([core_1, core_2, core_3]))
+    # Tambah variasi taysen dari ekor kemarin
+    core_list.append(TY.get(daily[3]) + daily[3])
+    
+    # --- MENCARI SHADOW 2D (CADANGAN) ---
+    # Teknik: Angka Indeks dan Angka yang belum keluar (Cold)
+    shadow_1 = ID.get(daily[2]) + ID.get(daily[3])
+    shadow_2 = ML.get(daily[2]) + TY.get(daily[3])
+    shadow_3 = str((int(daily[2])+5)%10) + str((int(daily[3])+5)%10)
+    
+    shadow_list = list(set([shadow_1, shadow_2, shadow_3]))
 
-# --- ROUTES ---
+    # --- BBFS CADANGAN (5-DIGIT) ---
+    all_digits = "".join(all_res[:15])
+    counts = Counter(all_digits)
+    # Ambil angka yang frekuensinya menengah (bukan paling sering, bukan paling jarang)
+    sorted_digits = [x[0] for x in counts.most_common()]
+    bbfs = sorted(sorted_digits[3:8]) 
+
+    return {
+        "core": [x for x in core_list if len(x)==2][:10],
+        "shadow": [x for x in shadow_list if len(x)==2][:10],
+        "bbfs": bbfs
+    }
 
 @app.route('/')
 def index():
@@ -112,26 +109,20 @@ def analyze():
     if not session.get('authorized'): return jsonify({"error": "Unauthorized"}), 403
     market = request.form.get('market')
     all_res = fetch_results(TARGET_POOLS.get(market))
-    if not all_res: all_res = ["0000"]*5
-    bbfs = get_ultimate_5digit(all_res)
-    is_twin, twins = detect_twin_probability(all_res)
-    raw_2d = ["".join(p) for p in permutations(bbfs, 2)]
+    
+    if not all_res: return jsonify({"error": "Data server tidak terjangkau"})
+    
+    data = process_logic_v5(all_res, market)
+    
     return jsonify({
-        "market": market, "last": all_res[0], "bbfs": " ".join(bbfs),
-        "twin_needed": is_twin, "twin_list": ", ".join(twins),
-        "list2d": ", ".join(sorted(list(set(raw_2d))[:12]))
+        "market": market,
+        "last": all_res[0],
+        "weekly": all_res[7] if len(all_res) > 7 else "N/A",
+        "core_2d": ", ".join(data['core']),
+        "shadow_2d": ", ".join(data['shadow']),
+        "bbfs": " ".join(data['bbfs']),
+        "method": "V5.0 WEEKLY CROSS-SYNC"
     })
-
-@app.route('/analyze-invest', methods=['POST'])
-def analyze_invest():
-    if not session.get('authorized'): return jsonify({"error": "Unauthorized"}), 403
-    market = request.form.get('market')
-    all_res = fetch_results(TARGET_POOLS.get(market))
-    if not all_res: all_res = ["0000"]*5
-    bbfs = get_ultimate_5digit(all_res)
-    # Invest 4-Line murni
-    inv = [bbfs[0]+bbfs[4], bbfs[1]+bbfs[3], bbfs[2]+bbfs[0], bbfs[3]+bbfs[2]]
-    return jsonify({"market": market, "invest_2d": inv})
 
 if __name__ == '__main__':
     app.run(debug=True)
