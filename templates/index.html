@@ -3,77 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MAMANG TECH V3.5 ULTRA</title>
+    <title>MAMANG TECH V3.8 ULTRA</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #020617; --neon: #22d3ee; --accent: #f59e0b; --purple: #a855f7; }
+        :root { --bg: #020617; --neon: #22d3ee; --accent: #f59e0b; }
         body { background: var(--bg); color: #f8fafc; font-family: 'Rajdhani'; min-height: 100vh; background-image: radial-gradient(circle, #1e293b 0%, #020617 100%); }
-        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; padding: 25px; }
-        .neon-text { font-family: 'Orbitron'; background: linear-gradient(to right, var(--neon), var(--purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .num-display { background: #000; border: 2px solid var(--neon); border-radius: 15px; padding: 20px; font-family: 'Orbitron'; color: var(--neon); font-size: 2.2rem; text-align: center; letter-spacing: 8px; box-shadow: 0 0 20px rgba(34,211,238,0.2); }
-        .shio-box { background: rgba(168, 85, 247, 0.1); border: 1px dashed var(--purple); border-radius: 12px; padding: 10px; color: var(--purple); font-weight: bold; font-family: 'Orbitron'; }
-        .btn-prime { background: linear-gradient(135deg, #0891b2, #1e40af); border: none; color: #fff; font-weight: bold; border-radius: 12px; padding: 15px; text-transform: uppercase; width: 100%; transition: 0.3s; }
-        .btn-prime:hover { box-shadow: 0 0 25px var(--neon); transform: translateY(-3px); }
-        .invest-card { background: #000; border: 1px solid var(--accent); border-radius: 15px; font-family: 'Orbitron'; color: var(--accent); font-size: 1.8rem; padding: 15px; text-align: center; }
+        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .neon-text { font-family: 'Orbitron'; background: linear-gradient(to right, var(--neon), #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .num-display { background: #000; border: 2px solid var(--neon); border-radius: 15px; padding: 20px; font-family: 'Orbitron'; color: var(--neon); font-size: 2.2rem; text-align: center; letter-spacing: 8px; }
+        .btn-prime { background: linear-gradient(135deg, #0891b2, #1e40af); border: none; color: #fff; font-weight: bold; border-radius: 12px; padding: 15px; width: 100%; transition: 0.3s; }
+        .btn-prime:hover { box-shadow: 0 0 20px var(--neon); transform: scale(1.02); }
+        .twin-box { background: rgba(220, 38, 38, 0.1); border: 1px dashed #ef4444; border-radius: 12px; padding: 10px; color: #ef4444; font-weight: bold; }
         .label-tech { font-size: 0.7rem; text-transform: uppercase; color: #64748b; font-weight: 700; letter-spacing: 1.5px; display: block; margin-bottom: 8px; }
+        .invest-card { background: #000; border: 1px solid var(--accent); border-radius: 15px; font-family: 'Orbitron'; color: var(--accent); font-size: 1.8rem; padding: 15px; text-align: center; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .animate-pulse { animation: pulse 2s infinite; }
     </style>
 </head>
 <body>
 <div class="container py-5">
     <div class="text-center mb-5">
         <h1 class="neon-text fw-bold">MAMANG TECH</h1>
-        <p class="small text-secondary fw-bold">V3.5 • ULTRA SHIO & MISTIK LAMA SYNC</p>
+        <p class="small text-secondary fw-bold">V3.8 • ULTIMATE PATTERN INTEGRATION</p>
     </div>
 
     {% if not logged_in %}
     <div class="col-md-4 mx-auto glass text-center">
         <input type="password" id="key" class="form-control bg-dark text-white border-0 py-3 mb-3 text-center" placeholder="LICENSE KEY">
-        <button class="btn btn-prime" onclick="login()">LOG IN</button>
+        <button class="btn btn-prime" onclick="login()">AUTHENTICATE</button>
     </div>
     {% else %}
     <div class="col-md-6 mx-auto">
         <div class="glass mb-4">
-            <label class="label-tech">Pilih Pool</label>
+            <label class="label-tech">Market Selector</label>
             <select id="market" class="form-select bg-dark text-white border-0 py-3 mb-4">
                 {% for m in markets %}<option value="{{m}}">{{m}}</option>{% endfor %}
             </select>
-            
             <div class="d-flex gap-2 mb-4">
-                <button class="btn btn-outline-info w-100 py-2" onclick="setMode('full')">5D BBFS</button>
-                <button class="btn btn-outline-warning w-100 py-2" onclick="setMode('inv')">SHIO INVEST</button>
+                <button class="btn btn-outline-info w-100" onclick="setMode('full')">5D BBFS</button>
+                <button class="btn btn-outline-warning w-100" onclick="setMode('inv')">4L INVEST</button>
             </div>
-            
-            <button class="btn btn-prime" onclick="run()" id="btnGo">MULAI ANALISA</button>
+            <button class="btn btn-prime" onclick="run()" id="btnGo">RUN ANALYTICS</button>
         </div>
 
         <div id="resFull" style="display:none;" class="glass mb-4">
-    <div class="text-center">
-        <span class="label-tech">ULTIMATE 5-DIGIT (Integrated Pattern)</span>
-        <div id="vBbfs" class="num-display mt-2 mb-3" style="border-color: #f59e0b; color: #f59e0b;"></div>
-        
-        <span class="label-tech">MACAU SHIO SYNC</span>
-        <div id="vShio" class="shio-box mt-1 mb-4" style="background: rgba(245, 158, 11, 0.1); border-color: #f59e0b; color: #f59e0b;"></div>
-    </div>
-    
-    <div class="row g-2 mb-3 text-center">
-        <div class="col-6 bg-dark p-2 rounded small text-secondary">PELARIAN: AKTIF</div>
-        <div class="col-6 bg-dark p-2 rounded small text-secondary">OFF-EKOR: FILTERED</div>
-    </div>
-
-    <label class="label-tech">VIP 2D INVEST (12 LINE ONLY)</label>
-    <div id="v2d" class="p-3 bg-black rounded-3 small text-warning" style="word-break: break-all; font-family: 'Orbitron';"></div>
-</div>
+            <div id="twinAlert" style="display:none;" class="twin-box mb-3 text-center animate-pulse">
+                <span class="small">TWIN DETECTED:</span> <span id="vTwin" class="ms-2"></span>
+            </div>
+            <div class="text-center">
+                <span class="label-tech">ULTIMATE 5-DIGIT BBFS</span>
+                <div id="vBbfs" class="num-display mt-2 mb-4"></div>
+                <div class="row g-2 mb-4">
+                    <div class="col-6 bg-dark p-2 rounded small text-secondary border border-secondary">PELARIAN: SYNC</div>
+                    <div class="col-6 bg-dark p-2 rounded small text-secondary border border-secondary">OFF-EKOR: ACTIVE</div>
+                </div>
+            </div>
+            <label class="label-tech">VIP 2D (12 LINE)</label>
+            <div id="v2d" class="p-3 bg-black rounded-3 small text-info text-center" style="letter-spacing: 2px;"></div>
+        </div>
 
         <div id="resInv" style="display:none;" class="glass border-warning text-center">
-            <span class="label-tech" style="color:var(--accent)">VIP SHIO INVESTMENT (4 LINE)</span>
+            <span class="label-tech" style="color:var(--accent)">VIP 4-LINE INVEST</span>
             <div class="row g-2 mt-2">
                 <div class="col-3"><div id="i1" class="invest-card"></div></div>
                 <div class="col-3"><div id="i2" class="invest-card"></div></div>
                 <div class="col-3"><div id="i3" class="invest-card"></div></div>
                 <div class="col-3"><div id="i4" class="invest-card"></div></div>
             </div>
-            <p class="mt-4 small text-secondary">Angka diambil dari Shio terkuat berdasarkan histori 10 hari terakhir.</p>
         </div>
     </div>
     {% endif %}
@@ -85,12 +82,13 @@
     function setMode(m) { mode = m; }
     function login() { $.post('/login', {key:$('#key').val()}, () => location.reload()); }
     function run() {
-        $('#btnGo').prop('disabled', true).text('ANALYZING...');
-        const ep = (mode == 'full') ? '/analyze' : '/analyze-invest';
-        $.post(ep, {market: $('#market').val()}, (d) => {
-            $('#btnGo').prop('disabled', false).text('MULAI ANALISA');
+        $('#btnGo').prop('disabled', true).text('PROCESSING...');
+        $.post((mode == 'full' ? '/analyze' : '/analyze-invest'), {market: $('#market').val()}, (d) => {
+            $('#btnGo').prop('disabled', false).text('RUN ANALYTICS');
             if(mode == 'full') {
-                $('#resInv').hide(); $('#vBbfs').text(d.bbfs); $('#vShio').text(d.shio); $('#v2d').text(d.list2d); $('#vPos').text(d.posisi); $('#resFull').fadeIn();
+                $('#resInv').hide(); $('#vBbfs').text(d.bbfs); $('#v2d').text(d.list2d);
+                if(d.twin_needed){ $('#vTwin').text(d.twin_list); $('#twinAlert').show(); } else { $('#twinAlert').hide(); }
+                $('#resFull').fadeIn();
             } else {
                 $('#resFull').hide(); $('#i1').text(d.invest_2d[0]); $('#i2').text(d.invest_2d[1]); $('#i3').text(d.invest_2d[2]); $('#i4').text(d.invest_2d[3]); $('#resInv').fadeIn();
             }
