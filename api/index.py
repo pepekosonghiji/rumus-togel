@@ -5,7 +5,7 @@ from collections import Counter
 from datetime import timedelta
 
 app = Flask(__name__, template_folder=os.path.join(os.path.dirname(__file__), '../templates'))
-app.secret_key = os.environ.get("SECRET_KEY", "MAMANG_V5_ULTRA_SHADOW")
+app.secret_key = "MAMANG_V6_ABSOLUTE"
 
 # --- MASTER DATABASE POLA ---
 ML = {'1':'0', '2':'5', '3':'8', '4':'7', '6':'9', '0':'1', '5':'2', '8':'3', '7':'4', '9':'6'}
@@ -25,72 +25,60 @@ def fetch_results(code):
     results = []
     try:
         with httpx.Client(timeout=15.0, verify=False, follow_redirects=True, headers=HEADERS) as client:
-            if code == 'custom_japan':
-                r = client.get("https://tabelupdate.online/data-keluaran-japan/")
-                rows = BeautifulSoup(r.text, 'html.parser').select('tbody tr')
-                for row in rows[:30]: # Ambil 30 data untuk analisa mingguan
-                    tds = row.find_all('td')
-                    if len(tds) >= 4:
-                        val = re.sub(r'\D', '', tds[3].text.strip())
-                        if len(val) == 4: results.append(val)
-            elif code.startswith('kia_'):
-                idx = int(code.split('_')[1])
-                r = client.get("https://nomorkiajit.com/hksgpsdy")
-                rows = BeautifulSoup(r.text, 'html.parser').select('tbody tr')
-                for row in rows[:30]:
-                    tds = row.find_all('td')
-                    if len(tds) >= 5:
-                        val = re.sub(r'\D', '', tds[idx].text.strip())
-                        if len(val) == 4: results.append(val)
-            else:
-                r = client.get(f"https://tgr7grldrc.salamrupiah.com/history/result-mobile/{code}-pool-1")
-                rows = BeautifulSoup(r.text, 'html.parser').select('table tbody tr')
-                for row in rows[:30]:
-                    tds = row.find_all('td')
-                    if len(tds) >= 4:
-                        val = re.sub(r'\D', '', tds[3].text.strip())
-                        if len(val) == 4: results.append(val)
+            url = f"https://tgr7grldrc.salamrupiah.com/history/result-mobile/{code}-pool-1"
+            if code == 'custom_japan': url = "https://tabelupdate.online/data-keluaran-japan/"
+            elif code.startswith('kia_'): url = "https://nomorkiajit.com/hksgpsdy"
+            
+            r = client.get(url)
+            soup = BeautifulSoup(r.text, 'html.parser')
+            rows = soup.select('tbody tr') or soup.select('table tr')
+            for row in rows[:30]:
+                tds = row.find_all('td')
+                for td in tds:
+                    val = re.sub(r'\D', '', td.text.strip())
+                    if len(val) == 4: 
+                        results.append(val)
+                        break
     except: pass
     return results
 
-def process_logic_v5(all_res, market):
-    if len(all_res) < 8: return {"core": [], "shadow": [], "bbfs": []}
+def get_v6_analysis(all_res, market):
+    if len(all_res) < 8: return None
+    
+    last = all_res[0]    # Kemarin
+    weekly = all_res[7]  # Minggu Lalu
+    pref = 'ML' if any(x in market for x in ['SINGAPORE', 'CAMBODIA', 'WUHAN']) else 'TY'
+    
+    # --- 1. CORE 2D BELAKANG (BOM) ---
+    c1 = last[2] + (ML.get(weekly[3]) if pref == 'ML' else TY.get(weekly[3]))
+    c2 = (ML.get(last[2]) if pref == 'ML' else TY.get(last[2])) + weekly[3]
+    core = list(set([c1, c2, weekly[2:], last[3]+last[2]]))
+    
+    # --- 2. SHADOW 2D (CADANGAN) ---
+    s1 = ID.get(last[2]) + ID.get(last[3])
+    s2 = ML.get(last[2]) + TY.get(last[3])
+    shadow = list(set([s1, s2, TY.get(last[2])+ID.get(last[3])]))
 
-    daily = all_res[0]   # Result Kemarin
-    weekly = all_res[7]  # Result Minggu Lalu (Hari yang sama)
-    
-    # Karakteristik Market
-    pref = 'ML' if 'SINGAPORE' in market or 'CAMBODIA' in market else 'TY'
-    
-    # --- MENCARI CORE 2D (BOM) ---
-    # Teknik: Persilangan Kepala Kemarin & Mistik Ekor Minggu Lalu
-    core_1 = daily[2] + (ML.get(weekly[3]) if pref == 'ML' else TY.get(weekly[3]))
-    core_2 = (ML.get(daily[2]) if pref == 'ML' else TY.get(daily[2])) + weekly[3]
-    core_3 = weekly[2:] # Replay angka minggu lalu
-    
-    core_list = list(set([core_1, core_2, core_3]))
-    # Tambah variasi taysen dari ekor kemarin
-    core_list.append(TY.get(daily[3]) + daily[3])
-    
-    # --- MENCARI SHADOW 2D (CADANGAN) ---
-    # Teknik: Angka Indeks dan Angka yang belum keluar (Cold)
-    shadow_1 = ID.get(daily[2]) + ID.get(daily[3])
-    shadow_2 = ML.get(daily[2]) + TY.get(daily[3])
-    shadow_3 = str((int(daily[2])+5)%10) + str((int(daily[3])+5)%10)
-    
-    shadow_list = list(set([shadow_1, shadow_2, shadow_3]))
+    # --- 3. POSISI DEPAN & TENGAH ---
+    depan = [last[0] + ID.get(last[1]), TY.get(last[0]) + last[1]]
+    tengah = [last[1] + ML.get(last[2]), TY.get(last[1]) + last[2]]
 
-    # --- BBFS CADANGAN (5-DIGIT) ---
-    all_digits = "".join(all_res[:15])
-    counts = Counter(all_digits)
-    # Ambil angka yang frekuensinya menengah (bukan paling sering, bukan paling jarang)
-    sorted_digits = [x[0] for x in counts.most_common()]
-    bbfs = sorted(sorted_digits[3:8]) 
+    # --- 4. TWIN DETECTOR ---
+    has_twin = any(r[2] == r[3] for r in all_res[:10])
+    hot_digit = Counter("".join(all_res[:5])).most_common(2)
+    twins = [x[0]+x[0] for x in hot_digit]
+
+    # --- 5. BBFS CADANGAN ---
+    bbfs = sorted([x[0] for x in Counter("".join(all_res[:15])).most_common()[3:8]])
 
     return {
-        "core": [x for x in core_list if len(x)==2][:10],
-        "shadow": [x for x in shadow_list if len(x)==2][:10],
-        "bbfs": bbfs
+        "core": ", ".join([x for x in core if len(x)==2][:8]),
+        "shadow": ", ".join([x for x in shadow if len(x)==2][:8]),
+        "depan": ", ".join(list(set(depan))),
+        "tengah": ", ".join(list(set(tengah))),
+        "twin_status": "WASPADA TWIN" if not has_twin else "NORMAL",
+        "twin_picks": ", ".join(twins),
+        "bbfs": " ".join(bbfs)
     }
 
 @app.route('/')
@@ -106,22 +94,14 @@ def login():
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
-    if not session.get('authorized'): return jsonify({"error": "Unauthorized"}), 403
     market = request.form.get('market')
     all_res = fetch_results(TARGET_POOLS.get(market))
+    if not all_res: return jsonify({"error": "Server Error"})
     
-    if not all_res: return jsonify({"error": "Data server tidak terjangkau"})
-    
-    data = process_logic_v5(all_res, market)
-    
+    data = get_v6_analysis(all_res, market)
     return jsonify({
-        "market": market,
-        "last": all_res[0],
-        "weekly": all_res[7] if len(all_res) > 7 else "N/A",
-        "core_2d": ", ".join(data['core']),
-        "shadow_2d": ", ".join(data['shadow']),
-        "bbfs": " ".join(data['bbfs']),
-        "method": "V5.0 WEEKLY CROSS-SYNC"
+        "market": market, "last": all_res[0], "weekly": all_res[7],
+        "data": data, "method": "V6.0 POSITION SYNC"
     })
 
 if __name__ == '__main__':
