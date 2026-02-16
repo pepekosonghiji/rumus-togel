@@ -3,125 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MAMANG AI | SCREENSHOT MODE x3</title>
+    <title>MAMANG AI | AUTO-CAPTURE x3</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
     <style>
-        :root { 
-            --bg: #000000; 
-            --card: #0a0a0a; 
-            --neon: #00ff41; 
-            --dim: #003b11; 
-            --text: #ffffff; 
-            --danger: #ff0000;
-        }
-        
-        body { 
-            background: var(--bg); 
-            color: var(--text); 
-            font-family: 'JetBrains Mono', monospace; 
-            margin: 0; 
-            padding: 20px;
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-        }
+        :root { --bg: #000000; --card: #0a0a0a; --neon: #00ff41; --dim: #003b11; --text: #ffffff; --danger: #ff0000; }
+        body { background: var(--bg); color: var(--text); font-family: 'JetBrains Mono', monospace; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
 
-        /* HEADER SCALE x3 */
-        header { 
-            width: 100%; 
-            padding: 30px 0; 
-            text-align: center; 
-            border-bottom: 3px solid var(--neon); 
-            margin-bottom: 40px;
-            background: linear-gradient(to bottom, #001a00, #000);
-        }
-        h1 { 
-            font-family: 'Orbitron', sans-serif; 
-            color: var(--neon); 
-            letter-spacing: 10px; 
-            font-size: 3.5rem; /* Scale x3 */
-            margin: 0;
-            text-shadow: 0 0 20px var(--neon);
-        }
+        header { width: 100%; padding: 30px 0; text-align: center; border-bottom: 3px solid var(--neon); margin-bottom: 40px; background: linear-gradient(to bottom, #001a00, #000); }
+        h1 { font-family: 'Orbitron', sans-serif; color: var(--neon); letter-spacing: 10px; font-size: 3.5rem; margin: 0; text-shadow: 0 0 20px var(--neon); }
 
         .container { width: 95%; max-width: 1200px; }
 
-        /* SELECTOR SCALE x2 */
-        .selector-box { 
-            background: var(--card); 
-            padding: 30px; 
-            border: 2px solid var(--dim); 
-            border-radius: 15px; 
-            display: flex; 
-            gap: 20px; 
-            justify-content: center; 
-            margin-bottom: 50px; 
-        }
-        select, button { 
-            background: #000; 
-            color: var(--neon); 
-            border: 3px solid var(--neon); 
-            padding: 20px 40px; 
-            border-radius: 10px; 
-            cursor: pointer; 
-            font-size: 1.8rem; /* Scale x2.5 */
-            font-weight: bold;
-        }
-        button:hover { background: var(--neon); color: #000; }
+        .selector-box { background: var(--card); padding: 30px; border: 2px solid var(--dim); border-radius: 15px; display: flex; gap: 20px; justify-content: center; margin-bottom: 30px; }
+        select, button { background: #000; color: var(--neon); border: 3px solid var(--neon); padding: 15px 30px; border-radius: 10px; cursor: pointer; font-size: 1.5rem; font-weight: bold; }
+        
+        /* Tombol Capture Khusus */
+        .btn-capture { background: var(--dim); border-color: var(--neon); color: white; display: none; margin: 0 auto 20px auto; }
+        .btn-capture:hover { background: var(--neon); color: #000; }
 
-        /* DASHBOARD GRID */
-        .dashboard { 
-            display: grid; 
-            grid-template-columns: repeat(2, 1fr); 
-            gap: 30px; 
-            display: none; 
-        }
+        .dashboard { display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px; display: none; padding: 20px; background: #000; }
 
-        /* MARKET INFO SCALE x3 */
-        .market-info { 
-            grid-column: 1 / -1; 
-            text-align: center; 
-            border: 4px solid var(--neon); 
-            padding: 30px; 
-            border-radius: 20px; 
-            background: rgba(0,255,65,0.1);
-            margin-bottom: 20px;
-        }
+        .market-info { grid-column: 1 / -1; text-align: center; border: 4px solid var(--neon); padding: 30px; border-radius: 20px; background: rgba(0,255,65,0.1); margin-bottom: 10px; }
         .market-name { font-size: 3.5rem; font-weight: bold; color: #fff; display: block; }
         .market-last { font-size: 2.5rem; color: var(--neon); }
 
-        /* CARDS SCALE x3 */
-        .card { 
-            background: var(--card); 
-            border: 2px solid #444; 
-            padding: 35px; 
-            border-radius: 20px; 
-            text-align: center;
-        }
-        .card-header { 
-            font-size: 1.5rem; 
-            color: #aaa; 
-            text-transform: uppercase; 
-            margin-bottom: 15px; 
-            letter-spacing: 3px;
-        }
-        .card-value { 
-            font-size: 4.2rem; /* ULTRA SCALE x3 */
-            color: var(--neon); 
-            font-weight: 800;
-            text-shadow: 0 0 10px rgba(0,255,65,0.5);
-        }
-
-        /* SPECIAL VALUES */
+        .card { background: var(--card); border: 2px solid #444; padding: 35px; border-radius: 20px; text-align: center; }
+        .card-header { font-size: 1.5rem; color: #aaa; text-transform: uppercase; margin-bottom: 15px; }
+        .card-value { font-size: 4rem; color: var(--neon); font-weight: 800; }
+        
         .val-small { font-size: 2.8rem; }
-        .val-danger { color: var(--danger); text-shadow: 0 0 10px var(--danger); }
-
+        .val-danger { color: var(--danger); }
         #loader { display: none; color: var(--neon); font-size: 2rem; margin: 40px; }
     </style>
 </head>
 <body>
-    <header><h1>MAMANG AI V8.25</h1></header>
+    <header><h1>MAMANG AI V8.26</h1></header>
     
     <div class="container">
         <div class="selector-box">
@@ -131,39 +50,22 @@
             <button onclick="start()">GET PREDICTION</button>
         </div>
 
-        <center><div id="loader">RUNNING MASTER ALGORITHM...</div></center>
+        <center>
+            <button id="capBtn" class="btn-capture" onclick="takeScreenshot()">📸 DOWNLOAD SCREENSHOT (PNG)</button>
+        </center>
 
-        <div class="dashboard" id="db">
+        <center><div id="loader">GENERATING DATA...</div></center>
+
+        <div class="dashboard" id="captureArea">
             <div class="market-info">
                 <span class="market-name" id="r_market">-</span>
                 <span class="market-last">RESULT TERAKHIR: <b id="r_last">-</b></span>
             </div>
-
-            <div class="card">
-                <div class="card-header">CORE 2D JITU</div>
-                <div class="card-value" id="r_core">-</div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">BBFS WEIGHTED</div>
-                <div class="card-value val-small" id="r_bbfs">-</div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">AS + KOP (ID)</div>
-                <div class="card-value" id="r_askop">-</div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">KOP + KEP (ML)</div>
-                <div class="card-value" id="r_kopkep">-</div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">SHIO MAIN</div>
-                <div class="card-value" id="r_shio">-</div>
-            </div>
-
+            <div class="card"><div class="card-header">CORE 2D JITU</div><div class="card-value" id="r_core">-</div></div>
+            <div class="card"><div class="card-header">BBFS WEIGHTED</div><div class="card-value val-small" id="r_bbfs">-</div></div>
+            <div class="card"><div class="card-header">AS + KOP (ID)</div><div class="card-value" id="r_askop">-</div></div>
+            <div class="card"><div class="card-header">KOP + KEP (ML)</div><div class="card-value" id="r_kopkep">-</div></div>
+            <div class="card"><div class="card-header">SHIO MAIN</div><div class="card-value" id="r_shio">-</div></div>
             <div class="card">
                 <div class="card-header">MACAU & TWIN</div>
                 <div class="card-value val-small" id="r_macau">-</div>
@@ -174,24 +76,34 @@
 
     <script>
         function start() {
-            $('#loader').show(); $('#db').hide();
+            $('#loader').show(); $('#captureArea').hide(); $('#capBtn').hide();
             $.post('/analyze', { market: $('#mSelect').val() }, function(d) {
                 $('#loader').hide();
                 if(d.status==='success') {
-                    $('#r_market').text(d.market); 
-                    $('#r_last').text(d.last);
-                    $('#r_core').text(d.data.core); 
-                    $('#r_bbfs').text(d.data.bbfs);
-                    $('#r_askop').text(d.data.as_kop); 
-                    $('#r_kopkep').text(d.data.kop_kep);
-                    $('#r_shio').text(d.data.shio); 
-                    $('#r_macau').text(d.data.macau);
+                    $('#r_market').text(d.market); $('#r_last').text(d.last);
+                    $('#r_core').text(d.data.core); $('#r_bbfs').text(d.data.bbfs);
+                    $('#r_askop').text(d.data.as_kop); $('#r_kopkep').text(d.data.kop_kep);
+                    $('#r_shio').text(d.data.shio); $('#r_macau').text(d.data.macau);
                     $('#r_twin').text(d.data.twin);
-                    $('#db').fadeIn().css('display', 'grid');
+                    $('#captureArea').fadeIn().css('display', 'grid');
+                    $('#capBtn').show(); // Tampilkan tombol screenshot
                 }
-            }).fail(function(){ 
-                $('#loader').hide(); 
-                alert("SERVER ERROR / SOURCE BUSY"); 
+            });
+        }
+
+        // FUNGSI JITU DOWNLOAD GAMBAR
+        function takeScreenshot() {
+            const element = document.getElementById('captureArea');
+            html2canvas(element, {
+                backgroundColor: "#000000",
+                scale: 2, // Kualitas gambar diperbagus
+                logging: false
+            }).then(canvas => {
+                const link = document.createElement('a');
+                const market = $('#r_market').text();
+                link.download = `MAMANG-AI-${market}.png`;
+                link.href = canvas.toDataURL("image/png");
+                link.click();
             });
         }
     </script>
