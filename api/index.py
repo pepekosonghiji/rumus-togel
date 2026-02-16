@@ -11,7 +11,7 @@ TY = {'0':'7', '1':'4', '2':'9', '3':'6', '4':'1', '5':'8', '6':'3', '7':'0', '8
 ID = {'0':'5', '1':'6', '2':'7', '3':'8', '4':'9', '5':'0', '6':'1', '7':'2', '8':'3', '9':'4'}
 SHIO_MAP = {10:"KUDA", 11:"KAMBING", 0:"MONYET", 1:"AYAM", 2:"ANJING", 3:"BABI", 4:"TIKUS", 5:"KERBAU", 6:"MACAN", 7:"KELINCI", 8:"NAGA", 9:"ULAR"}
 
-# --- [LOCKED] TARGET POOLS (TIDAK AKAN DIUBAH) ---
+# --- [LOCKED] TARGET POOLS ---
 TARGET_POOLS = {
     'CAMBODIA': 'p3501', 'SYDNEY LOTTO': 'p2262', 'HONGKONG LOTTO': 'p2263', 
     'HONGKONG POOLS': 'kia_hk', 'SINGAPORE POOLS': 'kia_sgp', 'SYDNEY POOLS': 'kia_sdy',
@@ -26,52 +26,67 @@ TARGET_POOLS = {
 
 # 1. LOGIKA KHUSUS: WUHAN
 def get_wuhan_logic(all_res):
-    d0 = all_res[0] # Contoh: 4146
-    # Rumus: Fokus Mistik Ekor kemarin ke Kepala hari ini
+    d0 = all_res[0]
     k1, k2 = ML.get(d0[3], '0'), TY.get(d0[3], '0')
     e1, e2 = ML.get(d0[2], '0'), TY.get(d0[3], '0')
-    
     line = [k1+e1, k1+e2, k2+e1, k2+e2, d0[3]+k1, e1+k2]
     counts = Counter("".join(all_res[:20]))
     bbfs = [x[0] for x in counts.most_common(6)]
+    shio_idx = int(d0[2:]) % 12
+    return {
+        "core": ", ".join(list(dict.fromkeys(line))),
+        "bbfs": " ".join(sorted(bbfs)),
+        "as_kop": ID.get(d0[0], '0') + ID.get(d0[1], '0'),
+        "kop_kep": ML.get(d0[1], '0') + ML.get(d0[2], '0'),
+        "shio": SHIO_MAP.get(shio_idx, "N/A"),
+        "macau": f"{SHIO_MAP.get(shio_idx)} - {SHIO_MAP.get((shio_idx + 6) % 12)}",
+        "twin": f"{d0[3]}{d0[3]}, {k1}{k1}"
+    }
+
+# 2. LOGIKA KHUSUS: JEJU (NEW)
+def get_jeju_logic(all_res):
+    d0 = all_res[0] # Result Terakhir: 1924
+    # JEJU sering main di pola INDEX silang dari 2D tengah
+    k_jeju = ID.get(d0[1], '0') # Index dari KOP
+    e_jeju = TY.get(d0[2], '0') # Taysen dari Kepala
+    
+    line = [k_jeju+e_jeju, e_jeju+k_jeju, d0[3]+k_jeju, ML.get(d0[3])+e_jeju]
+    counts = Counter("".join(all_res[:15])) # JEJU sangat sensitif pada data terbaru
+    bbfs = [x[0] for x in counts.most_common(6)]
+    shio_idx = int(d0[2:]) % 12
     
     return {
         "core": ", ".join(list(dict.fromkeys(line))),
         "bbfs": " ".join(sorted(bbfs)),
-        "shio": SHIO_MAP.get(int(d0[2:]) % 12, "N/A"),
-        "twin": f"{d0[3]}{d0[3]}, {k1}{k1}"
+        "as_kop": ID.get(d0[0], '0') + ID.get(d0[1], '0'),
+        "kop_kep": ML.get(d0[1], '0') + ML.get(d0[2], '0'),
+        "shio": SHIO_MAP.get(shio_idx, "N/A"),
+        "macau": f"{SHIO_MAP.get(shio_idx)} - {SHIO_MAP.get((shio_idx + 4) % 12)}",
+        "twin": f"{d0[2]}{d0[2]}, {d0[3]}{d0[3]}"
     }
 
-# 2. LOGIKA KHUSUS: BUSAN POOLS (Siap Diisi)
-def get_busan_logic(all_res):
-    d0 = all_res[0]
-    # (Sementara pakai pola standar, silakan instruksikan perubahan di sini)
-    line = [ML.get(d0[3])+d0[2], TY.get(d0[3])+d0[3]]
-    counts = Counter("".join(all_res[:25]))
-    bbfs = [x[0] for x in counts.most_common(6)]
-    return {"core": ", ".join(line), "bbfs": " ".join(sorted(bbfs)), "shio": "BUSAN-MODE", "twin": "--"}
-
-# 3. LOGIKA STANDAR (Untuk Market Lainnya)
+# 3. LOGIKA STANDAR
 def get_standard_logic(all_res):
     d0 = all_res[0]
     counts = Counter("".join(all_res[:30]))
     bbfs = [x[0] for x in counts.most_common(6)]
+    shio_idx = int(d0[2:]) % 12
     line = [d0[3]+ML.get(d0[3]), TY.get(d0[2])+d0[3]]
     return {
         "core": ", ".join(line),
         "bbfs": " ".join(sorted(bbfs)),
-        "shio": SHIO_MAP.get(int(d0[2:]) % 12, "N/A"),
+        "as_kop": ID.get(d0[0], '0') + ID.get(d0[1], '0'),
+        "kop_kep": ML.get(d0[1], '0') + ML.get(d0[2], '0'),
+        "shio": SHIO_MAP.get(shio_idx, "N/A"),
+        "macau": f"{SHIO_MAP.get(shio_idx)} - {SHIO_MAP.get((shio_idx + 6) % 12)}",
         "twin": f"{d0[3]}{d0[3]}"
     }
 
-# ==========================================================
-#        [LOCKED] ENGINE & ROUTES (JANGAN DIUBAH)
-# ==========================================================
-
+# --- [LOCKED] ENGINE ---
 def fetch_results(market_code):
     results = []
     try:
-        with httpx.Client(timeout=20.0, verify=False, follow_redirects=True) as client:
+        with httpx.Client(timeout=20.0, verify=False) as client:
             url = f"https://dk9if7ik34.salamrupiah.com/history/result-mobile/{market_code}-pool-1"
             r = client.get(url)
             soup = BeautifulSoup(r.text, 'html.parser')
@@ -90,13 +105,9 @@ def analyze():
     all_res = fetch_results(m_code)
     if not all_res: return jsonify({"error": "Sync Error"}), 500
     
-    # Switch Logika Berdasarkan Nama Market
-    if m_name == "WUHAN":
-        data = get_wuhan_logic(all_res)
-    elif m_name == "BUSAN POOLS":
-        data = get_busan_logic(all_res)
-    else:
-        data = get_standard_logic(all_res)
+    if m_name == "WUHAN": data = get_wuhan_logic(all_res)
+    elif m_name == "JEJU": data = get_jeju_logic(all_res)
+    else: data = get_standard_logic(all_res)
         
     return jsonify({"status":"success", "market":m_name, "last":all_res[0], "data":data})
 
