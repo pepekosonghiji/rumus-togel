@@ -2,6 +2,7 @@ import os, re, httpx, datetime
 from flask import Flask, render_template, request, jsonify
 from collections import Counter
 from bs4 import BeautifulSoup
+from .macau import fetch_macau_data, get_macau_logic
 
 app = Flask(__name__, template_folder=os.path.join(os.path.dirname(__file__), '../templates'))
 
@@ -122,12 +123,21 @@ def fetch_results(market_code):
             if results: break
         except: continue
     return results
+@app.route('/analyze_macau', methods=['POST'])
+def analyze_macau():
+    all_res = fetch_macau_data()
+    if not all_res: return jsonify({"error": "Data Macau Error"}), 500
+    data = get_macau_logic(all_res)
+    return jsonify({"status":"success", "market":"TOTO MACAU M17", "last":all_res[0], "data":data})
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
     m_name = request.form.get('market')
+    # Dial rute jika Macau dipilih
+    if m_name == 'TOTO MACAU M17': return analyze_macau()
+    
     all_res = fetch_results(TARGET_POOLS.get(m_name))
-    if not all_res: return jsonify({"error": "Sync Error: Data tidak ditemukan"}), 500
+    if not all_res: return jsonify({"error": "Sync Error"}), 500
     data = get_comprehensive_logic(all_res, m_name)
     return jsonify({"status":"success", "market":m_name, "last":all_res[0], "data":data})
 
