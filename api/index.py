@@ -80,19 +80,11 @@ def get_seoul_logic(all_res):
         "twin": f"{d0[0]}{d0[1]}, {d0[2]}{d0[2]}"
     }
 
-# 4. LOGIKA KHUSUS: TORONTO MID (KALIBRASI 2406)
+# 4. LOGIKA KHUSUS: TORONTO MID
 def get_toronto_logic(all_res):
-    d0 = all_res[0] # Result: 2406
-    # Pola Toronto: Mistik Baru Kop silang ke Ekor
-    k_tor = MB.get(d0[1], '0') # MB 4 = 5
-    e_tor = TY.get(d0[3], '0') # TY 6 = 3
-    
-    line = [
-        k_tor + e_tor,         # 53
-        ID.get(d0[2]) + d0[3], # Index 0 = 5 + 6 = 56
-        d0[3] + ML.get(d0[3]), # 69
-        "06", "60"             # Tracking pola result terakhir
-    ]
+    d0 = all_res[0] 
+    k_tor, e_tor = MB.get(d0[1], '0'), TY.get(d0[3], '0') 
+    line = [k_tor + e_tor, ID.get(d0[2]) + d0[3], d0[3] + ML.get(d0[3])]
     counts = Counter("".join(all_res[:20]))
     bbfs = [x[0] for x in counts.most_common(6)]
     shio_idx = int(d0[2:]) % 12
@@ -106,18 +98,28 @@ def get_toronto_logic(all_res):
         "twin": f"{d0[3]}{d0[3]}, {d0[1]}{d0[1]}"
     }
 
-# 5. LOGIKA STANDAR (Market Lainnya)
+# 5. LOGIKA UNIVERSAL (KEMBALI KE V8 - AGGRESIF)
 def get_standard_logic(all_res):
     d0 = all_res[0]
+    # Menggunakan tarikan Mistik dan Taysen langsung dari result terakhir (Pola V8)
+    line = [
+        d0[3] + ML.get(d0[3], '0'), 
+        TY.get(d0[2], '0') + d0[3],
+        ML.get(d0[2], '0') + TY.get(d0[3], '0'),
+        ID.get(d0[3], '0') + d0[2]
+    ]
     counts = Counter("".join(all_res[:30]))
     bbfs = [x[0] for x in counts.most_common(6)]
     shio_idx = int(d0[2:]) % 12
+    
     return {
-        "core": "N/A", "bbfs": " ".join(sorted(bbfs)),
+        "core": ", ".join(list(dict.fromkeys(line))),
+        "bbfs": " ".join(sorted(bbfs)),
         "as_kop": ID.get(d0[0], '0') + ID.get(d0[1], '0'),
         "kop_kep": ML.get(d0[1], '0') + ML.get(d0[2], '0'),
         "shio": SHIO_MAP.get(shio_idx, "N/A"),
-        "macau": "N/A", "twin": d0[3]+d0[3]
+        "macau": f"{SHIO_MAP.get(shio_idx)} - {SHIO_MAP.get((shio_idx + 6) % 12)}",
+        "twin": f"{d0[3]}{d0[3]}, {ML.get(d0[3], '0')}{ML.get(d0[3], '0')}"
     }
 
 # --- [LOCKED] ENGINE & ROUTES ---
@@ -145,7 +147,6 @@ def analyze():
     all_res = fetch_results(m_code)
     if not all_res: return jsonify({"error": "Sync Error"}), 500
     
-    # SWITCHER LOGIKA TERISOLASI
     if m_name == "WUHAN": data = get_wuhan_logic(all_res)
     elif m_name == "JEJU": data = get_jeju_logic(all_res)
     elif m_name == "SEOUL": data = get_seoul_logic(all_res)
