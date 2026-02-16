@@ -1,123 +1,240 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MAMANG PREDIKSI V8.4 - AUTO ANALYZE</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <title>MAMANG AI | ADVANCED ANALYTICS V8.16</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
-        body { font-family: 'JetBrains Mono', monospace; background-color: #0a0a0a; color: #00ff41; }
-        .neon-border { border: 1px solid #00ff41; box-shadow: 0 0 10px #00ff41; }
-        .btn-glow:hover { box-shadow: 0 0 20px #00ff41; }
+        :root {
+            --bg-color: #050505;
+            --card-bg: #0d0d0d;
+            --neon-green: #00ff41;
+            --neon-dim: #008f11;
+            --text-main: #e0e0e0;
+            --border-glow: 0 0 10px rgba(0, 255, 65, 0.2);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'JetBrains+Mono', monospace;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        header {
+            width: 100%;
+            padding: 20px 0;
+            text-align: center;
+            border-bottom: 1px solid var(--neon-dim);
+            margin-bottom: 30px;
+            box-shadow: var(--border-glow);
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon-green);
+            margin: 0;
+            letter-spacing: 5px;
+            font-size: 1.8rem;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 900px;
+        }
+
+        .selector-box {
+            background: var(--card-bg);
+            padding: 20px;
+            border: 1px solid var(--neon-dim);
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        select, button {
+            background: #1a1a1a;
+            color: var(--neon-green);
+            border: 1px solid var(--neon-green);
+            padding: 10px 20px;
+            font-family: 'JetBrains+Mono', monospace;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: var(--neon-green);
+            color: black;
+            box-shadow: 0 0 15px var(--neon-green);
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            display: none; /* Hidden until analysis starts */
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid #333;
+            padding: 20px;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+            transition: 0.3s;
+        }
+
+        .card:hover {
+            border-color: var(--neon-green);
+            box-shadow: var(--border-glow);
+        }
+
+        .card-header {
+            font-size: 0.8rem;
+            color: #888;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .card-value {
+            font-size: 1.6rem;
+            color: var(--neon-green);
+            font-weight: bold;
+        }
+
+        .market-info {
+            grid-column: 1 / -1;
+            text-align: center;
+            border: 1px solid var(--neon-green);
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+        }
+
+        .loader {
+            display: none;
+            margin: 20px;
+            color: var(--neon-green);
+            font-style: italic;
+        }
+
+        .footer {
+            margin-top: auto;
+            padding: 30px;
+            font-size: 0.7rem;
+            color: #444;
+            text-align: center;
+        }
+
+        /* Responsive Mobile */
+        @media (max-width: 600px) {
+            .selector-box { flex-direction: column; width: 100%; }
+            select, button { width: 100%; }
+        }
     </style>
 </head>
-<body class="p-4">
-    <div class="max-w-2xl mx-auto">
-        <header class="text-center mb-8 neon-border p-4 bg-black">
-            <h1 class="text-2xl font-bold">MAMANG ANALYTICS V8.1</h1>
-            <p class="text-xs text-gray-500">Auto-Scraper & Pattern Prediction Locked</p>
-        </header>
+<body>
 
-        <div class="mb-6 flex gap-2">
-            <select id="market" class="bg-black border border-green-500 text-green-500 p-2 flex-grow outline-none">
+    <header>
+        <h1>MAMANG AI V8.16</h1>
+        <div style="font-size: 0.7rem; color: var(--neon-dim); margin-top: 5px;">SYSTEM ANALYTICS & CALIBRATION ENGINE</div>
+    </header>
+
+    <div class="container">
+        <div class="selector-box">
+            <select id="marketSelect">
                 {% for m in markets %}
                 <option value="{{ m }}">{{ m }}</option>
                 {% endfor %}
             </select>
-            <button onclick="runAnalysis()" class="bg-green-600 text-black px-6 py-2 font-bold btn-glow">ANALYZE</button>
+            <button onclick="startAnalysis()">EXECUTE ANALYSIS</button>
         </div>
 
-        <div id="capture-area" class="bg-black p-6 neon-border hidden">
-            <div class="flex justify-between border-b border-green-900 pb-2 mb-4">
-                <div>
-                    <h2 id="res-market" class="text-xl font-bold">MARKET</h2>
-                    <p class="text-xs">TANGGAL: <span id="current-date"></span></p>
-                </div>
-                <div class="text-right">
-                    <p class="text-xs text-gray-500">RESULT TERAKHIR</p>
-                    <p id="res-last" class="text-3xl font-bold tracking-widest text-white">0000</p>
-                </div>
+        <center><div class="loader" id="loader">RUNNING WEIGHTING ENGINE... PLEASE WAIT...</div></center>
+
+        <div class="dashboard" id="dashboard">
+            <div class="market-info">
+                <span id="res_market" style="font-size: 1.2rem; font-weight: bold; color: white;">-</span>
+                <span style="margin: 0 15px; color: #444;">|</span>
+                LAST RESULT: <span id="res_last" style="color: var(--neon-green);">-</span>
             </div>
 
-            <div class="grid grid-cols-2 gap-4 text-sm">
-                <div class="border border-green-900 p-2">
-                    <p class="text-gray-500">CORE 2D BELAKANG</p>
-                    <p id="res-core" class="text-lg font-bold">--</p>
-                </div>
-                <div class="border border-green-900 p-2">
-                    <p class="text-gray-500">BBFS (30 DAYS)</p>
-                    <p id="res-bbfs" class="text-lg font-bold text-yellow-400">--</p>
-                </div>
-                <div class="border border-green-900 p-2">
-                    <p class="text-gray-500">AS + KOP (INDEX)</p>
-                    <p id="res-depan" class="text-lg font-bold">--</p>
-                </div>
-                <div class="border border-green-900 p-2">
-                    <p class="text-gray-500">KOP + KEPALA (ML)</p>
-                    <p id="res-tengah" class="text-lg font-bold">--</p>
-                </div>
-                <div class="border border-green-900 p-2">
-                    <p class="text-gray-500">SHIO UTAMA</p>
-                    <p id="res-shio" class="text-lg font-bold">--</p>
-                </div>
-                <div class="border border-green-900 p-2">
-                    <p class="text-gray-500">SHIO MACAU</p>
-                    <p id="res-macau" class="text-lg font-bold">--</p>
-                </div>
+            <div class="card">
+                <div class="card-header">Core 2D Belakang</div>
+                <div class="card-value" id="res_core">-</div>
             </div>
 
-            <div class="mt-4 p-2 bg-green-900/20 border border-green-700">
-                <p class="text-xs text-gray-400">CADANGAN TWIN / SHADOW:</p>
-                <p id="res-twin" class="font-bold"></p>
+            <div class="card">
+                <div class="card-header">BBFS (Weighted 7D)</div>
+                <div class="card-value" id="res_bbfs" style="letter-spacing: 5px;">-</div>
             </div>
-            
-            <p class="text-[8px] text-center mt-6 opacity-30">AUTO-GENERATED BY MAMANG AI ANALYTICS SYSTEM 2026</p>
+
+            <div class="card">
+                <div class="card-header">As + Kop (Index)</div>
+                <div class="card-value" id="res_askop">-</div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">Kop + Kepala (ML)</div>
+                <div class="card-value" id="res_kopkep">-</div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">Shio Utama</div>
+                <div class="card-value" id="res_shio">-</div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">Shio Macau / Twin</div>
+                <div class="card-value" id="res_macau" style="font-size: 1rem;">-</div>
+                <div id="res_twin" style="color: #ff4141; margin-top: 5px; font-size: 0.9rem;">-</div>
+            </div>
         </div>
+    </div>
 
-        <button id="snap-btn" onclick="takeScreenshot()" class="mt-4 w-full border border-green-500 p-2 hidden hover:bg-green-500 hover:text-black transition">DOWNLOAD RESULT (SCALE X3)</button>
+    <div class="footer">
+        AUTO-GENERATED BY MAMANG AI ANALYTICS SYSTEM 2026<br>
+        PROPRIETARY WEIGHTING ALGORITHM V8.16
     </div>
 
     <script>
-        async function runAnalysis() {
-            const m = document.getElementById('market').value;
-            const res = await fetch('/analyze', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                body: `market=${m}`
-            });
-            const data = await res.json();
-            
-            if(data.status === "success") {
-                document.getElementById('capture-area').classList.remove('hidden');
-                document.getElementById('snap-btn').classList.remove('hidden');
-                document.getElementById('res-market').innerText = data.market;
-                document.getElementById('res-last').innerText = data.last;
-                document.getElementById('res-core').innerText = data.data.core;
-                document.getElementById('res-bbfs').innerText = data.data.bbfs;
-                document.getElementById('res-depan').innerText = data.data.depan;
-                document.getElementById('res-tengah').innerText = data.data.tengah;
-                document.getElementById('res-shio').innerText = data.data.shio;
-                document.getElementById('res-macau').innerText = data.data.macau;
-                document.getElementById('res-twin').innerText = data.data.twin;
-                document.getElementById('current-date').innerText = new Date().toLocaleDateString('id-ID');
-            } else {
-                alert("Gagal ambil data. Cek koneksi.");
-            }
-        }
+        function startAnalysis() {
+            const market = $('#marketSelect').val();
+            $('#loader').show();
+            $('#dashboard').hide();
 
-        function takeScreenshot() {
-            const element = document.getElementById('capture-area');
-            html2canvas(element, {
-                scale: 3,
-                backgroundColor: "#0a0a0a",
-                logging: false
-            }).then(canvas => {
-                const a = document.createElement('a');
-                a.href = canvas.toDataURL("image/png");
-                a.download = `Mamang_Result_${document.getElementById('res-market').innerText}.png`;
-                a.click();
+            $.post('/analyze', { market: market }, function(data) {
+                $('#loader').hide();
+                if(data.status === 'success') {
+                    $('#res_market').text(data.market);
+                    $('#res_last').text(data.last);
+                    $('#res_core').text(data.data.core);
+                    $('#res_bbfs').text(data.data.bbfs);
+                    $('#res_askop').text(data.data.as_kop);
+                    $('#res_kopkep').text(data.data.kop_kep);
+                    $('#res_shio').text(data.data.shio);
+                    $('#res_macau').text(data.data.macau);
+                    $('#res_twin').text('CADANGAN TWIN: ' + data.data.twin);
+                    
+                    $('#dashboard').fadeIn(500).css('display', 'grid');
+                } else {
+                    alert('Sync Error: Market response failed.');
+                }
+            }).fail(function() {
+                $('#loader').hide();
+                alert('Connection Error: Server busy.');
             });
         }
     </script>
