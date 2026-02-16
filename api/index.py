@@ -61,26 +61,47 @@ def fetch_results(market_code):
 def get_v8_analysis(all_res):
     if not all_res or len(all_res) < 8: return None
     
-    d0 = all_res[0] # Hari Ini
-    d1 = all_res[1] # Kemarin
-    d7 = all_res[7] # Minggu Lalu
+    d0 = all_res[0] # Result Terakhir (Contoh: 0946)
+    d1 = all_res[1] 
+    d7 = all_res[7] 
     
-    # 1. ANALISA MULTI-PERIOD (CORE)
-    # Mencari titik temu Mistik/Taysen antara Result Hari ini vs Kemarin
+    # 1. CORE PATTERN (LOCKED)
     p1 = ML.get(d0[3], '0') + TY.get(d1[3], '0')
     p2 = ID.get(d0[3], '0') + MB.get(d1[2], '0')
     p3 = d0[3] + d7[3]
-    
     core_list = list(dict.fromkeys([p1, p1[::-1], p2, p2[::-1], p3, p3[::-1]]))
     
-    # 2. SHIO MACAU (Kombinasi Shio Induk & Shio Cadangan)
+    # 2. LOGIKA BBFS 6-DIGIT (PEMBOBOTAN)
+    # Ambil 30 data terakhir
+    raw_data = "".join(all_res[:30])
+    counts = Counter(raw_data)
+    
+    # Inisialisasi Skor (0-9)
+    scores = {str(i): 0 for i in range(10)}
+    
+    # A. Bobot Frekuensi (Angka Panas)
+    for num, freq in counts.items():
+        scores[num] += freq * 1.5 
+        
+    # B. Bobot Pola Jembatan (Angka dari Result Terakhir)
+    # Angka yang ada di result terakhir + Mistik/Indexnya diberi bobot extra
+    bridge_numbers = set(list(d0) + [ML.get(x) for x in d0] + [ID.get(x) for x in d0])
+    for num in bridge_numbers:
+        if num in scores:
+            scores[num] += 5 # Bonus poin karena terkait result terakhir
+            
+    # C. Angka Dingin (Pancingan)
+    # Angka yang frekuensinya paling rendah justru diberi sedikit dorongan jika ia adalah TY/ML ekor
+    cold_num = min(counts, key=counts.get)
+    scores[cold_num] += 3
+
+    # Urutkan berdasarkan skor tertinggi dan ambil 6 besar
+    optimized_bbfs = sorted(scores, key=scores.get, reverse=True)[:6]
+    
+    # 3. SHIO & MACAU
     shio_idx = int(d0[2:]) % 12
     main_shio = SHIO_MAP.get(shio_idx, "N/A")
-    macau_shio = f"{main_shio} - {SHIO_MAP.get((shio_idx + 6) % 12)}" # Shio Berseberangan
-    
-    # 3. BBFS FREKUENSI 30 DATA
-    counts = Counter("".join(all_res[:30]))
-    bbfs = [x[0] for x in counts.most_common(7)]
+    macau_shio = f"{main_shio} - {SHIO_MAP.get((shio_idx + 6) % 12)}"
     
     return {
         "core": ", ".join(core_list[:8]),
@@ -90,7 +111,7 @@ def get_v8_analysis(all_res):
         "shio": main_shio,
         "macau": macau_shio,
         "twin": f"{d0[3]}{d0[3]}, {ML.get(d0[3])}{ML.get(d0[3])}, {ID.get(d0[3])}{ID.get(d0[3])}",
-        "bbfs": " ".join(sorted(bbfs))
+        "bbfs": " ".join(sorted(optimized_bbfs)) # Output 6 Digit Terurut
     }
 
 @app.route('/')
