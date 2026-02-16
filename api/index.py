@@ -2,7 +2,9 @@ import os, re, httpx, datetime
 from flask import Flask, render_template, request, jsonify
 from collections import Counter
 from bs4 import BeautifulSoup
+# Pastikan macau.py ada di folder yang sama dengan index.py
 from .macau import fetch_macau_m17, calculate_macau_prediction
+
 app = Flask(__name__, template_folder=os.path.join(os.path.dirname(__file__), '../templates'))
 
 # --- [DATABASE MASTER POLA ABADI] ---
@@ -26,7 +28,6 @@ def get_engine_analytics(all_res, is_big=False):
     day_name = datetime.datetime.now().strftime("%A")
     limit = 60 if is_big else 30
     
-    # Filter histori: Mingguan & Harian
     daily_hist = "".join([all_res[i] for i in range(len(all_res)) if i % 7 == 0][:5])
     recent_7d = "".join(all_res[:7])
     full_data = "".join(all_res[:limit])
@@ -48,16 +49,13 @@ def get_engine_analytics(all_res, is_big=False):
     sorted_scores = sorted(scores.items(), key=lambda x: x[1], reverse=True)
     return [x[0] for x in sorted_scores[:6]]
 
-# --- [LOGIC BRANCHING: MIKRO & BIG] ---
 def get_comprehensive_logic(all_res, m_name):
     d0 = all_res[0]
     is_big = m_name in ['CAMBODIA', 'SYDNEY LOTTO', 'HONGKONG LOTTO', 'HONGKONG POOLS', 'SINGAPORE POOLS', 'SYDNEY POOLS']
     bbfs = get_engine_analytics(all_res, is_big)
     
-    # Jalur Utama 2D
     line = [TY.get(d0[2], '0')+d0[3], ML.get(d0[2], '0')+ID.get(d0[1], '0'), MB.get(d0[0], '0')+d0[3]]
     
-    # Penajaman Pasaran Mikro (Locked)
     if m_name == "OSAKA": line.extend([TY.get(d0[0])+d0[2], "54"])
     elif m_name == "PHUKET": line.extend([ML.get(d0[3])+d0[2], "31"])
     elif m_name == "WUHAN": line.extend([ML.get(d0[3])+ML.get(d0[2])])
@@ -80,11 +78,8 @@ def get_comprehensive_logic(all_res, m_name):
         "twin": f"{d0[2]}{d0[2]}, {d0[3]}{d0[3]}"
     }
 
-# --- [MULTI-SOURCE SCRAPER] ---
 def fetch_results(market_code):
     results = []
-    
-    # SOURCE 1: tabelsemalam.com (Khusus HK Pools)
     if market_code == "HK_SPECIAL":
         try:
             with httpx.Client(timeout=15.0, verify=False) as client:
@@ -96,13 +91,12 @@ def fetch_results(market_code):
                     for row in rows:
                         tds = row.find_all('td')
                         if len(tds) >= 2:
-                            val = tds[1].text.strip() # Kolom index 1 = HK
+                            val = tds[1].text.strip()
                             if val.isdigit() and len(val) == 4:
                                 results.append(val)
             if results: return results
         except: pass
 
-    # SOURCE 2: salamrupiah (Standard & Micro)
     urls = [
         f"https://dk9if7ik34.salamrupiah.com/history/result-mobile/{market_code}-pool-1",
         f"https://dk9if7ik34.salamrupiah.com/history/result-mobile/kia_{market_code}"
@@ -122,32 +116,41 @@ def fetch_results(market_code):
             if results: break
         except: continue
     return results
-@app.route('/analyze_macau', methods=['POST'])
-def analyze_macau():
-    all_res = fetch_macau_data()
-    if not all_res: return jsonify({"error": "Data Macau Error"}), 500
-    data = get_macau_logic(all_res)
-    return jsonify({"status":"success", "market":"TOTO MACAU M17", "last":all_res[0], "data":data})
 
+# --- [PERBAIKAN ROUTE ANALYZE] ---
 @app.route('/analyze', methods=['POST'])
 def analyze():
     market = request.form.get('market')
     
-    if market == "4D Toto Macau (M17)":
-        results = fetch_macau_m17()
+    # 1. Cek jika yang dipilih adalah MACAU
+    if market == "MACAU 4D":
+        results = fetch_macau_m17() # Fungsi dari macau.py
         if not results:
-            return jsonify({"status": "error", "msg": "Gagal Sinkronisasi Data M17"}), 500
-        
-        data = calculate_macau_prediction(results)
+            return jsonify({"status": "error", "msg": "Gagal Sinkronisasi Macau M17"}), 500
+        data = calculate_macau_prediction(results) # Fungsi dari macau.py
         return jsonify({
             "status": "success",
-            "market": "4D TOTO MACAU M17",
+            "market": "MACAU 4D (M17)",
             "last": results[0],
             "data": data
         })
     
-    # Jalur HK / Lainnya tetap seperti kode lama Bos
-    return jsonify({"status": "error", "msg": "Pasaran belum terintegrasi"})
+    # 2. Jalur Pasaran Lain (HK, SGP, dll)
+    market_code = TARGET_POOLS.get(market)
+    if not market_code:
+        return jsonify({"status": "error", "msg": "Pasaran tidak terdaftar"}), 400
+        
+    results = fetch_results(market_code)
+    if not results:
+        return jsonify({"status": "error", "msg": "Sync Error"}), 500
+        
+    data = get_comprehensive_logic(results, market)
+    return jsonify({
+        "status": "success", 
+        "market": market, 
+        "last": results[0], 
+        "data": data
+    })
 
 @app.route('/')
 def index():
