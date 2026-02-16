@@ -1,11 +1,12 @@
 import os, re, httpx
 from flask import Flask, render_template, request, jsonify, session
 from collections import Counter
+from bs4 import BeautifulSoup
 
 app = Flask(__name__, template_folder=os.path.join(os.path.dirname(__file__), '../templates'))
-app.secret_key = "MAMANG_V7_13_JSON_DETAIL_FIX"
+app.secret_key = "MAMANG_V7_14_HTML_FIX"
 
-# --- DATABASE POLA LENGKAP (LOCKED) ---
+# --- DATABASE POLA LENGKAP (LOCKED - JANGAN DIUBAH) ---
 ML = {'1':'0', '2':'5', '3':'8', '4':'7', '6':'9', '0':'1', '5':'2', '8':'3', '7':'4', '9':'6'}
 MB = {'0':'8', '1':'7', '2':'6', '3':'9', '4':'5', '5':'4', '6':'2', '7':'1', '8':'0', '9':'3'}
 ID = {'0':'5', '1':'6', '2':'7', '3':'8', '4':'9', '5':'0', '6':'1', '7':'2', '8':'3', '9':'4'}
@@ -26,20 +27,17 @@ TARGET_POOLS = {
 }
 
 HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    'Accept': 'application/json, text/javascript, */*; q=0.01',
-    'X-Requested-With': 'XMLHttpRequest'
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
 }
 
 def fetch_results(market_code):
     results = []
     try:
-        with httpx.Client(timeout=15.0, verify=False, headers=HEADERS, follow_redirects=True) as client:
+        with httpx.Client(timeout=20.0, verify=False, headers=HEADERS, follow_redirects=True) as client:
             if market_code.startswith('kia_'):
-                # JALUR KIA (Tetap Scraping)
+                # JALUR KIA (NOMORKIAJIT)
                 url = "https://nomorkiajit.com/hksgpsdy"
                 r = client.get(url)
-                from bs4 import BeautifulSoup
                 soup = BeautifulSoup(r.text, 'html.parser')
                 col_map = {'kia_hk': 2, 'kia_sgp': 3, 'kia_sdy': 4}
                 idx = col_map.get(market_code)
@@ -51,52 +49,53 @@ def fetch_results(market_code):
                             val = re.sub(r'\D', '', tds[idx].text.strip())
                             if len(val) == 4: results.append(val)
             else:
-                # JALUR SALAMRUPIAH JSON DETAIL (URL BARU)
-                # Contoh: https://dk9if7ik34.salamrupiah.com/history/detail/data/p3501-1
-                url = f"https://dk9if7ik34.salamrupiah.com/history/detail/data/{market_code}-1"
+                # JALUR SALAMRUPIAH HTML (URL RESULT-MOBILE)
+                url = f"https://dk9if7ik34.salamrupiah.com/history/result-mobile/{market_code}-pool-1"
                 r = client.get(url)
-                if r.status_code == 200:
-                    data_json = r.json()
-                    # Navigasi ke: angka_keluar -> data
-                    items = data_json.get('angka_keluar', {}).get('data', [])
-                    for item in items:
-                        val = item.get('angka')
-                        if val and len(str(val)) == 4:
-                            results.append(str(val))
+                soup = BeautifulSoup(r.text, 'html.parser')
+                
+                # Cari tabel dengan class legend
+                table = soup.find('table', class_='table-history')
+                if table:
+                    rows = table.find('tbody').find_all('tr')
+                    for row in rows:
+                        tds = row.find_all('td')
+                        if len(tds) >= 4:
+                            # Ambil text dari tag <a> di kolom ke-4 (index 3)
+                            link_val = tds[3].find('a')
+                            if link_val:
+                                val = re.sub(r'\D', '', link_val.text.strip())
+                                if len(val) == 4:
+                                    results.append(val)
     except Exception as e:
-        print(f"Fetch Error: {e}")
+        print(f"Error Fetching: {e}")
     return results
 
 def get_v7_analysis(all_res):
     if not all_res or len(all_res) < 8: return None
-    last = all_res[0]
-    weekly = all_res[7]
+    last = all_res[0]    # 0946
+    weekly = all_res[7]  # Angka 7 hari lalu
     
-    # --- POLA V7.3 KUNCI MATI ---
-    # 2D Belakang
+    # POLA V7.3 KUNCI MATI (ML, MB, ID, TY)
     c1 = ML.get(last[3], '0') + TY.get(last[3], '0')
     c2 = ID.get(last[3], '0') + MB.get(last[2], '0')
     c3 = last[3] + weekly[3]
     core_raw = list(dict.fromkeys([c1, c1[::-1], c2, c2[::-1], c3, c3[::-1]]))
-    
-    # Depan & Tengah
-    depan = last[0] + ID.get(last[1], '0')
-    tengah = last[1] + ML.get(last[2], '0')
     
     # Shio & Shio Macau
     shio_val = int(last[2:]) % 12
     main_shio = SHIO_MAP.get(shio_val, "N/A")
     macau_shio = f"{main_shio} - {SHIO_MAP.get((shio_val+1)%12)}"
     
-    # BBFS & Twin
-    counts = Counter("".join(all_res[:15]))
+    # BBFS & Pola Depan/Tengah
+    counts = Counter("".join(all_res[:20]))
     bbfs = [x[0] for x in counts.most_common(7)]
     
     return {
         "core": ", ".join(core_raw[:8]),
         "shadow": f"{TY.get(last[2], '0')}{TY.get(last[3], '0')}, {MB.get(last[2], '0')}{MB.get(last[3], '0')}",
-        "depan": depan,
-        "tengah": tengah,
+        "depan": last[0] + ID.get(last[1], '0'),
+        "tengah": last[1] + ML.get(last[2], '0'),
         "shio": main_shio,
         "macau": macau_shio,
         "twin": f"{last[3]}{last[3]}, {ML.get(last[3], '0')}{ML.get(last[3], '0')}, {ID.get(last[3], '0')}{ID.get(last[3], '0')}",
@@ -110,7 +109,7 @@ def analyze():
     all_res = fetch_results(m_code)
     
     if not all_res:
-        return jsonify({"error": f"Gagal mengambil data {m_name}. Coba lagi."}), 500
+        return jsonify({"error": f"Gagal Sinkron Data {m_name}. Coba Lagi."}), 500
         
     data = get_v7_analysis(all_res)
     return jsonify({
