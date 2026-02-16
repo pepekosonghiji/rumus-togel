@@ -2,8 +2,7 @@ import os, re, httpx, datetime
 from flask import Flask, render_template, request, jsonify
 from collections import Counter
 from bs4 import BeautifulSoup
-from .macau import fetch_macau_data, get_macau_logic
-
+from .macau import fetch_macau_m17, calculate_macau_prediction
 app = Flask(__name__, template_folder=os.path.join(os.path.dirname(__file__), '../templates'))
 
 # --- [DATABASE MASTER POLA ABADI] ---
@@ -132,14 +131,23 @@ def analyze_macau():
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
-    m_name = request.form.get('market')
-    # Dial rute jika Macau dipilih
-    if m_name == 'TOTO MACAU M17': return analyze_macau()
+    market = request.form.get('market')
     
-    all_res = fetch_results(TARGET_POOLS.get(m_name))
-    if not all_res: return jsonify({"error": "Sync Error"}), 500
-    data = get_comprehensive_logic(all_res, m_name)
-    return jsonify({"status":"success", "market":m_name, "last":all_res[0], "data":data})
+    if market == "4D Toto Macau (M17)":
+        results = fetch_macau_m17()
+        if not results:
+            return jsonify({"status": "error", "msg": "Gagal Sinkronisasi Data M17"}), 500
+        
+        data = calculate_macau_prediction(results)
+        return jsonify({
+            "status": "success",
+            "market": "4D TOTO MACAU M17",
+            "last": results[0],
+            "data": data
+        })
+    
+    # Jalur HK / Lainnya tetap seperti kode lama Bos
+    return jsonify({"status": "error", "msg": "Pasaran belum terintegrasi"})
 
 @app.route('/')
 def index():
