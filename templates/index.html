@@ -3,238 +3,195 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MAMANG AI | ADVANCED ANALYTICS V8.16</title>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <title>MAMANG AI | SCREENSHOT MODE x3</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
-        :root {
-            --bg-color: #050505;
-            --card-bg: #0d0d0d;
-            --neon-green: #00ff41;
-            --neon-dim: #008f11;
-            --text-main: #e0e0e0;
-            --border-glow: 0 0 10px rgba(0, 255, 65, 0.2);
+        :root { 
+            --bg: #000000; 
+            --card: #0a0a0a; 
+            --neon: #00ff41; 
+            --dim: #003b11; 
+            --text: #ffffff; 
+            --danger: #ff0000;
         }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            font-family: 'JetBrains+Mono', monospace;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        header {
-            width: 100%;
-            padding: 20px 0;
-            text-align: center;
-            border-bottom: 1px solid var(--neon-dim);
-            margin-bottom: 30px;
-            box-shadow: var(--border-glow);
-        }
-
-        h1 {
-            font-family: 'Orbitron', sans-serif;
-            color: var(--neon-green);
-            margin: 0;
-            letter-spacing: 5px;
-            font-size: 1.8rem;
-        }
-
-        .container {
-            width: 90%;
-            max-width: 900px;
-        }
-
-        .selector-box {
-            background: var(--card-bg);
+        
+        body { 
+            background: var(--bg); 
+            color: var(--text); 
+            font-family: 'JetBrains Mono', monospace; 
+            margin: 0; 
             padding: 20px;
-            border: 1px solid var(--neon-dim);
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            align-items: center;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
         }
 
-        select, button {
-            background: #1a1a1a;
-            color: var(--neon-green);
-            border: 1px solid var(--neon-green);
-            padding: 10px 20px;
-            font-family: 'JetBrains+Mono', monospace;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: 0.3s;
+        /* HEADER SCALE x3 */
+        header { 
+            width: 100%; 
+            padding: 30px 0; 
+            text-align: center; 
+            border-bottom: 3px solid var(--neon); 
+            margin-bottom: 40px;
+            background: linear-gradient(to bottom, #001a00, #000);
+        }
+        h1 { 
+            font-family: 'Orbitron', sans-serif; 
+            color: var(--neon); 
+            letter-spacing: 10px; 
+            font-size: 3.5rem; /* Scale x3 */
+            margin: 0;
+            text-shadow: 0 0 20px var(--neon);
         }
 
-        button:hover {
-            background: var(--neon-green);
-            color: black;
-            box-shadow: 0 0 15px var(--neon-green);
-        }
+        .container { width: 95%; max-width: 1200px; }
 
-        .dashboard {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            display: none; /* Hidden until analysis starts */
+        /* SELECTOR SCALE x2 */
+        .selector-box { 
+            background: var(--card); 
+            padding: 30px; 
+            border: 2px solid var(--dim); 
+            border-radius: 15px; 
+            display: flex; 
+            gap: 20px; 
+            justify-content: center; 
+            margin-bottom: 50px; 
         }
-
-        .card {
-            background: var(--card-bg);
-            border: 1px solid #333;
-            padding: 20px;
-            border-radius: 8px;
-            position: relative;
-            overflow: hidden;
-            transition: 0.3s;
-        }
-
-        .card:hover {
-            border-color: var(--neon-green);
-            box-shadow: var(--border-glow);
-        }
-
-        .card-header {
-            font-size: 0.8rem;
-            color: #888;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        .card-value {
-            font-size: 1.6rem;
-            color: var(--neon-green);
+        select, button { 
+            background: #000; 
+            color: var(--neon); 
+            border: 3px solid var(--neon); 
+            padding: 20px 40px; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            font-size: 1.8rem; /* Scale x2.5 */
             font-weight: bold;
         }
+        button:hover { background: var(--neon); color: #000; }
 
-        .market-info {
-            grid-column: 1 / -1;
+        /* DASHBOARD GRID */
+        .dashboard { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 30px; 
+            display: none; 
+        }
+
+        /* MARKET INFO SCALE x3 */
+        .market-info { 
+            grid-column: 1 / -1; 
+            text-align: center; 
+            border: 4px solid var(--neon); 
+            padding: 30px; 
+            border-radius: 20px; 
+            background: rgba(0,255,65,0.1);
+            margin-bottom: 20px;
+        }
+        .market-name { font-size: 3.5rem; font-weight: bold; color: #fff; display: block; }
+        .market-last { font-size: 2.5rem; color: var(--neon); }
+
+        /* CARDS SCALE x3 */
+        .card { 
+            background: var(--card); 
+            border: 2px solid #444; 
+            padding: 35px; 
+            border-radius: 20px; 
             text-align: center;
-            border: 1px solid var(--neon-green);
-            padding: 15px;
-            margin-bottom: 10px;
-            border-radius: 8px;
+        }
+        .card-header { 
+            font-size: 1.5rem; 
+            color: #aaa; 
+            text-transform: uppercase; 
+            margin-bottom: 15px; 
+            letter-spacing: 3px;
+        }
+        .card-value { 
+            font-size: 4.2rem; /* ULTRA SCALE x3 */
+            color: var(--neon); 
+            font-weight: 800;
+            text-shadow: 0 0 10px rgba(0,255,65,0.5);
         }
 
-        .loader {
-            display: none;
-            margin: 20px;
-            color: var(--neon-green);
-            font-style: italic;
-        }
+        /* SPECIAL VALUES */
+        .val-small { font-size: 2.8rem; }
+        .val-danger { color: var(--danger); text-shadow: 0 0 10px var(--danger); }
 
-        .footer {
-            margin-top: auto;
-            padding: 30px;
-            font-size: 0.7rem;
-            color: #444;
-            text-align: center;
-        }
-
-        /* Responsive Mobile */
-        @media (max-width: 600px) {
-            .selector-box { flex-direction: column; width: 100%; }
-            select, button { width: 100%; }
-        }
+        #loader { display: none; color: var(--neon); font-size: 2rem; margin: 40px; }
     </style>
 </head>
 <body>
-
-    <header>
-        <h1>MAMANG AI V8.16</h1>
-        <div style="font-size: 0.7rem; color: var(--neon-dim); margin-top: 5px;">SYSTEM ANALYTICS & CALIBRATION ENGINE</div>
-    </header>
-
+    <header><h1>MAMANG AI V8.25</h1></header>
+    
     <div class="container">
         <div class="selector-box">
-            <select id="marketSelect">
-                {% for m in markets %}
-                <option value="{{ m }}">{{ m }}</option>
-                {% endfor %}
+            <select id="mSelect">
+                {% for m in markets %}<option value="{{m}}">{{m}}</option>{% endfor %}
             </select>
-            <button onclick="startAnalysis()">EXECUTE ANALYSIS</button>
+            <button onclick="start()">GET PREDICTION</button>
         </div>
 
-        <center><div class="loader" id="loader">RUNNING WEIGHTING ENGINE... PLEASE WAIT...</div></center>
+        <center><div id="loader">RUNNING MASTER ALGORITHM...</div></center>
 
-        <div class="dashboard" id="dashboard">
+        <div class="dashboard" id="db">
             <div class="market-info">
-                <span id="res_market" style="font-size: 1.2rem; font-weight: bold; color: white;">-</span>
-                <span style="margin: 0 15px; color: #444;">|</span>
-                LAST RESULT: <span id="res_last" style="color: var(--neon-green);">-</span>
+                <span class="market-name" id="r_market">-</span>
+                <span class="market-last">RESULT TERAKHIR: <b id="r_last">-</b></span>
             </div>
 
             <div class="card">
-                <div class="card-header">Core 2D Belakang</div>
-                <div class="card-value" id="res_core">-</div>
+                <div class="card-header">CORE 2D JITU</div>
+                <div class="card-value" id="r_core">-</div>
             </div>
 
             <div class="card">
-                <div class="card-header">BBFS (Weighted 7D)</div>
-                <div class="card-value" id="res_bbfs" style="letter-spacing: 5px;">-</div>
+                <div class="card-header">BBFS WEIGHTED</div>
+                <div class="card-value val-small" id="r_bbfs">-</div>
             </div>
 
             <div class="card">
-                <div class="card-header">As + Kop (Index)</div>
-                <div class="card-value" id="res_askop">-</div>
+                <div class="card-header">AS + KOP (ID)</div>
+                <div class="card-value" id="r_askop">-</div>
             </div>
 
             <div class="card">
-                <div class="card-header">Kop + Kepala (ML)</div>
-                <div class="card-value" id="res_kopkep">-</div>
+                <div class="card-header">KOP + KEP (ML)</div>
+                <div class="card-value" id="r_kopkep">-</div>
             </div>
 
             <div class="card">
-                <div class="card-header">Shio Utama</div>
-                <div class="card-value" id="res_shio">-</div>
+                <div class="card-header">SHIO MAIN</div>
+                <div class="card-value" id="r_shio">-</div>
             </div>
 
             <div class="card">
-                <div class="card-header">Shio Macau / Twin</div>
-                <div class="card-value" id="res_macau" style="font-size: 1rem;">-</div>
-                <div id="res_twin" style="color: #ff4141; margin-top: 5px; font-size: 0.9rem;">-</div>
+                <div class="card-header">MACAU & TWIN</div>
+                <div class="card-value val-small" id="r_macau">-</div>
+                <div class="card-value val-small val-danger" id="r_twin">-</div>
             </div>
         </div>
-    </div>
-
-    <div class="footer">
-        AUTO-GENERATED BY MAMANG AI ANALYTICS SYSTEM 2026<br>
-        PROPRIETARY WEIGHTING ALGORITHM V8.16
     </div>
 
     <script>
-        function startAnalysis() {
-            const market = $('#marketSelect').val();
-            $('#loader').show();
-            $('#dashboard').hide();
-
-            $.post('/analyze', { market: market }, function(data) {
+        function start() {
+            $('#loader').show(); $('#db').hide();
+            $.post('/analyze', { market: $('#mSelect').val() }, function(d) {
                 $('#loader').hide();
-                if(data.status === 'success') {
-                    $('#res_market').text(data.market);
-                    $('#res_last').text(data.last);
-                    $('#res_core').text(data.data.core);
-                    $('#res_bbfs').text(data.data.bbfs);
-                    $('#res_askop').text(data.data.as_kop);
-                    $('#res_kopkep').text(data.data.kop_kep);
-                    $('#res_shio').text(data.data.shio);
-                    $('#res_macau').text(data.data.macau);
-                    $('#res_twin').text('CADANGAN TWIN: ' + data.data.twin);
-                    
-                    $('#dashboard').fadeIn(500).css('display', 'grid');
-                } else {
-                    alert('Sync Error: Market response failed.');
+                if(d.status==='success') {
+                    $('#r_market').text(d.market); 
+                    $('#r_last').text(d.last);
+                    $('#r_core').text(d.data.core); 
+                    $('#r_bbfs').text(d.data.bbfs);
+                    $('#r_askop').text(d.data.as_kop); 
+                    $('#r_kopkep').text(d.data.kop_kep);
+                    $('#r_shio').text(d.data.shio); 
+                    $('#r_macau').text(d.data.macau);
+                    $('#r_twin').text(d.data.twin);
+                    $('#db').fadeIn().css('display', 'grid');
                 }
-            }).fail(function() {
-                $('#loader').hide();
-                alert('Connection Error: Server busy.');
+            }).fail(function(){ 
+                $('#loader').hide(); 
+                alert("SERVER ERROR / SOURCE BUSY"); 
             });
         }
     </script>
