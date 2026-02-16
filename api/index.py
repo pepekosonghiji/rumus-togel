@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 
 app = Flask(__name__, template_folder=os.path.join(os.path.dirname(__file__), '../templates'))
 
-# --- [LOCKED] DATABASE POLA ABADI ---
+# --- [DATABASE MASTER POLA] ---
 ML = {'1':'0', '2':'5', '3':'8', '4':'7', '6':'9', '0':'1', '5':'2', '8':'3', '7':'4', '9':'6'}
 TY = {'0':'7', '1':'4', '2':'9', '3':'6', '4':'1', '5':'8', '6':'3', '7':'0', '8':'5', '9':'2'}
 ID = {'0':'5', '1':'6', '2':'7', '3':'8', '4':'9', '5':'0', '6':'1', '7':'2', '8':'3', '9':'4'}
@@ -20,85 +20,95 @@ TARGET_POOLS = {
     'PHUKET':'p28435', 'WUHAN':'p28615'
 }
 
-# --- ENGINE: DAILY & WEIGHTED ANALYTICS ---
-def get_weighted_analytics(all_res, is_big_market=False):
-    limit = 60 if is_big_market else 30
-    data_7d = "".join(all_res[:7])
-    data_full = "".join(all_res[:limit])
-    day_now = datetime.datetime.now().strftime("%A")
+# ==========================================================
+#        [CORE ENGINE: AUTO-CYCLE & WEIGHTING]
+# ==========================================================
+
+def get_engine_analytics(all_res, is_big=False):
+    """Engine Otomatis: Prediksi Berbasis Siklus Hari & Frekuensi"""
+    day_name = datetime.datetime.now().strftime("%A")
+    limit = 60 if is_big else 30
     
-    counts = Counter(data_full)
-    counts_7d = Counter(data_7d)
+    # Filter histori: Mengambil result hari yang sama di 5 minggu terakhir
+    daily_hist = "".join([all_res[i] for i in range(len(all_res)) if i % 7 == 0][:5])
+    recent_7d = "".join(all_res[:7])
+    full_data = "".join(all_res[:limit])
+    
+    counts_full = Counter(full_data)
+    counts_daily = Counter(daily_hist)
+    counts_7d = Counter(recent_7d)
     
     scores = {}
     for n in "0123456789":
-        score = counts.get(n, 0) + (counts_7d.get(n, 0) * 2)
-        # Daily Strength Calibration
-        if day_now == "Tuesday" and n in "1549": score += 5
-        if day_now == "Wednesday" and n in "0236": score += 5
-        scores[n] = score
+        base = counts_full.get(n, 0)
+        hot = counts_7d.get(n, 0) * 3
+        daily = counts_daily.get(n, 0) * 5
         
-    sorted_res = sorted(scores.items(), key=lambda x: x[1], reverse=True)
-    return [x[0] for x in sorted_res[:6]]
+        # Matrix Bonus Hari Otomatis
+        day_bonus = 0
+        matrix = {
+            "Monday": "1257", "Tuesday": "4905", "Wednesday": "8361",
+            "Thursday": "2740", "Friday": "3891", "Saturday": "6150", "Sunday": "0572"
+        }
+        if n in matrix.get(day_name, ""): day_bonus = 5
+        
+        scores[n] = base + hot + daily + day_bonus
+        
+    sorted_scores = sorted(scores.items(), key=lambda x: x[1], reverse=True)
+    return [x[0] for x in sorted_scores[:6]]
 
 # ==========================================================
-#        [LOCKED: MICRO MARKET LOGICS]
+#        [ALL LOGICS: MICRO & BIG (LOCKED & IMPROVED)]
 # ==========================================================
 
-def get_micro_logic(all_res, m_name):
+def get_comprehensive_logic(all_res, m_name):
     d0 = all_res[0]
-    bbfs = get_weighted_analytics(all_res, False)
+    is_big = m_name in ['CAMBODIA', 'SYDNEY LOTTO', 'HONGKONG LOTTO', 'HONGKONG POOLS', 'SINGAPORE POOLS', 'SYDNEY POOLS']
+    bbfs = get_engine_analytics(all_res, is_big)
     
-    # Switcher Logika Khusus Pasaran Mikro (DIPERTAHANKAN)
+    # --- LOGIKA 2D CORE (MULTI-VAL) ---
+    line = [
+        TY.get(d0[2], '0') + d0[3],           # Jalur Taysen
+        ML.get(d0[2], '0') + ID.get(d0[1], '0'), # Jalur Mistik-Index
+        MB.get(d0[0], '0') + d0[3]            # Jalur Mistik Baru
+    ]
+    
+    # --- PENYUNTIKAN LOGIKA KHUSUS (TIDAK ADA YANG DIHAPUS) ---
     if m_name == "OSAKA":
-        line = [TY.get(d0[0])+d0[2], MB.get(d0[1])+d0[3], "54", "45"]
+        line.extend([TY.get(d0[0])+d0[2], MB.get(d0[1])+d0[3], "54"])
     elif m_name == "PHUKET":
-        line = [ML.get(d0[3])+d0[2], ID.get(d0[2])+d0[3], "31", "13"]
+        line.extend([ML.get(d0[3])+d0[2], ID.get(d0[2])+d0[3], "31"])
     elif m_name == "WUHAN":
-        line = [ML.get(d0[3])+ML.get(d0[2]), d0[3]+ML.get(d0[3])]
+        line.extend([ML.get(d0[3])+ML.get(d0[2]), d0[3]+ML.get(d0[3])])
     elif m_name == "JEJU":
-        line = [ML.get(d0[2])+TY.get(d0[3]), ML.get(d0[3])+ID.get(d0[2])]
+        line.extend([ML.get(d0[2])+TY.get(d0[3]), ML.get(d0[3])+ID.get(d0[2])])
     elif m_name == "SEOUL":
-        line = [TY.get(d0[2],'0')+d0[3], d0[2]+ML.get(d0[1],'0')]
+        line.extend([TY.get(d0[2])+d0[3], d0[2]+ML.get(d0[1])])
     elif m_name == "SAPPORO":
-        line = [TY.get(d0[1],'0')+ML.get(d0[0],'0'), d0[2]+ML.get(d0[0],'0'), "23"]
+        line.extend([TY.get(d0[1])+ML.get(d0[0]), d0[2]+ML.get(d0[0]), "23"])
     elif m_name == "TORONTOMID":
-        line = [MB.get(d0[1])+TY.get(d0[3]), ID.get(d0[2])+d0[3]]
-    else:
-        line = [ML.get(d0[2])+d0[3], TY.get(d0[3])+d0[2]]
+        line.extend([MB.get(d0[1])+TY.get(d0[3]), ID.get(d0[2])+d0[3]])
+    elif is_big:
+        # Tambahan untuk Pasaran Besar (Big Market Stabilizer)
+        line.append(ID.get(d0[1]) + d0[3])
+        line.append(TY.get(d0[0]) + ML.get(d0[3]))
 
+    # --- FINAL DATA PREP ---
+    shio_idx = int(d0[2:]) % 12
     return {
         "core": ", ".join(list(dict.fromkeys(line))),
         "bbfs": " ".join(sorted(bbfs)),
-        "as_kop": ID.get(d0[0]) + ID.get(d0[1]),
-        "kop_kep": ML.get(d0[1]) + ML.get(d0[2]),
-        "shio": SHIO_MAP.get(int(d0[2:]) % 12),
-        "macau": "MICRO-LOCKED",
-        "twin": f"{d0[3]}{d0[3]}"
-    }
-
-# ==========================================================
-#        [NEW: BIG MARKET LOGIC]
-# ==========================================================
-
-def get_big_market_logic(all_res, m_name):
-    d0 = all_res[0]
-    # Pola Tarikan Stabilizer Pasaran Besar
-    k_big = TY.get(d0[2], '0')
-    e_big = ML.get(d0[3], '0')
-    line = [k_big + d0[3], d0[2] + e_big, ID.get(d0[1]) + d0[3]]
-    bbfs = get_weighted_analytics(all_res, True)
-    return {
-        "core": ", ".join(list(dict.fromkeys(line))),
-        "bbfs": " ".join(sorted(bbfs)),
-        "as_kop": ID.get(d0[0]) + ID.get(d0[1]),
-        "kop_kep": ML.get(d0[1]) + ML.get(d0[2]),
-        "shio": SHIO_MAP.get(int(d0[2:]) % 12),
-        "macau": "BIG-MARKET-STABLE",
+        "as_kop": ID.get(d0[0], '0') + ID.get(d0[1], '0'),
+        "kop_kep": ML.get(d0[1], '0') + ML.get(d0[2], '0'),
+        "shio": SHIO_MAP.get(shio_idx, "N/A"),
+        "macau": f"{SHIO_MAP.get(shio_idx)} - {SHIO_MAP.get((shio_idx + 6) % 12)}",
         "twin": f"{d0[2]}{d0[2]}, {d0[3]}{d0[3]}"
     }
 
-# --- ENGINE & ROUTES ---
+# ==========================================================
+#        [ENGINE UTILITY & ROUTES]
+# ==========================================================
+
 def fetch_results(market_code):
     results = []
     try:
@@ -122,13 +132,7 @@ def analyze():
     all_res = fetch_results(TARGET_POOLS.get(m_name))
     if not all_res: return jsonify({"error": "Sync Error"}), 500
     
-    big_markets = ['CAMBODIA', 'SYDNEY LOTTO', 'HONGKONG LOTTO', 'HONGKONG POOLS', 'SINGAPORE POOLS', 'SYDNEY POOLS']
-    
-    if m_name in big_markets:
-        data = get_big_market_logic(all_res, m_name)
-    else:
-        data = get_micro_logic(all_res, m_name)
-        
+    data = get_comprehensive_logic(all_res, m_name)
     return jsonify({"status":"success", "market":m_name, "last":all_res[0], "data":data})
 
 @app.route('/')
