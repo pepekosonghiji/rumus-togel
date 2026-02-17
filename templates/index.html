@@ -1,106 +1,219 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MAMANG AI | MULTI-PASARAN V8.27</title>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PREDIKSI ENGINE V9.1</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        :root { --bg: #000; --card: #0a0a0a; --neon: #00ff41; --text: #fff; --danger: #ff0000; }
-        body { background: var(--bg); color: var(--text); font-family: 'JetBrains Mono', monospace; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        header { width: 100%; padding: 25px 0; text-align: center; border-bottom: 3px solid var(--neon); margin-bottom: 30px; }
-        h1 { font-family: 'Orbitron', sans-serif; color: var(--neon); letter-spacing: 8px; font-size: 3rem; margin: 0; }
-        .container { width: 95%; max-width: 1200px; }
-        .selector-box { background: var(--card); padding: 25px; border: 2px solid #222; border-radius: 15px; display: flex; gap: 15px; justify-content: center; margin-bottom: 30px; }
-        select, button { background: #000; color: var(--neon); border: 2px solid var(--neon); padding: 15px 25px; border-radius: 8px; font-size: 1.3rem; font-weight: bold; cursor: pointer; }
-        .btn-capture { background: #003b11; display: none; margin-bottom: 20px; }
-        .dashboard { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; display: none; padding: 15px; }
-        .market-info { grid-column: 1 / -1; text-align: center; border: 3px solid var(--neon); padding: 25px; border-radius: 15px; background: rgba(0,255,65,0.05); }
-        .card { background: var(--card); border: 1px solid #444; padding: 30px; border-radius: 15px; text-align: center; }
-        .card-header { font-size: 1.2rem; color: #888; margin-bottom: 10px; }
-        .card-value { font-size: 3.8rem; color: var(--neon); font-weight: 800; }
-        .val-small { font-size: 2.5rem; }
-        #loader { display: none; color: var(--neon); font-size: 1.5rem; }
+        /* --- [BASE STYLING - UNIVERSAL] --- */
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px; /* Batas lebar di komputer agar tidak meluber */
+            box-sizing: border-box;
+        }
+
+        /* --- [FORM & INPUT] --- */
+        .control-panel {
+            background: #111;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #333;
+        }
+
+        select, button {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border: none;
+            font-size: 16px; /* Mencegah auto-zoom di iPhone */
+            font-weight: bold;
+        }
+
+        select {
+            background: #222;
+            color: #0f0;
+            border: 1px solid #0f0;
+        }
+
+        button#analyzeBtn {
+            background: #0f0;
+            color: #000;
+            cursor: pointer;
+        }
+
+        button#capBtn {
+            background: #444;
+            color: #fff;
+            margin-top: 10px;
+        }
+
+        /* --- [CAPTURE AREA - LOGIKA GRID ADAPTIF] --- */
+        #captureArea {
+            background: #000;
+            padding: 15px;
+            border: 2px solid #0f0;
+            border-radius: 15px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* Default 2 kolom */
+            gap: 10px;
+        }
+
+        .header-box {
+            grid-column: span 2;
+            text-align: center;
+            border: 2px solid #0f0;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 5px;
+        }
+
+        .header-box h1 { color: #fff; margin: 0; font-size: 24px; text-transform: uppercase; }
+        .header-box h2 { color: #0f0; margin: 5px 0 0; font-size: 20px; }
+
+        .card {
+            background: #080808;
+            border: 1px solid #333;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .card h3 { color: #888; font-size: 12px; margin: 0 0 8px; text-transform: uppercase; }
+        .card .value { color: #0f0; font-size: 28px; font-weight: bold; word-wrap: break-word; }
+
+        /* Khusus Shio dan Twin agar lebih proporsional */
+        .shio-value { font-size: 22px !important; color: #0f0; }
+        .twin-value { color: #ff3131 !important; font-size: 22px !important; }
+
+        /* --- [RESPONSIVE ADJUSTMENTS] --- */
+        @media (max-width: 480px) {
+            .header-box h1 { font-size: 20px; }
+            .header-box h2 { font-size: 18px; }
+            .card .value { font-size: 22px; }
+            .container { padding: 5px; }
+        }
     </style>
 </head>
 <body>
-    <header><h1>MAMANG ANALIS V8.27</h1></header>
-    <div class="container">
-        <div class="selector-box">
-            <select id="mSelect">{% for m in markets %}<option value="{{m}}">{{m}}</option>{% endfor %}</select>
-            <button onclick="start()">EXECUTE</button>
+
+<div class="container">
+    <div class="control-panel">
+        <select id="marketSelect">
+            <option value="">-- PILIH PASARAN --</option>
+            {% for m in markets %}
+            <option value="{{ m }}">{{ m }}</option>
+            {% endfor %}
+        </select>
+        <button id="analyzeBtn">GET PREDICTION</button>
+        <button id="capBtn" onclick="takeScreenshot()">DOWNLOAD SCREENSHOT</button>
+    </div>
+
+    <div id="captureArea">
+        <div class="header-box">
+            <h1 id="r_market">NAMA PASARAN</h1>
+            <h2 id="r_last">LAST: 0000</h2>
         </div>
-        <center><button id="capBtn" class="btn-capture" onclick="takeScreenshot()">📸 DOWNLOAD PNG</button></center>
-        <center><div id="loader">SYNCING DATA...</div></center>
-        <div class="dashboard" id="captureArea">
-            <div class="market-info">
-                <span style="font-size:3rem; display:block;" id="r_market">-</span>
-                <span style="font-size:2rem; color:var(--neon);">LAST: <b id="r_last">-</b></span>
-            </div>
-            <div class="card"><div class="card-header">CORE 2D</div><div class="card-value" id="r_core">-</div></div>
-            <div class="card"><div class="card-header">BBFS</div><div class="card-value val-small" id="r_bbfs">-</div></div>
-            <div class="card"><div class="card-header">AS+KOP</div><div class="card-value" id="r_askop">-</div></div>
-            <div class="card"><div class="card-header">KOP+KEP</div><div class="card-value" id="r_kopkep">-</div></div>
-            <div class="card"><div class="card-header">SHIO</div><div class="card-value" id="r_shio">-</div></div>
-            <div class="card"><div class="card-header">MACAU/TWIN</div><div class="card-value val-small" id="r_macau">-</div><div class="val-small" style="color:red;" id="r_twin">-</div></div>
+
+        <div class="card">
+            <h3>CORE 2D</h3>
+            <div id="r_core" class="value">-</div>
+        </div>
+
+        <div class="card">
+            <h3>BBFS</h3>
+            <div id="r_bbfs" class="value">-</div>
+        </div>
+
+        <div class="card">
+            <h3>AS + KOP</h3>
+            <div id="r_askop" class="value">-</div>
+        </div>
+
+        <div class="card">
+            <h3>KOP + KEP</h3>
+            <div id="r_kopkep" class="value">-</div>
+        </div>
+
+        <div class="card">
+            <h3>SHIO</h3>
+            <div id="r_shio" class="value shio-value">-</div>
+        </div>
+
+        <div class="card">
+            <h3>MACAU / TWIN</h3>
+            <div id="r_macau" class="value shio-value">-</div>
+            <div id="r_twin" class="value twin-value">-</div>
         </div>
     </div>
-    <script>
-        function start() {
-            $('#loader').show(); $('#captureArea').hide(); $('#capBtn').hide();
-            $.post('/analyze', { market: $('#mSelect').val() }, function(d) {
-                $('#loader').hide();
-                if(d.status==='success') {
-                    $('#r_market').text(d.market); $('#r_last').text(d.last);
-                    $('#r_core').text(d.data.core); $('#r_bbfs').text(d.data.bbfs);
-                    $('#r_askop').text(d.data.as_kop); $('#r_kopkep').text(d.data.kop_kep);
-                    $('#r_shio').text(d.data.shio); $('#r_macau').text(d.data.macau);
-                    $('#r_twin').text(d.data.twin);
-                    $('#captureArea').fadeIn().css('display', 'grid'); $('#capBtn').show();
-                }
-            });
-        }
-        function takeScreenshot() {
-    // 1. Pilih elemen yang akan di-capture
-    const element = document.querySelector("#captureArea");
-    const marketName = $('#r_market').text() || "PREDIKSI";
+</div>
 
-    // 2. Tampilkan Loader agar user tahu proses sedang berjalan
-    $('#capBtn').text("GENERATING...").prop('disabled', true);
+<script>
+    $('#analyzeBtn').click(function() {
+        const market = $('#marketSelect').val();
+        if(!market) return alert("Pilih Pasaran Bos!");
 
-    // 3. Konfigurasi html2canvas agar Universal
-    html2canvas(element, {
-        backgroundColor: "#000000", // Paksa background hitam agar elegan
-        scale: 3,                   // Resolusi tinggi (x3) agar tidak pecah/blur
-        useCORS: true,              // Support gambar dari luar jika ada
-        allowTaint: true,
-        logging: false,
-        windowWidth: 600,           // KUNCI: Paksa simulasi lebar 600px (ideal untuk HP & Web)
-        onclone: (clonedDoc) => {
-            // Memastikan elemen di dalam clone terlihat dan rapi
-            const clonedElement = clonedDoc.querySelector("#captureArea");
-            clonedElement.style.display = "grid"; 
-            clonedElement.style.width = "600px";  // Lebar standar agar tidak terpotong
-            clonedElement.style.margin = "0 auto";
-            clonedElement.style.padding = "20px";
-        }
-    }).then(canvas => {
-        // 4. Proses Download
-        const link = document.createElement('a');
-        link.download = `PREDIKSI-${marketName}.png`;
-        link.href = canvas.toDataURL("image/png");
-        link.click();
+        $(this).text("SYNCING...").prop('disabled', true);
 
-        // 5. Kembalikan tombol ke semula
-        $('#capBtn').text("DOWNLOAD SCREENSHOT").prop('disabled', false);
-    }).catch(err => {
-        console.error("Screenshot Error: ", err);
-        alert("Gagal mengambil screenshot, coba lagi.");
-        $('#capBtn').text("DOWNLOAD SCREENSHOT").prop('disabled', false);
+        $.post('/analyze', { market: market }, function(res) {
+            if(res.status === 'success') {
+                $('#r_market').text(res.market);
+                $('#r_last').text("LAST: " + res.last);
+                $('#r_core').text(res.data.core);
+                $('#r_bbfs').text(res.data.bbfs);
+                $('#r_askop').text(res.data.as_kop);
+                $('#r_kopkep').text(res.data.kop_kep);
+                $('#r_shio').text(res.data.shio);
+                $('#r_macau').text(res.data.macau.split(' - ')[0]);
+                $('#r_twin').text(res.data.twin);
+            } else {
+                alert(res.msg);
+            }
+            $('#analyzeBtn').text("GET PREDICTION").prop('disabled', false);
+        });
     });
-}
-    </script>
+
+    function takeScreenshot() {
+        const element = document.querySelector("#captureArea");
+        const marketName = $('#r_market').text();
+        
+        $('#capBtn').text("GENERATING...").prop('disabled', true);
+
+        html2canvas(element, {
+            backgroundColor: "#000",
+            scale: 3,
+            windowWidth: 600, // Simulasi lebar HP di screenshot agar tidak berantakan
+            onclone: (clonedDoc) => {
+                const clonedEl = clonedDoc.querySelector("#captureArea");
+                clonedEl.style.width = "500px";
+                clonedEl.style.display = "grid";
+            }
+        }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = `PREDIKSI-${marketName}.png`;
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+            $('#capBtn').text("DOWNLOAD SCREENSHOT").prop('disabled', false);
+        });
+    }
+</script>
+
 </body>
 </html>
