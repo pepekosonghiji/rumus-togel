@@ -119,7 +119,7 @@ def analyze():
         if market == "MACAU 4D":
             from .macau import calculate_macau_prediction
             # Gunakan p2263 sebagai sumber data sementara jika MACAU_TRIGGER gagal
-            results = fetch_results('p2263') 
+            results = fetch_results('m17') 
             if not results: return jsonify({"status": "error", "msg": "Sync Macau Gagal"}), 500
             data = calculate_macau_prediction(results)
             return jsonify({"status": "success", "market": "MACAU 4D (M17)", "last": results[0], "data": data})
