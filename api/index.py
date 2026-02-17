@@ -14,27 +14,17 @@ MB = {'0':'8', '1':'7', '2':'6', '3':'9', '4':'5', '5':'4', '6':'2', '7':'1', '8
 SHIO_MAP = {10:"KUDA", 11:"KAMBING", 0:"MONYET", 1:"AYAM", 2:"ANJING", 3:"BABI", 4:"TIKUS", 5:"KERBAU", 6:"MACAN", 7:"KELINCI", 8:"NAGA", 9:"ULAR"}
 
 TARGET_POOLS = {
-    'CAMBODIA': 'p3501', 
-    'SYDNEY LOTTO': 'p2262', 
-    'HONGKONG LOTTO': 'p2263', 
-    'HONGKONG POOLS': 'HK_SPECIAL', 
-    'SINGAPORE POOLS': 'p2264', 
-    'BUSAN POOLS':'p16063', 
-    'OSAKA':'p28422', 
-    'JEJU':'p22815', 
-    'DANANG':'p22816',
-    'PENANG':'p22817', 
-    'SEOUL':'p28502', 
-    'TORONTOMID':'p13976', 
-    'SAPPORO':'p22814',
-    'PHUKET':'p28435', 
-    'WUHAN':'p28615',
-    'MACAU 4D':'MACAU_TRIGGER'
+    'CAMBODIA': 'p3501', 'SYDNEY LOTTO': 'p2262', 'HONGKONG LOTTO': 'p2263', 
+    'HONGKONG POOLS': 'HK_SPECIAL', 'SINGAPORE POOLS': 'singapore', 'SYDNEY POOLS': 'sydney',
+    'BUSAN POOLS':'p16063', 'OSAKA':'p28422', 'JEJU':'p22815', 'DANANG':'p22816',
+    'PENANG':'p22817', 'SEOUL':'p28502', 'TORONTOMID':'p13976', 'SAPPORO':'p22814',
+    'PHUKET':'p28435', 'WUHAN':'p28615','MACAU 4D':'MACAU_TRIGGER'
 }
 
-# --- [CORE ENGINE V9.1: PENAJAMAN BBFS & PELARIAN] ---
+# --- [CORE ENGINE V9.2: PENAJAMAN BBFS & DAY MATRIX] ---
 def get_engine_analytics(all_res, is_big=False):
     d0 = all_res[0]
+    day_name = datetime.datetime.now().strftime("%A")
     limit = 60 if is_big else 30
     full_data = "".join(all_res[:limit])
     recent_7d = "".join(all_res[:7])
@@ -46,27 +36,38 @@ def get_engine_analytics(all_res, is_big=False):
     for n in "0123456789":
         scores[n] = counts_full.get(n, 0) + (counts_7d.get(n, 0) * 4)
     
-    # KALIBRASI PELARIAN (Agar angka dingin tidak lolos)
+    # KALIBRASI PELARIAN
     escape_1 = TY.get(d0[0], '0')
     escape_2 = ML.get(d0[1], '0')
     scores[escape_1] = scores.get(escape_1, 0) + 15 
     scores[escape_2] = scores.get(escape_2, 0) + 10
 
+    # FILTER KHUSUS BIG MARKET (CAMBODIA DLL)
+    if is_big:
+        # Deteksi angka "Berhutang" (Angka dingin yang harus keluar)
+        for n in "0123456789":
+            if n not in "".join(all_res[:6]):
+                scores[n] += 12
+        
+        # MATRIX HARIAN (Score Bonus Harian)
+        matrix = {
+            "Monday":"1257", "Tuesday":"4905", "Wednesday":"8361", 
+            "Thursday":"2740", "Friday":"3891", "Saturday":"6150", "Sunday":"0572"
+        }
+        day_bonus = matrix.get(day_name, "")
+        for n in day_bonus:
+            scores[n] = scores.get(n, 0) + 8
+
     sorted_scores = sorted(scores.items(), key=lambda x: x[1], reverse=True)
     return [x[0] for x in sorted_scores[:6]]
 
-# --- [LOGIC BRANCHING: MIKRO (LOCKED) & BIG] ---
+# --- [LOGIC BRANCHING: MIKRO (LOCKED) & BIG (REFINED)] ---
 def get_comprehensive_logic(all_res, m_name):
     d0 = all_res[0]
     is_big = m_name in ['CAMBODIA', 'SYDNEY LOTTO', 'HONGKONG LOTTO', 'HONGKONG POOLS', 'SINGAPORE POOLS', 'SYDNEY POOLS']
     bbfs = get_engine_analytics(all_res, is_big)
     
-    # Jalur Utama 2D Standar
-    line = [
-        TY.get(d0[2], '0')+d0[3], 
-        ML.get(d0[2], '0')+ID.get(d0[1], '0'), 
-        MB.get(d0[0], '0')+d0[3]
-    ]
+    line = [TY.get(d0[2], '0')+d0[3], ML.get(d0[2], '0')+ID.get(d0[1], '0'), MB.get(d0[0], '0')+d0[3]]
     
     # --- [PATAHAN LOGIKA MIKRO: JANGAN DISENTUH] ---
     if m_name == "OSAKA": line.extend([TY.get(d0[0])+d0[2], "54"])
@@ -77,11 +78,18 @@ def get_comprehensive_logic(all_res, m_name):
     elif m_name == "SAPPORO": line.extend([TY.get(d0[1])+ML.get(d0[0]), "23"])
     elif m_name == "TORONTOMID": line.extend([MB.get(d0[1])+TY.get(d0[3])])
     # --- [AKHIR LOGIKA MIKRO] ---
+
+    # --- [LOGIKA KHUSUS CAMBODIA (REFINED)] ---
+    elif m_name == "CAMBODIA":
+        line.append(ML.get(d0[0]) + d0[3]) # Head-to-Tail Cross
+        line.append(ID.get(d0[2]) + ML.get(d0[3])) # Index-Mistik
+        # Dinamis Harian (Kunci Angka Berdasarkan Hari)
+        day_key = {"Monday":"14", "Tuesday":"40", "Wednesday":"86", "Thursday":"20", "Friday":"31", "Saturday":"60", "Sunday":"02"}
+        line.append(day_key.get(datetime.datetime.now().strftime("%A"), "00"))
     
     elif is_big:
         line.append(ID.get(d0[1]) + d0[3])
         line.append(TY.get(d0[0]) + ML.get(d0[3]))
-        line.append(ID.get(d0[2]) + TY.get(d0[3])) # Tambahan penajaman Big Market
 
     shio_idx = int(d0[2:]) % 12
     return {
@@ -94,6 +102,7 @@ def get_comprehensive_logic(all_res, m_name):
         "twin": f"{d0[2]}{d0[2]}, {d0[3]}{d0[3]}"
     }
 
+# --- [SCRAPER & ROUTE - STABLE VERSION] ---
 def fetch_results(market_code):
     results = []
     if market_code == "HK_SPECIAL":
@@ -108,15 +117,10 @@ def fetch_results(market_code):
                         tds = row.find_all('td')
                         if len(tds) >= 2:
                             val = tds[1].text.strip()
-                            if val.isdigit() and len(val) == 4:
-                                results.append(val)
+                            if val.isdigit() and len(val) == 4: results.append(val)
             if results: return results
         except: pass
-
-    urls = [
-        f"https://dk9if7ik34.salamrupiah.com/history/result-mobile/{market_code}-pool-1",
-        f"https://dk9if7ik34.salamrupiah.com/history/result-mobile/kia_{market_code}"
-    ]
+    urls = [f"https://dk9if7ik34.salamrupiah.com/history/result-mobile/{market_code}-pool-1", f"https://dk9if7ik34.salamrupiah.com/history/result-mobile/kia_{market_code}"]
     for url in urls:
         try:
             with httpx.Client(timeout=15.0, verify=False) as client:
@@ -141,13 +145,10 @@ def analyze():
         if not results: return jsonify({"status": "error", "msg": "Sync Macau Gagal"}), 500
         data = calculate_macau_prediction(results)
         return jsonify({"status": "success", "market": "MACAU 4D (M17)", "last": results[0], "data": data})
-    
     market_code = TARGET_POOLS.get(market)
     if not market_code: return jsonify({"status": "error", "msg": "Pasaran Tidak Terdaftar"}), 400
-        
     results = fetch_results(market_code)
     if not results: return jsonify({"status": "error", "msg": f"Gagal Sinkronisasi {market}"}), 500
-        
     data = get_comprehensive_logic(results, market)
     return jsonify({"status": "success", "market": market, "last": results[0], "data": data})
 
