@@ -2,7 +2,6 @@ import os, re, httpx, datetime
 from flask import Flask, render_template, request, jsonify
 from collections import Counter
 from bs4 import BeautifulSoup
-# Pastikan macau.py ada di folder yang sama dengan index.py
 from .macau import fetch_macau_m17, calculate_macau_prediction
 
 app = Flask(__name__, template_folder=os.path.join(os.path.dirname(__file__), '../templates'))
@@ -15,47 +14,62 @@ MB = {'0':'8', '1':'7', '2':'6', '3':'9', '4':'5', '5':'4', '6':'2', '7':'1', '8
 SHIO_MAP = {10:"KUDA", 11:"KAMBING", 0:"MONYET", 1:"AYAM", 2:"ANJING", 3:"BABI", 4:"TIKUS", 5:"KERBAU", 6:"MACAN", 7:"KELINCI", 8:"NAGA", 9:"ULAR"}
 
 TARGET_POOLS = {
-    'CAMBODIA': 'p3501', 'SYDNEY LOTTO': 'p2262', 'HONGKONG LOTTO': 'p2263', 
+    'CAMBODIA': 'p3501', 
+    'SYDNEY LOTTO': 'p2262', 
+    'HONGKONG LOTTO': 'p2263', 
     'HONGKONG POOLS': 'HK_SPECIAL', 
-    'SINGAPORE POOLS': 'singapore', 'SYDNEY POOLS': 'sydney',
-    'BUSAN POOLS':'p16063', 'OSAKA':'p28422', 'JEJU':'p22815', 'DANANG':'p22816',
-    'PENANG':'p22817', 'SEOUL':'p28502', 'TORONTOMID':'p13976', 'SAPPORO':'p22814',
-    'PHUKET':'p28435', 'WUHAN':'p28615','MACAU 4D':'MACAU_TRIGGER'
+    'SINGAPORE POOLS': 'singapore', 
+    'SYDNEY POOLS': 'sydney',
+    'BUSAN POOLS':'p16063', 
+    'OSAKA':'p28422', 
+    'JEJU':'p22815', 
+    'DANANG':'p22816',
+    'PENANG':'p22817', 
+    'SEOUL':'p28502', 
+    'TORONTOMID':'p13976', 
+    'SAPPORO':'p22814',
+    'PHUKET':'p28435', 
+    'WUHAN':'p28615',
+    'MACAU 4D':'MACAU_TRIGGER'
 }
 
-# --- [CORE ENGINE: WEIGHTING SYSTEM] ---
+# --- [CORE ENGINE V9.1: PENAJAMAN BBFS & PELARIAN] ---
 def get_engine_analytics(all_res, is_big=False):
-    day_name = datetime.datetime.now().strftime("%A")
+    d0 = all_res[0]
     limit = 60 if is_big else 30
-    
-    daily_hist = "".join([all_res[i] for i in range(len(all_res)) if i % 7 == 0][:5])
-    recent_7d = "".join(all_res[:7])
     full_data = "".join(all_res[:limit])
+    recent_7d = "".join(all_res[:7])
     
     counts_full = Counter(full_data)
-    counts_daily = Counter(daily_hist)
     counts_7d = Counter(recent_7d)
     
     scores = {}
     for n in "0123456789":
-        base = counts_full.get(n, 0)
-        hot = counts_7d.get(n, 0) * 3
-        daily = counts_daily.get(n, 0) * 5
-        
-        matrix = {"Monday":"1257","Tuesday":"4905","Wednesday":"8361","Thursday":"2740","Friday":"3891","Saturday":"6150","Sunday":"0572"}
-        day_bonus = 5 if n in matrix.get(day_name, "") else 0
-        scores[n] = base + hot + daily + day_bonus
-        
+        scores[n] = counts_full.get(n, 0) + (counts_7d.get(n, 0) * 4)
+    
+    # KALIBRASI PELARIAN (Agar angka dingin tidak lolos)
+    escape_1 = TY.get(d0[0], '0')
+    escape_2 = ML.get(d0[1], '0')
+    scores[escape_1] = scores.get(escape_1, 0) + 15 
+    scores[escape_2] = scores.get(escape_2, 0) + 10
+
     sorted_scores = sorted(scores.items(), key=lambda x: x[1], reverse=True)
     return [x[0] for x in sorted_scores[:6]]
 
+# --- [LOGIC BRANCHING: MIKRO (LOCKED) & BIG] ---
 def get_comprehensive_logic(all_res, m_name):
     d0 = all_res[0]
     is_big = m_name in ['CAMBODIA', 'SYDNEY LOTTO', 'HONGKONG LOTTO', 'HONGKONG POOLS', 'SINGAPORE POOLS', 'SYDNEY POOLS']
     bbfs = get_engine_analytics(all_res, is_big)
     
-    line = [TY.get(d0[2], '0')+d0[3], ML.get(d0[2], '0')+ID.get(d0[1], '0'), MB.get(d0[0], '0')+d0[3]]
+    # Jalur Utama 2D Standar
+    line = [
+        TY.get(d0[2], '0')+d0[3], 
+        ML.get(d0[2], '0')+ID.get(d0[1], '0'), 
+        MB.get(d0[0], '0')+d0[3]
+    ]
     
+    # --- [PATAHAN LOGIKA MIKRO: JANGAN DISENTUH] ---
     if m_name == "OSAKA": line.extend([TY.get(d0[0])+d0[2], "54"])
     elif m_name == "PHUKET": line.extend([ML.get(d0[3])+d0[2], "31"])
     elif m_name == "WUHAN": line.extend([ML.get(d0[3])+ML.get(d0[2])])
@@ -63,9 +77,12 @@ def get_comprehensive_logic(all_res, m_name):
     elif m_name == "SEOUL": line.extend([TY.get(d0[2])+d0[3]])
     elif m_name == "SAPPORO": line.extend([TY.get(d0[1])+ML.get(d0[0]), "23"])
     elif m_name == "TORONTOMID": line.extend([MB.get(d0[1])+TY.get(d0[3])])
+    # --- [AKHIR LOGIKA MIKRO] ---
+    
     elif is_big:
         line.append(ID.get(d0[1]) + d0[3])
         line.append(TY.get(d0[0]) + ML.get(d0[3]))
+        line.append(ID.get(d0[2]) + TY.get(d0[3])) # Tambahan penajaman Big Market
 
     shio_idx = int(d0[2:]) % 12
     return {
@@ -117,40 +134,23 @@ def fetch_results(market_code):
         except: continue
     return results
 
-# --- [PERBAIKAN ROUTE ANALYZE] ---
 @app.route('/analyze', methods=['POST'])
 def analyze():
     market = request.form.get('market')
-    
-    # 1. Cek jika yang dipilih adalah MACAU
     if market == "MACAU 4D":
-        results = fetch_macau_m17() # Fungsi dari macau.py
-        if not results:
-            return jsonify({"status": "error", "msg": "Gagal Sinkronisasi Macau M17"}), 500
-        data = calculate_macau_prediction(results) # Fungsi dari macau.py
-        return jsonify({
-            "status": "success",
-            "market": "MACAU 4D (M17)",
-            "last": results[0],
-            "data": data
-        })
+        results = fetch_macau_m17()
+        if not results: return jsonify({"status": "error", "msg": "Sync Macau Gagal"}), 500
+        data = calculate_macau_prediction(results)
+        return jsonify({"status": "success", "market": "MACAU 4D (M17)", "last": results[0], "data": data})
     
-    # 2. Jalur Pasaran Lain (HK, SGP, dll)
     market_code = TARGET_POOLS.get(market)
-    if not market_code:
-        return jsonify({"status": "error", "msg": "Pasaran tidak terdaftar"}), 400
+    if not market_code: return jsonify({"status": "error", "msg": "Pasaran Tidak Terdaftar"}), 400
         
     results = fetch_results(market_code)
-    if not results:
-        return jsonify({"status": "error", "msg": "Sync Error"}), 500
+    if not results: return jsonify({"status": "error", "msg": f"Gagal Sinkronisasi {market}"}), 500
         
     data = get_comprehensive_logic(results, market)
-    return jsonify({
-        "status": "success", 
-        "market": market, 
-        "last": results[0], 
-        "data": data
-    })
+    return jsonify({"status": "success", "market": market, "last": results[0], "data": data})
 
 @app.route('/')
 def index():
