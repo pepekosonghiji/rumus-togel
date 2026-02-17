@@ -1,100 +1,66 @@
-import httpx
-from bs4 import BeautifulSoup
 import re
 from collections import Counter
 
-# --- [DATABASE MASTER POLA ABADI] ---
-ML = {'1':'0', '2':'5', '3':'8', '4':'7', '6':'9', '0':'1', '5':'2', '8':'3', '7':'4', '9':'6'}
-TY = {'0':'7', '1':'4', '2':'9', '3':'6', '4':'1', '5':'8', '6':'3', '7':'0', '8':'5', '9':'2'}
-ID = {'0':'5', '1':'6', '2':'7', '3':'8', '4':'9', '5':'0', '6':'1', '7':'2', '8':'3', '9':'4'}
-MB = {'0':'8', '1':'7', '2':'6', '3':'9', '4':'5', '5':'4', '6':'2', '7':'1', '8':'0', '9':'3'}
-SHIO_MAP = {10:"KUDA", 11:"KAMBING", 0:"MONYET", 1:"AYAM", 2:"ANJING", 3:"BABI", 4:"TIKUS", 5:"KERBAU", 6:"MACAN", 7:"KELINCI", 8:"NAGA", 9:"ULAR"}
+# --- [DATABASE DATABASE KHUSUS MACAU] ---
+# Menggunakan Mistik dan Taysen yang dikalibrasi untuk putaran cepat M17
+ML_MC = {'1':'0', '2':'5', '3':'8', '4':'7', '6':'9', '0':'1', '5':'2', '8':'3', '7':'4', '9':'6'}
+TY_MC = {'0':'7', '1':'4', '2':'9', '3':'6', '4':'1', '5':'8', '6':'3', '7':'0', '8':'5', '9':'2'}
+MB_MC = {'0':'8', '1':'7', '2':'6', '3':'9', '4':'5', '5':'4', '6':'2', '7':'1', '8':'0', '9':'3'}
 
-def fetch_macau_m17():
-    """Scraper Tajam khusus M17 dengan pembersihan Regex"""
-    results = []
-    url = "https://dk9if7ik34.salamrupiah.com/history/result-mobile/m17-pool-1"
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
-    }
-    try:
-        with httpx.Client(timeout=15.0, verify=False, headers=headers) as client:
-            r = client.get(url)
-            if r.status_code == 200:
-                soup = BeautifulSoup(r.text, 'html.parser')
-                table = soup.find('table', class_='table-history')
-                if table:
-                    rows = table.find('tbody').find_all('tr')
-                    for row in rows:
-                        tds = row.find_all('td')
-                        if len(tds) >= 3:
-                            link_data = tds[2].find('a')
-                            if link_data:
-                                # Membersihkan semua karakter kecuali angka
-                                val = re.sub(r'\D', '', link_data.text.strip())
-                                if len(val) == 4:
-                                    results.append(val)
-    except Exception as e:
-        print(f"Scraper Error: {e}")
-    return results
+def calculate_macau_prediction(results):
+    """
+    LOGIC V10 SHARP: Khusus Macau M17
+    Fokus: Menghindari angka result terakhir (4980) dan mencari angka 'hutang'.
+    """
+    if not results:
+        return None
 
-def calculate_macau_prediction(all_res):
-    """Engine Analisa V9.0: Penajaman Berdasarkan Karakter Result"""
-    if not all_res: return None
+    d0 = results[0]  # Result terakhir: 4980
     
-    d0 = all_res[0]  # Result Terbaru (contoh: 9711)
+    # --- [1. RUMUS BBFS: GAP VELOCITY] ---
+    # Memindai 15 putaran terakhir untuk mencari angka yang sengaja disimpan bandot
+    full_history = "".join(results[:15])
+    counts = Counter(full_history)
     
-    # 1. DETEKSI TWIN & SHIFTING LOGIC
-    is_twin_belakang = d0[2] == d0[3]
-    is_twin_depan = d0[0] == d0[1]
-    
-    # 2. PENAJAMAN BBFS (Weighting 3-Layer)
-    # Layer 1: Frekuensi Global (42 putaran)
-    # Layer 2: Frekuensi Harian (6 putaran)
-    # Layer 3: Mistik/Taysen dari Result Terakhir
-    all_digits = "".join(all_res[:42])
-    recent_digits = "".join(all_res[:6])
-    
-    scores = {str(i): 0 for i in range(10)}
-    for n in all_digits: scores[n] += 1
-    for n in recent_digits: scores[n] += 3 # Angka panas hari ini
-    
-    # Tambahkan angka pelarian jika result twin
-    if is_twin_belakang:
-        escape_digit = TY.get(d0[3], '0')
-        scores[escape_digit] += 10 # Prioritas angka taysen dari twin
+    mc_scores = {n: 0 for n in "0123456789"}
+    for n in "0123456789":
+        # Skor dasar dari frekuensi kemunculan (semakin jarang semakin tinggi skornya)
+        mc_scores[n] = 15 - counts.get(n, 0) 
         
-    bbfs = sorted(scores, key=scores.get, reverse=True)[:6]
-
-    # 3. PENAJAMAN CORE 2D JITU
-    if is_twin_belakang:
-        # Pola jika result terakhir twin (seperti 11)
-        # Ambil Mistik Baru As + Taysen Ekor
-        # Ambil Index Kop + Mistik Lama Kepala
-        line = [
-            MB.get(d0[0], '0') + TY.get(d0[3], '0'),
-            ID.get(d0[1], '0') + ML.get(d0[2], '0'),
-            TY.get(d0[2], '0') + MB.get(d0[3], '0')
-        ]
-    else:
-        # Pola Standar Tajam
-        line = [
-            TY.get(d0[2], '0') + d0[3],
-            ML.get(d0[2], '0') + ID.get(d0[3], '0'),
-            MB.get(d0[0], '0') + d0[3]
-        ]
+        # Penajaman: Cari jarak (gap) terakhir angka itu muncul
+        for i, res in enumerate(results[:20]):
+            if n in res:
+                mc_scores[n] += (i * 2.5) # Bobot 'Hutang' diperberat
+                break
     
-    # 4. SHIO & MACAU (Berdasarkan 2D Belakang)
-    shio_idx = int(d0[2:]) % 12
-    shio_main = SHIO_MAP.get(shio_idx, "N/A")
-    shio_off = SHIO_MAP.get((shio_idx + 6) % 12, "N/A")
+    # Eliminasi Angka Result Terakhir (4980) agar tidak meleset
+    for char in d0:
+        mc_scores[char] -= 10 
+
+    sorted_mc = sorted(mc_scores.items(), key=lambda x: x[1], reverse=True)
+    bbfs_final = [x[0] for x in sorted_mc[:6]]
+
+    # --- [2. RUMUS CORE 2D: CROSS-MIRROR] ---
+    # Pola: Mistik Baru Kop + Taysen Ekor & Indeks As + Kepala
+    # Result 4980 -> Kop: 9, Ekor: 0, As: 4, Kepala: 8
+    line_2d = [
+        MB_MC.get(d0[1]) + TY_MC.get(d0[3]), # 37
+        ML_MC.get(d0[2]) + MB_MC.get(d0[0]), # 38
+        "17", "35", "62", "18", "57"         # Angka Pelarian Siklus M17
+    ]
+    
+    # Clean up 2D agar unik
+    core_2d = list(dict.fromkeys(line_2d))
+
+    # --- [3. AS, KOP, SHIO] ---
+    shio_map = {10:"KUDA", 11:"KAMBING", 0:"MONYET", 1:"AYAM", 2:"ANJING", 3:"BABI", 4:"TIKUS", 5:"KERBAU", 6:"MACAN", 7:"KELINCI", 8:"NAGA", 9:"ULAR"}
+    shio_idx = int(d0[2:]) % 12 # Berdasarkan 2 digit belakang (80)
 
     return {
-        "core": ", ".join(list(dict.fromkeys(line))),
-        "bbfs": " ".join(sorted(bbfs)),
-        "as_kop": ID.get(d0[0], '0') + ID.get(d0[1], '0'),
-        "kop_kep": ML.get(d0[1], '0') + ML.get(d0[2], '0'),
-        "shio": shio_main,
-        "macau": f"{shio_main} - {shio_off}",
-        "twin": f"{ML.get(d0[2])}{ML.get(d0[2])}, {TY.get(d0[3])}{TY.get(d0[3])}"
+        "core_2d": ", ".join(core_2d),
+        "bbfs": " ".join(sorted(bbfs_final)),
+        "as_kop": MB_MC.get(d0[0]) + ML_MC.get(d0[1]),
+        "kop_kep": TY_MC.get(d0[1]) + MB_MC.get(d0[2]),
+        "shio": shio_map.get(shio_idx, "N/A"),
+        "macau_twin": f"{d0[1]}{d0[1]}, {TY_MC.get(d0[3])}{TY_MC.get(d0[3])}"
     }
