@@ -65,6 +65,23 @@ def get_comprehensive_logic(all_res, m_name):
         "macau": f"{SHIO_MAP.get(int(d0[2:]) % 12)} - {SHIO_MAP.get((int(d0[2:]) % 12 + 6) % 12)}",
         "twin": f"11, {bbfs[0]}{bbfs[0]}" # Antisipasi twin 11 setelah 55
     }
+    elif m_name == "SINGAPORE POOLS":
+        d0 = all_res[0]
+        bbfs = get_refined_bbfs(all_res, limit=55)
+        l1 = ID.get(d0[2], '0') + MB.get(d0[3], '0')
+        l2 = TY.get(d0[0], '0') + ML.get(d0[2], '0')
+        l3 = "9" + bbfs[0] if "9" in bbfs else "7" + bbfs[0]
+        l4 = d0[3] + d0[2]
+        core_lines = list(dict.fromkeys([l1, l2, l3, l4, "86"]))
+        return {
+        "core": ", ".join(core_lines[:5]),
+        "bbfs": " ".join(sorted(bbfs[:6])),
+        "as_kop": MB.get(d0[0], '0') + ID.get(d0[1], '0'),
+        "kop_kep": TY.get(d0[1], '0') + ML.get(d0[2], '0'),
+        "shio": SHIO_MAP.get(int(d0[2:]) % 12, "N/A"),
+        "macau": f"{SHIO_MAP.get(int(d0[2:]) % 12)} - {SHIO_MAP.get((int(d0[2:]) % 12 + 6) % 12)}",
+        "twin": f"66, 00" # Twin 11 biasanya memancing twin 66 atau 00
+    }
     elif m_name == "SAPPORO":
         d0 = all_res[0]
         bbfs = get_refined_bbfs(all_res, limit=40)
