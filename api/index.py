@@ -181,7 +181,22 @@ def get_comprehensive_logic(all_res, m_name):
         "twin": f"{d0[3]}{d0[3]}, {bbfs[0]}{bbfs[0]}"
     }
     elif m_name == "PHUKET":
-        line.extend([MB.get(d0[0])+d0[2], ML.get(d0[1])+TY.get(d0[3])])
+        d0 = all_res[0]
+        bbfs = get_engine_analytics(all_res, is_big=False)
+        l1 = ID.get(d0[2], '0') + ML.get(d0[3], '0')
+        l2 = TY.get(d0[0], '0') + MB.get(d0[1], '0')
+        l3 = "0" + bbfs[0]
+        l4 = "71" if "7" in bbfs else "12
+        core_lines = list(dict.fromkeys([l1, l2, l3, l4, "17"]))
+        return {
+            "core": ", ".join(core_lines[:5]),
+            "bbfs": " ".join(sorted(bbfs)),
+            "as_kop": TY.get(d0[0], '0') + ID.get(d0[1], '0'),
+            "kop_kep": MB.get(d0[1], '0') + ML.get(d0[2], '0'),
+            "shio": SHIO_MAP.get(int(d0[2:]) % 12, "N/A"),
+            "macau": f"{SHIO_MAP.get(int(d0[2:]) % 12)} - {SHIO_MAP.get((int(d0[2:]) % 12 + 6) % 12)}",
+            "twin": f"{d0[1]}{d0[1]}, {bbfs[0]}{bbfs[0]}"
+        }
     elif is_big:
         line.append(ID.get(d0[1]) + d0[3])
         line.append(TY.get(d0[0]) + ML.get(d0[3]))
