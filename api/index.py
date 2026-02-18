@@ -82,6 +82,23 @@ def get_comprehensive_logic(all_res, m_name):
         "macau": f"{SHIO_MAP.get(int(d0[2:]) % 12)} - {SHIO_MAP.get((int(d0[2:]) % 12 + 6) % 12)}",
         "twin": f"66, 00" # Twin 11 biasanya memancing twin 66 atau 00
     }
+    elif m_name == "DANANG":
+        d0 = all_res[0]
+        bbfs = get_refined_bbfs(all_res, limit=45)
+        l1 = MB.get(d0[1], '1') + TY.get(d0[3], '7')
+        l2 = ID.get(d0[0], '0') + ML.get(d0[2], '5')
+        l3 = bbfs[0] + MB.get(selisih_tengah, '4')
+        l4 = "94" if "9" in bbfs else "41"
+        core_lines = list(dict.fromkeys([l1, l2, l3, l4, "71", "49"]))
+        return {
+            "core": ", ".join(core_lines[:5]),
+            "bbfs": " ".join(sorted(bbfs)),
+            "as_kop": TY.get(d0[0], '0') + ML.get(d0[1], '4'),
+            "kop_kep": ID.get(d0[1], '2') + MB.get(d0[2], '6'),
+            "shio": SHIO_MAP.get(int(d0[2:]) % 12, "N/A"),
+            "macau": f"{SHIO_MAP.get(int(d0[2:]) % 12)} - {SHIO_MAP.get((int(d0[2:]) % 12 + 6) % 12)}",
+            "twin": f"11, 44, 77" # Danang sering keluarkan twin ganjil setelah JP 4D
+        }
     elif m_name == "SAPPORO":
         d0 = all_res[0]
         bbfs = get_refined_bbfs(all_res, limit=40)
