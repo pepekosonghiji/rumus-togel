@@ -187,7 +187,43 @@ def get_comprehensive_logic(all_res, m_name):
         "twin": f"{d0[0]}{d0[0]}, 11" # Fokus twin 22 atau 11
     }
     elif m_name == "HONGKONG LOTTO":
-        line.extend([ID.get(d0[0])+ML.get(d0[3]), TY.get(d0[1])+d0[2], MB.get(d0[3])+d0[0]])
+        d0 = all_res[0]
+        d0 = all_res[1]
+        bbfs = get_refined_bbfs(all_res, limit=50)
+        l1 = TY.get(d0[1], '0') + ML.get(d0[2], '0')
+        l2 = ID.get(d0[0], '0') + MB.get(d0[3], '0')
+        l3 = d0[2] + d1[3]
+        l4 = "05" if "0" in bbfs else "50"
+        if MB.get(d0[3]) not in bbfs: bbfs.append(MB.get(d0[3]))
+        core_lines = list(dict.fromkeys([l1, l2, l3, l4, "15", "51", "84"]))
+        return {
+            "core": ", ".join(core_lines[:5]),
+            "bbfs": " ".join(sorted(list(set(bbfs[:7])))), # BBFS 7 Digit lebih aman
+            "as_kop": MB.get(d0[0], '0') + ID.get(d0[1], '0'),
+            "kop_kep": TY.get(d0[1], '0') + ML.get(d0[2], '0'),
+            "shio": SHIO_MAP.get(int(d0[2:]) % 12, "N/A"),
+            "macau": f"{SHIO_MAP.get(int(d0[2:]) % 12)} - {SHIO_MAP.get((int(d0[2:]) % 12 + 6) % 12)}",
+            "twin": f"55, 00, 11"
+        }
+    elif m_name == "HONGKONG POOLS":
+        d0 = all_res[0]
+        bbfs = get_refined_bbfs(all_res, limit=60)
+        l1 = ML.get(d0[3], '0') + TY.get(d0[0], '0')
+        l2 = ID.get(d0[1], '0') + MB.get(d0[2], '0')
+        l3 = d0[1] + ID.get(d0[3], '0') 
+        l4 = "29" if "2" in bbfs else "40"
+        if "0" not in bbfs: bbfs.append("0")
+        
+        core_lines = list(dict.fromkeys([l1, l2, l3, l4, "75", "15"]))
+        return {
+            "core": ", ".join(core_lines[:5]),
+            "bbfs": " ".join(sorted(list(set(bbfs[:7])))),
+            "as_kop": TY.get(d0[0], '0') + ML.get(d0[1], '0'),
+            "kop_kep": ID.get(d0[1], '0') + MB.get(d0[2], '0'),
+            "shio": SHIO_MAP.get(int(d0[2:]) % 12, "N/A"),
+            "macau": f"{SHIO_MAP.get(int(d0[2:]) % 12)} - {SHIO_MAP.get((int(d0[2:]) % 12 + 6) % 12)}",
+            "twin": f"99, 66, 00"
+        }
     elif m_name == "CAMBODIA":
         jalur_main = ID.get(d0[0]) + ML.get(d0[3])
         jalur_bom = TY.get(d0[1]) + ID.get(d0[2])
