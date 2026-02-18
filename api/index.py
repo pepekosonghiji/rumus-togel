@@ -52,7 +52,10 @@ def get_comprehensive_logic(all_res, m_name):
     elif m_name == "HONGKONG LOTTO":
         line.extend([ID.get(d0[0])+ML.get(d0[3]), TY.get(d0[1])+d0[2], MB.get(d0[3])+d0[0]])
     elif m_name == "CAMBODIA":
-        line.extend([ID.get(d0[0])+ML.get(d0[3]), TY.get(d0[1])+ID.get(d0[2]), d0[1]+d0[3]])
+        jalur_main = ID.get(d0[0]) + ML.get(d0[3])
+        jalur_bom = TY.get(d0[1]) + ID.get(d0[2])
+        cadangan_presisi = d0[3] + TY.get(d0[3])
+        line.extend([jalur_main, jalur_bom, cadangan_presisi, d1[2]+d0[3]])
     elif m_name == "SYDNEY LOTTO":
         line.extend([ML.get(d0[0])+TY.get(d0[2]), ID.get(d0[1])+d0[3]])
     elif m_name == "PHUKET":
