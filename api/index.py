@@ -47,6 +47,23 @@ def get_comprehensive_logic(all_res, m_name):
     line = [TY.get(d0[2], '0')+d0[3], ML.get(d0[2], '0')+ID.get(d0[1], '0')]
     
     if m_name == "OSAKA": line = [ID.get(d0[1])+d0[3], "84", "24", "74", "45", "54"]
+    elif m_name == "SEOUL":
+        d0 = all_res[0]
+        bbfs = get_refined_bbfs(all_res, limit=35)
+        l1 = ID.get(d0[3], '0') + ML.get(d0[2], '1')
+        l2 = TY.get(d0[1], '0') + bbfs[0]
+        l3 = MB.get(d0[0], '0') + MB.get(d0[3], '0')
+        l4 = "0" + ID.get(d0[3], '8')
+        core_lines = list(dict.fromkeys([l1, l2, l3, l4, "03"]))
+        return {
+        "core": ", ".join(core_lines[:5]),
+        "bbfs": " ".join(sorted(bbfs)),
+        "as_kop": MB.get(d0[0], '0') + ID.get(d0[1], '0'),
+        "kop_kep": TY.get(d0[1], '0') + ML.get(d0[2], '0'),
+        "shio": SHIO_MAP.get(int(d0[2:]) % 12, "N/A"),
+        "macau": f"{SHIO_MAP.get(int(d0[2:]) % 12)} - {SHIO_MAP.get((int(d0[2:]) % 12 + 6) % 12)}",
+        "twin": f"33, {bbfs[0]}{bbfs[0]}" # Antisipasi twin pindah ke belakang
+    }
     elif m_name == "JEJU":
         d0 = all_res[0]
         bbfs = get_refined_bbfs(all_res, limit=40)
