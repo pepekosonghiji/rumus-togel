@@ -57,7 +57,26 @@ def get_comprehensive_logic(all_res, m_name):
         cadangan_presisi = d0[3] + TY.get(d0[3])
         line.extend([jalur_main, jalur_bom, cadangan_presisi, d1[2]+d0[3]])
     elif m_name == "SYDNEY LOTTO":
-        line.extend([ML.get(d0[0])+TY.get(d0[2]), ID.get(d0[1])+d0[3]])
+        d0 = all_res[0]
+        d1 = all_res[1]
+        bbfs = get_refined_bbfs(all_res, limit=45)
+        line1 = TY.get(d0[3], '0') + ML.get(d0[2], '0')
+        line2 = ID.get(d0[0], '0') + d1[3]
+        selisih_idx = ID.get(str(abs(int(d0[1]) - int(d0[2]))), '0')
+        line3 = selisih_idx + bbfs[0]
+        line4 = "54" if "5" in bbfs else "58"
+        core_lines = list(dict.fromkeys([line1, line2, line3, line4, "12", "37"]))
+        askop_final = MB.get(d0[0], '0') + ID.get(d0[1], '0')
+        kopkep_final = TY.get(d0[1], '0') + ML.get(d0[2], '0')
+        return {
+        "core": ", ".join(core_lines[:5]), # Ambil 5 line terbaik
+        "bbfs": " ".join(sorted(bbfs)),
+        "as_kop": askop_final,
+        "kop_kep": kopkep_final,
+        "shio": SHIO_MAP.get(int(d0[2:]) % 12, "N/A"),
+        "macau": f"{SHIO_MAP.get(int(d0[2:]) % 12)} - {SHIO_MAP.get((int(d0[2:]) % 12 + 6) % 12)}",
+        "twin": f"{d0[3]}{d0[3]}, {bbfs[0]}{bbfs[0]}"
+    }
     elif m_name == "PHUKET":
         line.extend([MB.get(d0[0])+d0[2], ML.get(d0[1])+TY.get(d0[3])])
     elif is_big:
