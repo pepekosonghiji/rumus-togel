@@ -31,62 +31,62 @@ def fetch_macau_m17():
 
 def calculate_macau_prediction(results):
     """
-    PENAJAMAN ANALISA V12.5: 
-    - Fokus pada 'Gap Overdue' (Angka yang sudah lewat jatuh tempo).
-    - Sinkronisasi 100% dengan UI HTML.
+    LOGIC V13.0 - ULTRA PRECISION 2D FOCUS (MACAU M17)
+    Fokus utama: Membedah pola 2D menggunakan Taysen Berantai dan Index Selisih.
     """
     try:
         if not results or len(results) < 2:
             return {"core": "-", "bbfs": "-", "as_kop": "00", "kop_kep": "00", "shio": "-", "macau": "-", "twin": "-"}
 
-        # Result Terakhir (d0) dan Sebelumnya (d1)
+        # Result Terakhir: 9452 (d0), 6449 (d1)
         d0 = str(results[0]).zfill(4)
         d1 = str(results[1]).zfill(4)
         
-        # --- 1. BBFS SHARPENING (Weighted Gap Analysis) ---
-        full_history = "".join(results[:50]) # Pantau 50 putaran untuk akurasi tinggi
+        # --- [PROSES BBFS - TETAP STABIL] ---
+        full_history = "".join(results[:40])
         counts = Counter(full_history)
-        
-        scores = {n: 0 for n in "0123456789"}
-        for n in "0123456789":
-            # Skor dasar: Semakin jarang muncul (Cold Number), skor semakin tinggi
-            scores[n] = (50 - counts.get(n, 0))
-            
-            # Bonus Gap: Cari jarak absen terakhir angka tersebut
-            for i, res in enumerate(results[:30]):
-                if n in str(res):
-                    scores[n] += (i * 5) # Bobot gap dinaikkan ke 5x lipat
-                    break
-                if i == 29: scores[n] += 150 # Angka yang hilang > 30 putaran wajib masuk
-
-        # ANTI-REPEAT: Kurangi skor angka yang baru keluar di d0 dan d1 secara signifikan
-        for char in set(d0 + d1):
-            scores[char] -= 100
-
+        scores = {n: (40 - counts.get(n, 0)) for n in "0123456789"}
+        for char in d0: scores[char] -= 60
         sorted_scores = sorted(scores.items(), key=lambda x: x[1], reverse=True)
         bbfs_final = [x[0] for x in sorted_scores[:6]]
 
-        # --- 2. CORE 2D SHARPENING (Cross-Pattern) ---
-        # Rumus A: Mistik Baru dari KOP terakhir + Index AS sebelumnya
-        p1 = MB_MC.get(d0[1], '0') + ID_MC.get(d1[0], '0')
-        # Rumus B: Taysen dari KEPALA terakhir + Ekor terakhir
-        p2 = TY_MC.get(d0[2], '0') + d0[3]
-        # Rumus C: Dua angka teratas BBFS (Angka paling 'berhutang')
-        p3 = bbfs_final[0] + bbfs_final[1]
+        # --- [PROSES PENAJAMAN 2D - FOKUS UTAMA] ---
+        # Rumus 1: Pola Taysen Berantai (EKOR d0 -> Taysen -> Index)
+        # Result 3939 (Ekor 9) -> Taysen 2 -> Index 7. Maka angka 27/72 kuat.
+        ekor_d0 = d0[3]
+        taysen_ekor = TY_MC.get(ekor_d0, '0')
+        p1 = taysen_ekor + ID_MC.get(taysen_ekor, '0')
 
-        # --- 3. SHIO & MACAU (UI Logic) ---
+        # Rumus 2: Pola Selisih Mistis (AS d0 - KEPALA d0)
+        # Mencari angka tengah yang sering muncul sebagai 'Jembatan'
+        as_val = int(d0[0])
+        kep_val = int(d0[2])
+        selisih = str(abs(as_val - kep_val))
+        p2 = MB_MC.get(selisih, '0') + TY_MC.get(d0[1], '0')
+
+        # Rumus 3: Pola Indeks Silang (KEPALA d0 + EKOR d1)
+        # Menangkap pola result 3939 yang sering mengambil indeks dari result sebelumnya
+        p3 = ID_MC.get(d0[2], '0') + ID_MC.get(d1[3], '0')
+
+        # Rumus 4: Angka "Hutang" Terkuat (Top 2 BBFS)
+        p4 = bbfs_final[0] + bbfs_final[1]
+
+        # Gabungkan dan Hilangkan Duplikat
+        core_2d = list(dict.fromkeys([p1, p2, p3, p4]))
+        
+        # --- [SHIO & MACAU - TETAP SYNC UI] ---
         shio_map = {10:"KUDA", 11:"KAMBING", 0:"MONYET", 1:"AYAM", 2:"ANJING", 3:"BABI", 4:"TIKUS", 5:"KERBAU", 6:"MACAN", 7:"KELINCI", 8:"NAGA", 9:"ULAR"}
         shio_idx = int(d0[2:]) % 12
         shio_name = shio_map.get(shio_idx, "N/A")
         macau_val = f"{shio_name} - {shio_map.get((shio_idx + 6) % 12, 'N/A')}"
 
-        # --- 4. TWIN SHARPENING ---
-        # Twin diambil dari angka dengan skor tertinggi di BBFS
-        tw_1 = bbfs_final[0] + bbfs_final[0]
-        tw_2 = bbfs_final[1] + bbfs_final[1]
+        # --- [TWIN SHARPENING] ---
+        # Twin fokus pada angka taysen dari EKOR terakhir (antisipasi twin silang)
+        tw_1 = taysen_ekor + taysen_ekor
+        tw_2 = bbfs_final[0] + bbfs_final[0]
 
         return {
-            "core": f"{p1}, {p2}, {p3}",
+            "core": ", ".join(core_2d[:4]), # Menampilkan 4 line 2D paling tajam
             "bbfs": " ".join(sorted(bbfs_final)),
             "as_kop": ID_MC.get(d0[0], '0') + ID_MC.get(d0[1], '0'),
             "kop_kep": ML_MC.get(d0[1], '0') + MB_MC.get(d0[2], '0'),
@@ -94,5 +94,5 @@ def calculate_macau_prediction(results):
             "macau": macau_val,
             "twin": f"{tw_1}, {tw_2}"
         }
-    except:
-        return {"core": "ERR", "bbfs": "-", "as_kop": "00", "kop_kep": "00", "shio": "-", "macau": "-", "twin": "-"}
+    except Exception as e:
+        return {"core": "ERR LOGIC", "bbfs": "-", "as_kop": "00", "kop_kep": "00", "shio": "-", "macau": "-", "twin": "-"}
