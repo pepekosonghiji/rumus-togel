@@ -123,6 +123,7 @@
             {% endfor %}
         </select>
         <button id="analyzeBtn">GET PREDICTION</button>
+        <button id="copyBtn" onclick="copyToClipboard()" style="background: #007bff; color: white;">COPY TEXT DATA</button>
         <button id="capBtn" onclick="takeScreenshot()">DOWNLOAD SCREENSHOT</button>
     </div>
 
@@ -213,6 +214,36 @@
             $('#capBtn').text("DOWNLOAD SCREENSHOT").prop('disabled', false);
         });
     }
+    function copyToClipboard() {
+    const market = $('#r_market').text();
+    const last = $('#r_last').text();
+    const core = $('#r_core').text();
+    const bbfs = $('#r_bbfs').text();
+    const askop = $('#r_askop').text();
+    const kopkep = $('#r_kopkep').text();
+    const shio = $('#r_shio').text();
+    const twin = $('#r_twin').text();
+
+    const textToCopy = `
+🎯 PREDIKSI ${market}
+📝 ${last}
+---------------------------
+🚀 CORE 2D : ${core}
+🎡 BBFS    : ${bbfs}
+📐 AS+KOP  : ${askop}
+📏 KOP+KEP : ${kopkep}
+🐉 SHIO    : ${shio}
+👯 TWIN    : ${twin}
+---------------------------
+Cek Terus: rumus-togel.vercel.app
+    `.trim();
+
+    navigator.clipboard.writeText(textToCopy).then(() => {
+        alert("Data Berhasil di Copy!");
+    }).catch(err => {
+        console.error('Gagal copy: ', err);
+    });
+}
 </script>
 
 </body>
