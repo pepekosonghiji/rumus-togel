@@ -39,76 +39,74 @@ def fetch_macau_m17():
 
 def calculate_macau_prediction(results):
     """
-    LOGIC V11.0: ADAPTIVE WEIGHTED GAP (AWG)
-    Fokus: Memperkuat akurasi BBFS & 2D dengan sistem skor 'Hutang Angka'.
+    LOGIC V12: FREQUENCY-GAP HYBRID
+    Pertajaman BBFS dengan pembobotan ganda dan pengisian otomatis Core 2D.
     """
     try:
-        if not results or len(results) < 1:
+        if not results or len(results) < 2:
             return {
-                "core_2d": "SYNC GAGAL", "bbfs": "-", "as_kop": "00", 
+                "core_2d": "MENUNGGU DATA", "bbfs": "-", "as_kop": "00", 
                 "kop_kep": "00", "shio": "-", "macau_twin": "-"
             }
 
-        # Mengambil result terakhir (d0) dan result sebelumnya (d1)
+        # Data Primer: 9452 (d0) dan 6449 (d1)
         d0 = str(results[0]).zfill(4) 
-        d1 = str(results[1]).zfill(4) if len(results) > 1 else "0000"
+        d1 = str(results[1]).zfill(4)
         
-        # --- [1. BBFS SHARPENING: AWG SYSTEM] ---
-        # Mengambil histori 30 putaran untuk akurasi lebih dalam
-        full_history = "".join(map(str, results[:30])) 
+        # --- [1. PERTAJAMAN BBFS: HYBRID SCORING] ---
+        full_history = "".join(map(str, results[:40])) # Pantau 40 putaran
         counts = Counter(full_history)
         
         scores = {n: 0 for n in "0123456789"}
         for n in "0123456789":
-            # Semakin jarang muncul secara keseluruhan, skor semakin tinggi
-            scores[n] = (40 - counts.get(n, 0))
+            # Skor 1: Kelangkaan (Semakin jarang muncul di 40 putaran, semakin tinggi)
+            scores[n] = (60 - counts.get(n, 0))
             
-            # Bonus skor berdasarkan jarak (Gap) absennya angka
-            for i, res in enumerate(results[:20]):
+            # Skor 2: Gap Absen (Mencari angka yang 'jatuh tempo')
+            for i, res in enumerate(results[:25]):
                 if n in str(res):
-                    scores[n] += (i * 3.5) # Bobot jarak ditingkatkan menjadi 3.5
+                    scores[n] += (i * 4.5) # Bobot gap ditingkatkan ke 4.5
                     break
-                if i == 19: # Angka yang benar-benar hilang > 20 putaran
-                    scores[n] += 100
         
-        # FILTER ANTI-STUCK: Memangkas skor angka yang muncul di 2 result terakhir
-        # Mencegah jebakan angka repeat (seperti kasus HK 3907)
-        combined_last = d0 + d1
-        for char in set(combined_last):
-            scores[char] -= 60 # Penalti berat agar angka baru bisa naik ke BBFS
+        # FILTER ANTI-STUCK: Buang angka dari result terakhir (9,4,5,2)
+        # Tapi biarkan angka dari result sebelumnya (6,4,4,9) jika gap-nya tinggi
+        for char in d0:
+            scores[char] -= 80 
 
-        # Urutkan angka berdasarkan skor hutang tertinggi
         sorted_scores = sorted(scores.items(), key=lambda x: x[1], reverse=True)
         bbfs_final = [x[0] for x in sorted_scores[:6]]
 
-        # --- [2. RUMUS 2D: CROSS-MIRROR ANALYTICS] ---
-        # Kombinasi silang Index, Mistik Baru, dan Taysen
-        p1 = ID_MC.get(d0[0], '0') + MB_MC.get(d0[1], '0') # Index As + Mistik Kop
-        p2 = TY_MC.get(d0[2], '0') + ID_MC.get(d0[3], '0') # Taysen Kepala + Index Ekor
+        # --- [2. PERBAIKAN CORE 2D: AUTO-FILL SYSTEM] ---
+        # Rumus A: Mistik Baru dari (AS d0 + EKOR d1)
+        # Rumus B: Index dari (KOP d0 + KEPALA d0)
         
-        # Jalur cadangan dari 2 angka BBFS terkuat
-        top_gap = bbfs_final[0] + bbfs_final[1]
+        # Pastikan angka 2D selalu terisi dengan mengambil top skor BBFS
+        top1 = bbfs_final[0]
+        top2 = bbfs_final[1]
+        top3 = bbfs_final[2]
+
+        line_2d = [
+            top1 + top2, # Kombinasi 1-2
+            top1 + top3, # Kombinasi 1-3
+            MB_MC.get(d0[1], '0') + ID_MC.get(d0[3], '0'), # Pola Mistik-Index
+            TY_MC.get(d0[2], '0') + top1 # Pola Taysen-Top
+        ]
         
-        line_2d = [p1, p2, top_gap, "17", "62", "38"]
-        
-        # --- [3. SHIO & TWIN] ---
+        # --- [3. SHIO & TWIN RE-CALIBRATION] ---
         shio_map = {10:"KUDA", 11:"KAMBING", 0:"MONYET", 1:"AYAM", 2:"ANJING", 3:"BABI", 4:"TIKUS", 5:"KERBAU", 6:"MACAN", 7:"KELINCI", 8:"NAGA", 9:"ULAR"}
         shio_idx = int(d0[2:]) % 12 
 
-        # Twin diambil dari angka hutang tertinggi (bbfs_final[0])
-        twin_angka = bbfs_final[0]
+        # Twin wajib diisi dari 2 angka teratas BBFS
+        twin1 = f"{top1}{top1}"
+        twin2 = f"{top2}{top2}"
 
         return {
             "core_2d": ", ".join(list(dict.fromkeys(line_2d))),
             "bbfs": " ".join(sorted(bbfs_final)),
             "as_kop": ID_MC.get(d0[0], '0') + MB_MC.get(d0[1], '0'),
-            "kop_kep": TY_MC.get(d0[1], '0') + ML_MC.get(d0[2], '0'),
+            "kop_kep": ML_MC.get(d0[1], '0') + TY_MC.get(d0[2], '0'),
             "shio": shio_map.get(shio_idx, "N/A"),
-            "macau_twin": f"{twin_angka}{twin_angka}, {d0[3]}{d0[3]}"
+            "macau_twin": f"{twin1}, {twin2}"
         }
-    except Exception:
-        # Emergency Fallback agar tidak Error 500
-        return {
-            "core_2d": "ERR LOGIC", "bbfs": "-", "as_kop": "00", 
-            "kop_kep": "00", "shio": "-", "macau_twin": "-"
-        }
+    except Exception as e:
+        return {"core_2d": "ERR", "bbfs": "-", "as_kop": "00", "kop_kep": "00", "shio": "-", "macau_twin": "-"}
