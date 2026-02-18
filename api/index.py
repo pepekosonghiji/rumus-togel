@@ -46,7 +46,25 @@ def get_comprehensive_logic(all_res, m_name):
     bbfs = get_engine_analytics(all_res, is_big)
     line = [TY.get(d0[2], '0')+d0[3], ML.get(d0[2], '0')+ID.get(d0[1], '0')]
     
-    if m_name == "OSAKA": line = [ID.get(d0[1])+d0[3], "84", "24", "74", "45", "54"]
+    if m_name == "OSAKA":
+        d0 = all_res[0]
+        bbfs = get_refined_bbfs(all_res, limit=30)
+        l1 = ML.get(d0[0], '0') + ID.get(d0[3], '0')
+        l2 = TY.get(d0[2], '0') + MB.get(d0[1], '0')
+        if l2[0] == l2[1]: l2 = l2[0] + TY.get(l2[0], '1')
+        selisih = str(abs(int(d0[0]) - int(d0[3])))
+        l3 = MB.get(selisih, '0') + bbfs[0]
+        l4 = d0[1] + d0[2]
+        core_lines = list(dict.fromkeys([l1, l2, l3, l4, "10"]))
+        return {
+        "core": ", ".join(core_lines[:5]),
+        "bbfs": " ".join(sorted(bbfs)),
+        "as_kop": ID.get(d0[0], '0') + MB.get(d0[1], '0'),
+        "kop_kep": TY.get(d0[1], '0') + ML.get(d0[2], '0'),
+        "shio": SHIO_MAP.get(int(d0[2:]) % 12, "N/A"),
+        "macau": f"{SHIO_MAP.get(int(d0[2:]) % 12)} - {SHIO_MAP.get((int(d0[2:]) % 12 + 6) % 12)}",
+        "twin": f"11, {bbfs[0]}{bbfs[0]}" # Antisipasi twin 11 setelah 55
+    }
     elif m_name == "SAPPORO":
         d0 = all_res[0]
         bbfs = get_refined_bbfs(all_res, limit=40)
