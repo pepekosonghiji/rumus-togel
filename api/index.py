@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 
 # PENTING: Import macau dipindahkan ke dalam fungsi analyze untuk mencegah Error 500 saat startup
 app = Flask(__name__, template_folder=os.path.join(os.path.dirname(__file__), '../templates'))
+app = Flask(__name__, template_folder='../templates')
 
 # --- [DATABASE MASTER POLA ABADI - TIDAK DISENTUH] ---
 ML = {'1':'0', '2':'5', '3':'8', '4':'7', '6':'9', '0':'1', '5':'2', '8':'3', '7':'4', '9':'6'}
