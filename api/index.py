@@ -47,6 +47,24 @@ def get_comprehensive_logic(all_res, m_name):
     line = [TY.get(d0[2], '0')+d0[3], ML.get(d0[2], '0')+ID.get(d0[1], '0')]
     
     if m_name == "OSAKA": line = [ID.get(d0[1])+d0[3], "84", "24", "74", "45", "54"]
+    elif m_name == "SAPPORO":
+        d0 = all_res[0]
+        bbfs = get_refined_bbfs(all_res, limit=40)
+        l1 = ML.get(d0[1], '0') + TY.get(d0[3], '5')
+        l2 = ID.get(d0[0], '0') + MB.get(d0[2], '7')
+        if l2[0] == l2[1]: l2 = l2[0] + ID.get(l2[1], '2')
+        l3 = bbfs[0] + bbfs[2]
+        l4 = d0[2] + ID.get(d0[0], '7')
+        core_lines = list(dict.fromkeys([l1, l2, l3, l4, "18"]))
+        return {
+        "core": ", ".join(core_lines[:5]),
+        "bbfs": " ".join(sorted(bbfs)),
+        "as_kop": TY.get(d0[0], '0') + ID.get(d0[1], '0'),
+        "kop_kep": MB.get(d0[1], '0') + ML.get(d0[2], '0'),
+        "shio": SHIO_MAP.get(int(d0[2:]) % 12, "N/A"),
+        "macau": f"{SHIO_MAP.get(int(d0[2:]) % 12)} - {SHIO_MAP.get((int(d0[2:]) % 12 + 6) % 12)}",
+        "twin": f"{d0[2]}{d0[2]}, {bbfs[0]}{bbfs[0]}"
+    }
     elif m_name == "SEOUL":
         d0 = all_res[0]
         bbfs = get_refined_bbfs(all_res, limit=35)
