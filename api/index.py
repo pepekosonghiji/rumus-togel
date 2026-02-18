@@ -353,5 +353,4 @@ def analyze():
 def index():
     return render_template('index.html', markets=sorted(TARGET_POOLS.keys()))
 
-if __name__ == '__main__':
-    app.run(debug=True)
+app_handler = app
