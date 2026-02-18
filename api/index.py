@@ -38,7 +38,11 @@ def get_engine_analytics(all_res, is_big=False):
     scores[ML.get(d0[1], '0')] += 10
     sorted_scores = sorted(scores.items(), key=lambda x: x[1], reverse=True)
     return [x[0] for x in sorted_scores[:6]]
-
+def get_refined_bbfs(all_res, limit=30):
+    full_data = "".join(all_res[:limit])
+    counts = Counter(full_data)
+    sorted_chars = sorted(counts.items(), key=lambda x: x[1], reverse=True)
+    return [x[0] for x in sorted_chars[:6]]
 # --- [LOGIC BRANCHING - TIDAK DISENTUH] ---
 def get_comprehensive_logic(all_res, m_name):
     d0 = all_res[0]
@@ -104,6 +108,7 @@ def get_comprehensive_logic(all_res, m_name):
         bbfs = get_refined_bbfs(all_res, limit=45)
         l1 = MB.get(d0[1], '1') + TY.get(d0[3], '7')
         l2 = ID.get(d0[0], '0') + ML.get(d0[2], '5')
+        selisih_tengah = str(abs(int(d0[1]) - int(d0[2])))
         l3 = bbfs[0] + MB.get(selisih_tengah, '4')
         l4 = "94" if "9" in bbfs else "41"
         core_lines = list(dict.fromkeys([l1, l2, l3, l4, "71", "49"]))
@@ -188,7 +193,7 @@ def get_comprehensive_logic(all_res, m_name):
     }
     elif m_name == "HONGKONG LOTTO":
         d0 = all_res[0]
-        d0 = all_res[1]
+        d1 = all_res[1]
         bbfs = get_refined_bbfs(all_res, limit=50)
         l1 = TY.get(d0[1], '0') + ML.get(d0[2], '0')
         l2 = ID.get(d0[0], '0') + MB.get(d0[3], '0')
@@ -225,6 +230,8 @@ def get_comprehensive_logic(all_res, m_name):
             "twin": f"99, 66, 00"
         }
     elif m_name == "CAMBODIA":
+        d0 = all_res[0]
+        d1 = all_res[1] if len(all_res) > 1 else d0
         jalur_main = ID.get(d0[0]) + ML.get(d0[3])
         jalur_bom = TY.get(d0[1]) + ID.get(d0[2])
         cadangan_presisi = d0[3] + TY.get(d0[3])
@@ -256,7 +263,7 @@ def get_comprehensive_logic(all_res, m_name):
         l1 = ID.get(d0[2], '0') + ML.get(d0[3], '0')
         l2 = TY.get(d0[0], '0') + MB.get(d0[1], '0')
         l3 = "0" + bbfs[0]
-        l4 = "71" if "7" in bbfs else "12
+        l4 = "71" if "7" in bbfs else "12"
         core_lines = list(dict.fromkeys([l1, l2, l3, l4, "17"]))
         return {
             "core": ", ".join(core_lines[:5]),
