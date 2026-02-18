@@ -28,65 +28,98 @@ def fetch_macau_m17():
         return results
     except:
         return []
+from datetime import datetime
+import pytz
+
 def calculate_macau_prediction(results):
     """
-    LOGIC V14.0 - ULTRA PRECISION (MACAU M17)
-    Fokus: Penajaman 2D Sniper & Sinkronisasi BBFS Anti-Bandot.
-    Update: Transisi Ganjil ke Genap setelah Result 5319.
+    LOGIC V16.0 - MULTI-SCHEDULE PRECISION (MACAU M17)
+    Menyesuaikan algoritma mengikut waktu putaran: 13, 16, 19, 22, 23, 00.
     """
     try:
         if not results or len(results) < 2:
-            return {
-                "core": "-", "bbfs": "-", "as_kop": "00", 
-                "kop_kep": "00", "shio": "-", "macau": "-", "twin": "-"
-            }
+            return {"core": "-", "bbfs": "-", "as_kop": "00", "kop_kep": "00", "shio": "-", "macau": "-", "twin": "-"}
 
-        # d0: 5319 (Result Terakhir), d1: 9950 (Result Sebelumnya)
         d0 = str(results[0]).zfill(4)
-        d1 = str(results[1]).zfill(4)
         
-        # --- [1. BBFS SINKRONISASI V14.0] ---
-        # Menggunakan teknik 'Inversion Weighting' (Memburu angka yang jatuh tempo)
-        full_history = "".join(results[:45])
+        # --- [1. PENGESAN WAKTU (WIB)] ---
+        tz = pytz.timezone('Asia/Jakarta')
+        now = datetime.now(tz)
+        hour = now.hour
+
+        # --- [2. PENETAPAN STRATEGI MENGIKUT JAM] ---
+        # Siang (13, 16): Biasanya angka 'Repeat' atau 'Taysen' kuat.
+        # Malam (19, 22, 23, 00): Biasanya 'Mistik' dan 'Indeks' lebih dominan.
+        
+        limit_history = 30
+        weight_repeat = 5 # Default
+        
+        if hour in [13, 16]:
+            strategy = "SIANG_FLOW"
+            weight_repeat = 15 # Lebih cenderung ikut angka yang baru keluar
+            limit_history = 25
+        elif hour in [19, 22, 23]:
+            strategy = "MALAM_MISTIK"
+            weight_repeat = -10 # Elak angka repeat, cari angka mistik
+            limit_history = 40
+        else: # Putaran 00:00 atau Subuh
+            strategy = "MIDNIGHT_SHADOW"
+            weight_repeat = 0
+            limit_history = 50
+
+        # --- [3. BBFS SINKRONISASI (TIME-BASED)] ---
+        full_history = "".join(results[:limit_history])
         counts = Counter(full_history)
+        scores = {n: (limit_history - counts.get(n, 0)) for n in "0123456789"}
         
-        # Beri nilai tinggi pada angka yang jarang muncul (Hutang)
-        # Tapi kurangi nilai angka yang baru saja keluar (5,3,1,9) agar tidak repeat
-        scores = {n: (45 - counts.get(n, 0)) for n in "0123456789"}
-        for char in d0: scores[char] -= 50 # Anti-Repeat Filter
-        
+        for char in d0:
+            scores[char] += weight_repeat # Pengaruh strategi jam
+
         sorted_scores = sorted(scores.items(), key=lambda x: x[1], reverse=True)
         bbfs_final = [x[0] for x in sorted_scores[:6]]
 
-        # --- [2. PENAJAMAN SNIPER 2D (CORE)] ---
+        # --- [4. PENAJAMAN SNIPER 2D MENGIKUT SLOT] ---
         
-        # Jalur A: Taysen Berantai (Ekor d0 -> Taysen -> Index)
-        # Ekor 9 -> Taysen 2 -> Index 7. Maka 27/72 kuat.
-        t_ekor = TY_MC.get(d0[3], '2')
-        p1 = t_ekor + ID_MC.get(t_ekor, '7')
-
-        # Jalur B: Mistik Rebound (Kepala d0 -> Mistik Baru + Kop d0 -> Taysen)
-        # Kepala 1 -> MB 7, Kop 3 -> TY 6. Maka 76 kuat.
-        p2 = MB_MC.get(d0[2], '7') + TY_MC.get(d0[1], '6')
-
-        # Jalur C: Shadow AS-KOP (AS d0 -> Index + Ekor d0 -> Mistik Lama)
-        # AS 5 -> ID 0, Ekor 9 -> ML 6. Maka 06 kuat.
-        p3 = ID_MC.get(d0[0], '0') + ML_MC.get(d0[3], '6')
-
-        # Jalur D: Pola Rebound Ekor (Ekor d0 - 1 & Ekor d0 + 1)
-        # Mengincar angka 8 atau 0 jika ekor sebelumnya 9.
-        p4 = "58" if "8" in bbfs_final else "50"
-
-        # Gabungkan semua sniper, prioritaskan p1 dan p2
-        core_2d = list(dict.fromkeys([p1, p2, p3, p4, "72", "06"]))
+        if strategy == "SIANG_FLOW":
+            # Fokus Taysen & Aliran Angka (Contoh: 52 -> Taysen 87)
+            p1 = TY_MC.get(d0[2], '0') + TY_MC.get(d0[3], '0')
+            p2 = d0[1] + ID_MC.get(d0[3], '0')
+            p3 = "28" if "2" in bbfs_final else "54"
         
-        # --- [3. DATA TAMBAHAN (SHIO & TWIN)] ---
-        shio_map = {
-            10:"KUDA", 11:"KAMBING", 0:"MONYET", 1:"AYAM", 2:"ANJING", 
-            3:"BABI", 4:"TIKUS", 5:"KERBAU", 6:"MACAN", 7:"KELINCI", 
-            8:"NAGA", 9:"ULAR"
-        }
-        # Hitungan Shio berdasarkan 2D belakang
+        elif strategy == "MALAM_MISTIK":
+            # Fokus Mistik & Indeks (Contoh: 52 -> ML 25 atau ID 07)
+            p1 = ML_MC.get(d0[2], '0') + ML_MC.get(d0[3], '0')
+            p2 = ID_MC.get(d0[0], '0') + MB_MC.get(d0[2], '0')
+            p3 = TY_MC.get(d0[1], '0') + d0[3]
+            
+        else: # MIDNIGHT
+            p1 = ID_MC.get(d0[0], '9') + TY_MC.get(d0[3], '9')
+            p2 = ML_MC.get(d0[1], '3') + MB_MC.get(d0[2], '4')
+            p3 = "71" if "7" in bbfs_final else "04"
+
+        p4 = MB_MC.get(d0[3], '0') + ID_MC.get(d0[2], '0')
+        core_2d = list(dict.fromkeys([p1, p2, p3, p4, "15", "90"]))
+        
+        # --- [5. SHIO & TWIN] ---
         shio_idx = int(d0[2:]) % 12
-        shio_name = shio_map.get(shio_idx, "N/A")
-        macau_val = f"{shio_name} - {shio_map.get((
+        shio_map = {10:"KUDA", 11:"KAMBING", 0:"MONYET", 1:"AYAM", 2:"ANJING", 3:"BABI", 4:"TIKUS", 5:"KERBAU", 6:"MACAN", 7:"KELINCI", 8:"NAGA", 9:"ULAR"}
+        
+        # Twin Logic: Jam malam lebih kerap keluar twin ganjil
+        twin_val = f"{p1[0]}{p1[0]}, {p2[-1]}{p2[-1]}"
+        if hour >= 22:
+            twin_val = "99, 77, 11"
+        elif hour <= 16:
+            twin_val = "22, 44, 88"
+
+        return {
+            "core": ", ".join(core_2d[:5]),
+            "bbfs": " ".join(sorted(bbfs_final)),
+            "as_kop": ID_MC.get(d0[0], '0') + MB_MC.get(d0[1], '0'),
+            "kop_kep": TY_MC.get(d0[1], '0') + ML_MC.get(d0[2], '0'),
+            "shio": shio_map.get(shio_idx, "N/A"),
+            "macau": f"{shio_map.get(shio_idx)} - {shio_map.get((shio_idx + 6) % 12)}",
+            "twin": twin_val,
+            "info": f"Slot {hour}:00 ({strategy})" # Untuk debug
+        }
+    except Exception as e:
+        return {"core": "ERR", "bbfs": "-", "as_kop": "00", "kop_kep": "00", "shio": "-", "macau": "-", "twin": "-"}
