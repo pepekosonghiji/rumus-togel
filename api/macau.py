@@ -28,71 +28,65 @@ def fetch_macau_m17():
         return results
     except:
         return []
-
 def calculate_macau_prediction(results):
     """
-    LOGIC V13.0 - ULTRA PRECISION 2D FOCUS (MACAU M17)
-    Fokus utama: Membedah pola 2D menggunakan Taysen Berantai dan Index Selisih.
+    LOGIC V14.0 - ULTRA PRECISION (MACAU M17)
+    Fokus: Penajaman 2D Sniper & Sinkronisasi BBFS Anti-Bandot.
+    Update: Transisi Ganjil ke Genap setelah Result 5319.
     """
     try:
         if not results or len(results) < 2:
-            return {"core": "-", "bbfs": "-", "as_kop": "00", "kop_kep": "00", "shio": "-", "macau": "-", "twin": "-"}
+            return {
+                "core": "-", "bbfs": "-", "as_kop": "00", 
+                "kop_kep": "00", "shio": "-", "macau": "-", "twin": "-"
+            }
 
-        # Result Terakhir: 9452 (d0), 6449 (d1)
+        # d0: 5319 (Result Terakhir), d1: 9950 (Result Sebelumnya)
         d0 = str(results[0]).zfill(4)
         d1 = str(results[1]).zfill(4)
         
-        # --- [PROSES BBFS - TETAP STABIL] ---
-        full_history = "".join(results[:40])
+        # --- [1. BBFS SINKRONISASI V14.0] ---
+        # Menggunakan teknik 'Inversion Weighting' (Memburu angka yang jatuh tempo)
+        full_history = "".join(results[:45])
         counts = Counter(full_history)
-        scores = {n: (40 - counts.get(n, 0)) for n in "0123456789"}
-        for char in d0: scores[char] -= 60
+        
+        # Beri nilai tinggi pada angka yang jarang muncul (Hutang)
+        # Tapi kurangi nilai angka yang baru saja keluar (5,3,1,9) agar tidak repeat
+        scores = {n: (45 - counts.get(n, 0)) for n in "0123456789"}
+        for char in d0: scores[char] -= 50 # Anti-Repeat Filter
+        
         sorted_scores = sorted(scores.items(), key=lambda x: x[1], reverse=True)
         bbfs_final = [x[0] for x in sorted_scores[:6]]
 
-        # --- [PROSES PENAJAMAN 2D - FOKUS UTAMA] ---
-        # Rumus 1: Pola Taysen Berantai (EKOR d0 -> Taysen -> Index)
-        # Result 3939 (Ekor 9) -> Taysen 2 -> Index 7. Maka angka 27/72 kuat.
-        ekor_d0 = d0[3]
-        taysen_ekor = TY_MC.get(ekor_d0, '0')
-        p1 = taysen_ekor + ID_MC.get(taysen_ekor, '0')
-
-        # Rumus 2: Pola Selisih Mistis (AS d0 - KEPALA d0)
-        # Mencari angka tengah yang sering muncul sebagai 'Jembatan'
-        as_val = int(d0[0])
-        kep_val = int(d0[2])
-        selisih = str(abs(as_val - kep_val))
-        p2 = MB_MC.get(selisih, '0') + TY_MC.get(d0[1], '0')
-
-        # Rumus 3: Pola Indeks Silang (KEPALA d0 + EKOR d1)
-        # Menangkap pola result 3939 yang sering mengambil indeks dari result sebelumnya
-        p3 = ID_MC.get(d0[2], '0') + ID_MC.get(d1[3], '0')
-
-        # Rumus 4: Angka "Hutang" Terkuat (Top 2 BBFS)
-        p4 = bbfs_final[0] + bbfs_final[1]
-
-        # Gabungkan dan Hilangkan Duplikat
-        core_2d = list(dict.fromkeys([p1, p2, p3, p4]))
+        # --- [2. PENAJAMAN SNIPER 2D (CORE)] ---
         
-        # --- [SHIO & MACAU - TETAP SYNC UI] ---
-        shio_map = {10:"KUDA", 11:"KAMBING", 0:"MONYET", 1:"AYAM", 2:"ANJING", 3:"BABI", 4:"TIKUS", 5:"KERBAU", 6:"MACAN", 7:"KELINCI", 8:"NAGA", 9:"ULAR"}
+        # Jalur A: Taysen Berantai (Ekor d0 -> Taysen -> Index)
+        # Ekor 9 -> Taysen 2 -> Index 7. Maka 27/72 kuat.
+        t_ekor = TY_MC.get(d0[3], '2')
+        p1 = t_ekor + ID_MC.get(t_ekor, '7')
+
+        # Jalur B: Mistik Rebound (Kepala d0 -> Mistik Baru + Kop d0 -> Taysen)
+        # Kepala 1 -> MB 7, Kop 3 -> TY 6. Maka 76 kuat.
+        p2 = MB_MC.get(d0[2], '7') + TY_MC.get(d0[1], '6')
+
+        # Jalur C: Shadow AS-KOP (AS d0 -> Index + Ekor d0 -> Mistik Lama)
+        # AS 5 -> ID 0, Ekor 9 -> ML 6. Maka 06 kuat.
+        p3 = ID_MC.get(d0[0], '0') + ML_MC.get(d0[3], '6')
+
+        # Jalur D: Pola Rebound Ekor (Ekor d0 - 1 & Ekor d0 + 1)
+        # Mengincar angka 8 atau 0 jika ekor sebelumnya 9.
+        p4 = "58" if "8" in bbfs_final else "50"
+
+        # Gabungkan semua sniper, prioritaskan p1 dan p2
+        core_2d = list(dict.fromkeys([p1, p2, p3, p4, "72", "06"]))
+        
+        # --- [3. DATA TAMBAHAN (SHIO & TWIN)] ---
+        shio_map = {
+            10:"KUDA", 11:"KAMBING", 0:"MONYET", 1:"AYAM", 2:"ANJING", 
+            3:"BABI", 4:"TIKUS", 5:"KERBAU", 6:"MACAN", 7:"KELINCI", 
+            8:"NAGA", 9:"ULAR"
+        }
+        # Hitungan Shio berdasarkan 2D belakang
         shio_idx = int(d0[2:]) % 12
         shio_name = shio_map.get(shio_idx, "N/A")
-        macau_val = f"{shio_name} - {shio_map.get((shio_idx + 6) % 12, 'N/A')}"
-
-        # --- [TWIN SHARPENING] ---
-        # Twin fokus pada angka taysen dari EKOR terakhir (antisipasi twin silang)
-        tw_1 = taysen_ekor + taysen_ekor
-        tw_2 = bbfs_final[0] + bbfs_final[0]
-
-        return {
-            "core": ", ".join(core_2d[:4]), # Menampilkan 4 line 2D paling tajam
-            "bbfs": " ".join(sorted(bbfs_final)),
-            "as_kop": ID_MC.get(d0[0], '0') + ID_MC.get(d0[1], '0'),
-            "kop_kep": ML_MC.get(d0[1], '0') + MB_MC.get(d0[2], '0'),
-            "shio": shio_name,
-            "macau": macau_val,
-            "twin": f"{tw_1}, {tw_2}"
-        }
-    except Exception as e:
-        return {"core": "ERR LOGIC", "bbfs": "-", "as_kop": "00", "kop_kep": "00", "shio": "-", "macau": "-", "twin": "-"}
+        macau_val = f"{shio_name} - {shio_map.get((
