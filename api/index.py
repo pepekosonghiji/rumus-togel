@@ -4,8 +4,6 @@ from collections import Counter
 from bs4 import BeautifulSoup
 
 # PENTING: Import macau dipindahkan ke dalam fungsi analyze untuk mencegah Error 500 saat startup
-# dari .macau import fetch_macau_m17, calculate_macau_prediction <-- INI DIHAPUS DARI ATAS
-
 app = Flask(__name__, template_folder=os.path.join(os.path.dirname(__file__), '../templates'))
 
 # --- [DATABASE MASTER POLA ABADI - TIDAK DISENTUH] ---
@@ -108,34 +106,36 @@ def fetch_results(market_code):
         except: continue
     return results
 
-# --- [ROUTE ANALYZE - PERBAIKAN STABILITAS] ---
+# --- [ROUTE ANALYZE - FIX TOTAL] ---
 @app.route('/analyze', methods=['POST'])
 def analyze():
+    # Perbaikan 1: Inisialisasi results di awal agar tidak UnboundLocalError
+    results = [] 
     try:
         market = request.form.get('market')
         if not market: return jsonify({"status": "error", "msg": "Pilih Pasaran"}), 400
 
-        # Penanganan Khusus MACAU agar tidak 500
+        # Perbaikan 2: Percabangan Terpisah untuk MACAU vs Pasaran Lain
         if market == "MACAU 4D":
-            from .macau import fetch_macau_m17, calculate_macau_prediction # Pastikan import benar
+            from .macau import fetch_macau_m17, calculate_macau_prediction 
             results = fetch_macau_m17()
-        if not results: 
-            return jsonify({"status": "error", "msg": "Sync Macau Gagal"}), 500
-        data = calculate_macau_prediction(results)
-        return jsonify({"status": "success", "market": "MACAU 4D (M17)", "last": results[0], "data": data})
+            if not results: 
+                return jsonify({"status": "error", "msg": "Sync Macau Gagal"}), 500
+            data = calculate_macau_prediction(results)
+            return jsonify({"status": "success", "market": "MACAU 4D (M17)", "last": results[0], "data": data})
 
-        # Pasaran Normal
-        market_code = TARGET_POOLS.get(market)
-        if not market_code: return jsonify({"status": "error", "msg": "Kode Pasaran Hilang"}), 400
-        
-        results = fetch_results(market_code)
-        if not results: return jsonify({"status": "error", "msg": f"Gagal Sinkronisasi {market}"}), 500
-        
-        data = get_comprehensive_logic(results, market)
-        return jsonify({"status": "success", "market": market, "last": results[0], "data": data})
+        else:
+            # Pasaran Normal
+            market_code = TARGET_POOLS.get(market)
+            if not market_code: return jsonify({"status": "error", "msg": "Kode Pasaran Hilang"}), 400
+            
+            results = fetch_results(market_code)
+            if not results: return jsonify({"status": "error", "msg": f"Gagal Sinkronisasi {market}"}), 500
+            
+            data = get_comprehensive_logic(results, market)
+            return jsonify({"status": "success", "market": market, "last": results[0], "data": data})
     
     except Exception as e:
-        # Menangkap error apa pun agar tidak muncul 500 Internal Server Error
         return jsonify({"status": "error", "msg": f"Sistem Crash: {str(e)}"}), 500
 
 @app.route('/')
