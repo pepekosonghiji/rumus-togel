@@ -38,75 +38,36 @@ def fetch_macau_m17():
         return []
 
 def calculate_macau_prediction(results):
-    """
-    LOGIC V12: FREQUENCY-GAP HYBRID
-    Pertajaman BBFS dengan pembobotan ganda dan pengisian otomatis Core 2D.
-    """
     try:
         if not results or len(results) < 2:
-            return {
-                "core_2d": "MENUNGGU DATA", "bbfs": "-", "as_kop": "00", 
-                "kop_kep": "00", "shio": "-", "macau_twin": "-"
-            }
+            return {"core": "DATA MINIM", "bbfs": "-", "as_kop": "00", "kop_kep": "00", "shio": "-", "twin": "-"}
 
-        # Data Primer: 9452 (d0) dan 6449 (d1)
-        d0 = str(results[0]).zfill(4) 
-        d1 = str(results[1]).zfill(4)
+        d0 = str(results[0]).zfill(4)
         
-        # --- [1. PERTAJAMAN BBFS: HYBRID SCORING] ---
-        full_history = "".join(map(str, results[:40])) # Pantau 40 putaran
-        counts = Counter(full_history)
+        # Penajaman BBFS (Mencari angka yang paling lama tidak muncul)
+        full_data = "".join(results[:30])
+        counts = Counter(full_data)
+        scores = {n: (30 - counts.get(n, 0)) for n in "0123456789"}
         
-        scores = {n: 0 for n in "0123456789"}
-        for n in "0123456789":
-            # Skor 1: Kelangkaan (Semakin jarang muncul di 40 putaran, semakin tinggi)
-            scores[n] = (60 - counts.get(n, 0))
-            
-            # Skor 2: Gap Absen (Mencari angka yang 'jatuh tempo')
-            for i, res in enumerate(results[:25]):
-                if n in str(res):
-                    scores[n] += (i * 4.5) # Bobot gap ditingkatkan ke 4.5
-                    break
+        # Buang angka yang baru keluar (9452)
+        for char in d0: scores[char] -= 50
         
-        # FILTER ANTI-STUCK: Buang angka dari result terakhir (9,4,5,2)
-        # Tapi biarkan angka dari result sebelumnya (6,4,4,9) jika gap-nya tinggi
-        for char in d0:
-            scores[char] -= 80 
-
         sorted_scores = sorted(scores.items(), key=lambda x: x[1], reverse=True)
         bbfs_final = [x[0] for x in sorted_scores[:6]]
-
-        # --- [2. PERBAIKAN CORE 2D: AUTO-FILL SYSTEM] ---
-        # Rumus A: Mistik Baru dari (AS d0 + EKOR d1)
-        # Rumus B: Index dari (KOP d0 + KEPALA d0)
         
-        # Pastikan angka 2D selalu terisi dengan mengambil top skor BBFS
-        top1 = bbfs_final[0]
-        top2 = bbfs_final[1]
-        top3 = bbfs_final[2]
-
-        line_2d = [
-            top1 + top2, # Kombinasi 1-2
-            top1 + top3, # Kombinasi 1-3
-            MB_MC.get(d0[1], '0') + ID_MC.get(d0[3], '0'), # Pola Mistik-Index
-            TY_MC.get(d0[2], '0') + top1 # Pola Taysen-Top
-        ]
-        
-        # --- [3. SHIO & TWIN RE-CALIBRATION] ---
-        shio_map = {10:"KUDA", 11:"KAMBING", 0:"MONYET", 1:"AYAM", 2:"ANJING", 3:"BABI", 4:"TIKUS", 5:"KERBAU", 6:"MACAN", 7:"KELINCI", 8:"NAGA", 9:"ULAR"}
-        shio_idx = int(d0[2:]) % 12 
-
-        # Twin wajib diisi dari 2 angka teratas BBFS
-        twin1 = f"{top1}{top1}"
-        twin2 = f"{top2}{top2}"
+        # Kunci CORE 2D agar TIDAK KOSONG
+        # Mengambil kombinasi angka BBFS terkuat
+        c1 = bbfs_final[0] + bbfs_final[1]
+        c2 = bbfs_final[2] + bbfs_final[3]
+        c3 = MB_MC.get(d0[1], '0') + TY_MC.get(d0[3], '0')
 
         return {
-            "core_2d": ", ".join(list(dict.fromkeys(line_2d))),
+            "core": f"{c1}, {c2}, {c3}", # Ganti 'core_2d' jadi 'core' agar sinkron dengan template
             "bbfs": " ".join(sorted(bbfs_final)),
-            "as_kop": ID_MC.get(d0[0], '0') + MB_MC.get(d0[1], '0'),
-            "kop_kep": ML_MC.get(d0[1], '0') + TY_MC.get(d0[2], '0'),
-            "shio": shio_map.get(shio_idx, "N/A"),
-            "macau_twin": f"{twin1}, {twin2}"
+            "as_kop": ID_MC.get(d0[0], '0') + ID_MC.get(d0[1], '0'),
+            "kop_kep": ML_MC.get(d0[1], '0') + MB_MC.get(d0[2], '0'),
+            "shio": SHIO_MAP_MACAU_M17(d0), # Gunakan fungsi shio yang sudah ada
+            "twin": f"{bbfs_final[0]}{bbfs_final[0]}, {bbfs_final[1]}{bbfs_final[1]}"
         }
-    except Exception as e:
-        return {"core_2d": "ERR", "bbfs": "-", "as_kop": "00", "kop_kep": "00", "shio": "-", "macau_twin": "-"}
+    except:
+        return {"core": "ERR", "bbfs": "-", "as_kop": "00", "kop_kep": "00", "shio": "-", "twin": "-"}
