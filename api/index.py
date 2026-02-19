@@ -46,7 +46,7 @@ def get_refined_bbfs(all_res, limit=30):
 # --- [LOGIC BRANCHING - TIDAK DISENTUH] ---
 def get_comprehensive_logic(all_res, m_name):
     d0 = all_res[0]
-    is_big = m_name in ['CAMBODIA', 'SYDNEY LOTTO', 'HONGKONG LOTTO', 'HONGKONG POOLS', 'SINGAPORE POOLS', 'SYDNEY POOLS']
+    is_big = m_name in ['SYDNEY POOLS']
     bbfs = get_engine_analytics(all_res, is_big)
     line = [TY.get(d0[2], '0')+d0[3], ML.get(d0[2], '0')+ID.get(d0[1], '0')]
     
