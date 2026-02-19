@@ -69,6 +69,30 @@ def get_comprehensive_logic(all_res, m_name):
         "macau": f"{SHIO_MAP.get(int(d0[2:]) % 12)} - {SHIO_MAP.get((int(d0[2:]) % 12 + 6) % 12)}",
         "twin": f"11, {bbfs[0]}{bbfs[0]}" # Antisipasi twin 11 setelah 55
     }
+    elif m_name == "OREGON 3":
+        ganjil_count = sum(1 for x in d0 if int(x) % 2 != 0)
+        gap_ai = str(abs(int(d0[0]) - int(d0[3])))
+        mb_kop = MB.get(d0[1], '0')
+        full_data = "".join(all_res[:40])
+        counts = Counter(full_data)
+        sorted_chars = sorted(counts.items(), key=lambda x: x[1])
+        bbfs_oregon = [x[0] for x in sorted_chars[2:8]]
+        if gap_ai not in bbfs_oregon: bbfs_oregon[0] = gap_ai
+        l1 = ID.get(d0[2], '0') + TY.get(d0[3], '0') 
+        l2 = mb_kop + d0[0]
+        l3 = "46" if ganjil_count >= 3 else "15"
+        l4 = gap_ai + ML.get(d0[3], '0')
+        core_lines = list(dict.fromkeys([l1, l2, l3, l4, "28", "70"]))
+
+        return {
+            "core": ", ".join(core_lines[:5]),
+            "bbfs": " ".join(sorted(bbfs_oregon)),
+            "as_kop": MB.get(d0[0], '0') + ID.get(d0[1], '0'),
+            "kop_kep": TY.get(d0[1], '0') + ML.get(d0[2], '0'),
+            "shio": SHIO_MAP.get(int(d0[2:]) % 12, "N/A"),
+            "macau": f"{SHIO_MAP.get(int(d0[2:]) % 12)} - {SHIO_MAP.get((int(d0[2:]) % 12 + 6) % 12)}",
+            "twin": "44, 22, 88" if ganjil_count >= 3 else f"{d0[3]}{d0[3]}, 00"
+        }
     elif m_name == "PENANG":
         d0 = all_res[0]
         bbfs = get_refined_bbfs(all_res, limit=40)
