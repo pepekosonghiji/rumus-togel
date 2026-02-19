@@ -38,12 +38,14 @@ def get_engine_analytics(all_res, is_big=False):
     scores[ML.get(d0[1], '0')] += 10
     sorted_scores = sorted(scores.items(), key=lambda x: x[1], reverse=True)
     return [x[0] for x in sorted_scores[:6]]
+
 def get_refined_bbfs(all_res, limit=30):
     full_data = "".join(all_res[:limit])
     counts = Counter(full_data)
     sorted_chars = sorted(counts.items(), key=lambda x: x[1], reverse=True)
     return [x[0] for x in sorted_chars[:6]]
-# --- [LOGIC BRANCHING - TIDAK DISENTUH] ---
+
+# --- [LOGIC BRANCHING] ---
 def get_comprehensive_logic(all_res, m_name):
     d0 = all_res[0]
     is_big = m_name in ['SYDNEY POOLS']
@@ -51,25 +53,26 @@ def get_comprehensive_logic(all_res, m_name):
     line = [TY.get(d0[2], '0')+d0[3], ML.get(d0[2], '0')+ID.get(d0[1], '0')]
     
     if m_name == "OSAKA":
-        d0 = all_res[0]
-        bbfs = get_refined_bbfs(all_res, limit=30)
+        bbfs_os = get_refined_bbfs(all_res, limit=30)
         l1 = ML.get(d0[0], '0') + ID.get(d0[3], '0')
         l2 = TY.get(d0[2], '0') + MB.get(d0[1], '0')
         if l2[0] == l2[1]: l2 = l2[0] + TY.get(l2[0], '1')
         selisih = str(abs(int(d0[0]) - int(d0[3])))
-        l3 = MB.get(selisih, '0') + bbfs[0]
+        l3 = MB.get(selisih, '0') + bbfs_os[0]
         l4 = d0[1] + d0[2]
         core_lines = list(dict.fromkeys([l1, l2, l3, l4, "10"]))
         return {
-        "core": ", ".join(core_lines[:5]),
-        "bbfs": " ".join(sorted(bbfs)),
-        "as_kop": ID.get(d0[0], '0') + MB.get(d0[1], '0'),
-        "kop_kep": TY.get(d0[1], '0') + ML.get(d0[2], '0'),
-        "shio": SHIO_MAP.get(int(d0[2:]) % 12, "N/A"),
-        "macau": f"{SHIO_MAP.get(int(d0[2:]) % 12)} - {SHIO_MAP.get((int(d0[2:]) % 12 + 6) % 12)}",
-        "twin": f"11, {bbfs[0]}{bbfs[0]}" # Antisipasi twin 11 setelah 55
-    }
+            "core": ", ".join(core_lines[:5]),
+            "bbfs": " ".join(sorted(bbfs_os)),
+            "as_kop": ID.get(d0[0], '0') + MB.get(d0[1], '0'),
+            "kop_kep": TY.get(d0[1], '0') + ML.get(d0[2], '0'),
+            "shio": SHIO_MAP.get(int(d0[2:]) % 12, "N/A"),
+            "macau": f"{SHIO_MAP.get(int(d0[2:]) % 12)} - {SHIO_MAP.get((int(d0[2:]) % 12 + 6) % 12)}",
+            "twin": f"11, {bbfs_os[0]}{bbfs_os[0]}"
+        }
+
     elif m_name == "OREGON 3":
+        # --- LOGIKA KHUSUS OREGON 3 (PENAJAMAN V18.0) ---
         ganjil_count = sum(1 for x in d0 if int(x) % 2 != 0)
         gap_ai = str(abs(int(d0[0]) - int(d0[3])))
         mb_kop = MB.get(d0[1], '0')
@@ -78,6 +81,7 @@ def get_comprehensive_logic(all_res, m_name):
         sorted_chars = sorted(counts.items(), key=lambda x: x[1])
         bbfs_oregon = [x[0] for x in sorted_chars[2:8]]
         if gap_ai not in bbfs_oregon: bbfs_oregon[0] = gap_ai
+        
         l1 = ID.get(d0[2], '0') + TY.get(d0[3], '0') 
         l2 = mb_kop + d0[0]
         l3 = "46" if ganjil_count >= 3 else "15"
@@ -93,215 +97,211 @@ def get_comprehensive_logic(all_res, m_name):
             "macau": f"{SHIO_MAP.get(int(d0[2:]) % 12)} - {SHIO_MAP.get((int(d0[2:]) % 12 + 6) % 12)}",
             "twin": "44, 22, 88" if ganjil_count >= 3 else f"{d0[3]}{d0[3]}, 00"
         }
+
     elif m_name == "PENANG":
-        d0 = all_res[0]
-        bbfs = get_refined_bbfs(all_res, limit=40)
+        bbfs_pe = get_refined_bbfs(all_res, limit=40)
         l1 = TY.get(d0[2], '0') + MB.get(d0[3], '0')
         l2 = ID.get(d0[0], '0') + ML.get(d0[1], '0')
         l3 = d0[2] + ID.get(d0[3], '3')
-        l4 = "19" if "1" in bbfs else "37"
+        l4 = "19" if "1" in bbfs_pe else "37"
         core_lines = list(dict.fromkeys([l1, l2, l3, l4, "48", "84"]))
         return {
             "core": ", ".join(core_lines[:5]),
-            "bbfs": " ".join(sorted(bbfs)),
+            "bbfs": " ".join(sorted(bbfs_pe)),
             "as_kop": MB.get(d0[0], '0') + TY.get(d0[1], '0'),
             "kop_kep": ID.get(d0[1], '0') + ML.get(d0[2], '0'),
             "shio": SHIO_MAP.get(int(d0[2:]) % 12, "N/A"),
             "macau": f"{SHIO_MAP.get(int(d0[2:]) % 12)} - {SHIO_MAP.get((int(d0[2:]) % 12 + 6) % 12)}",
-            "twin": f"00, 33, 55" # Antisipasi twin baru setelah pola sandwich 8-4-8
+            "twin": f"00, 33, 55"
         }
+
     elif m_name == "SINGAPORE POOLS":
-        d0 = all_res[0]
-        bbfs = get_refined_bbfs(all_res, limit=55)
+        bbfs_sg = get_refined_bbfs(all_res, limit=55)
         l1 = ID.get(d0[2], '0') + MB.get(d0[3], '0')
         l2 = TY.get(d0[0], '0') + ML.get(d0[2], '0')
-        l3 = "9" + bbfs[0] if "9" in bbfs else "7" + bbfs[0]
+        l3 = "9" + bbfs_sg[0] if "9" in bbfs_sg else "7" + bbfs_sg[0]
         l4 = d0[3] + d0[2]
         core_lines = list(dict.fromkeys([l1, l2, l3, l4, "86"]))
         return {
-        "core": ", ".join(core_lines[:5]),
-        "bbfs": " ".join(sorted(bbfs[:6])),
-        "as_kop": MB.get(d0[0], '0') + ID.get(d0[1], '0'),
-        "kop_kep": TY.get(d0[1], '0') + ML.get(d0[2], '0'),
-        "shio": SHIO_MAP.get(int(d0[2:]) % 12, "N/A"),
-        "macau": f"{SHIO_MAP.get(int(d0[2:]) % 12)} - {SHIO_MAP.get((int(d0[2:]) % 12 + 6) % 12)}",
-        "twin": f"66, 00" # Twin 11 biasanya memancing twin 66 atau 00
-    }
+            "core": ", ".join(core_lines[:5]),
+            "bbfs": " ".join(sorted(bbfs_sg[:6])),
+            "as_kop": MB.get(d0[0], '0') + ID.get(d0[1], '0'),
+            "kop_kep": TY.get(d0[1], '0') + ML.get(d0[2], '0'),
+            "shio": SHIO_MAP.get(int(d0[2:]) % 12, "N/A"),
+            "macau": f"{SHIO_MAP.get(int(d0[2:]) % 12)} - {SHIO_MAP.get((int(d0[2:]) % 12 + 6) % 12)}",
+            "twin": f"66, 00"
+        }
+
     elif m_name == "DANANG":
-        d0 = all_res[0]
-        bbfs = get_refined_bbfs(all_res, limit=45)
+        bbfs_da = get_refined_bbfs(all_res, limit=45)
         l1 = MB.get(d0[1], '1') + TY.get(d0[3], '7')
         l2 = ID.get(d0[0], '0') + ML.get(d0[2], '5')
         selisih_tengah = str(abs(int(d0[1]) - int(d0[2])))
-        l3 = bbfs[0] + MB.get(selisih_tengah, '4')
-        l4 = "94" if "9" in bbfs else "41"
+        l3 = bbfs_da[0] + MB.get(selisih_tengah, '4')
+        l4 = "94" if "9" in bbfs_da else "41"
         core_lines = list(dict.fromkeys([l1, l2, l3, l4, "71", "49"]))
         return {
             "core": ", ".join(core_lines[:5]),
-            "bbfs": " ".join(sorted(bbfs)),
+            "bbfs": " ".join(sorted(bbfs_da)),
             "as_kop": TY.get(d0[0], '0') + ML.get(d0[1], '4'),
             "kop_kep": ID.get(d0[1], '2') + MB.get(d0[2], '6'),
             "shio": SHIO_MAP.get(int(d0[2:]) % 12, "N/A"),
             "macau": f"{SHIO_MAP.get(int(d0[2:]) % 12)} - {SHIO_MAP.get((int(d0[2:]) % 12 + 6) % 12)}",
-            "twin": f"11, 44, 77" # Danang sering keluarkan twin ganjil setelah JP 4D
+            "twin": f"11, 44, 77"
         }
+
     elif m_name == "SAPPORO":
-        d0 = all_res[0]
-        bbfs = get_refined_bbfs(all_res, limit=40)
+        bbfs_sap = get_refined_bbfs(all_res, limit=40)
         l1 = ML.get(d0[1], '0') + TY.get(d0[3], '5')
         l2 = ID.get(d0[0], '0') + MB.get(d0[2], '7')
         if l2[0] == l2[1]: l2 = l2[0] + ID.get(l2[1], '2')
-        l3 = bbfs[0] + bbfs[2]
+        l3 = bbfs_sap[0] + bbfs_sap[2]
         l4 = d0[2] + ID.get(d0[0], '7')
         core_lines = list(dict.fromkeys([l1, l2, l3, l4, "18"]))
         return {
-        "core": ", ".join(core_lines[:5]),
-        "bbfs": " ".join(sorted(bbfs)),
-        "as_kop": TY.get(d0[0], '0') + ID.get(d0[1], '0'),
-        "kop_kep": MB.get(d0[1], '0') + ML.get(d0[2], '0'),
-        "shio": SHIO_MAP.get(int(d0[2:]) % 12, "N/A"),
-        "macau": f"{SHIO_MAP.get(int(d0[2:]) % 12)} - {SHIO_MAP.get((int(d0[2:]) % 12 + 6) % 12)}",
-        "twin": f"{d0[2]}{d0[2]}, {bbfs[0]}{bbfs[0]}"
-    }
+            "core": ", ".join(core_lines[:5]),
+            "bbfs": " ".join(sorted(bbfs_sap)),
+            "as_kop": TY.get(d0[0], '0') + ID.get(d0[1], '0'),
+            "kop_kep": MB.get(d0[1], '0') + ML.get(d0[2], '0'),
+            "shio": SHIO_MAP.get(int(d0[2:]) % 12, "N/A"),
+            "macau": f"{SHIO_MAP.get(int(d0[2:]) % 12)} - {SHIO_MAP.get((int(d0[2:]) % 12 + 6) % 12)}",
+            "twin": f"{d0[2]}{d0[2]}, {bbfs_sap[0]}{bbfs_sap[0]}"
+        }
+
     elif m_name == "SEOUL":
-        d0 = all_res[0]
-        bbfs = get_refined_bbfs(all_res, limit=35)
+        bbfs_se = get_refined_bbfs(all_res, limit=35)
         l1 = ID.get(d0[3], '0') + ML.get(d0[2], '1')
-        l2 = TY.get(d0[1], '0') + bbfs[0]
+        l2 = TY.get(d0[1], '0') + bbfs_se[0]
         l3 = MB.get(d0[0], '0') + MB.get(d0[3], '0')
         l4 = "0" + ID.get(d0[3], '8')
         core_lines = list(dict.fromkeys([l1, l2, l3, l4, "03"]))
         return {
-        "core": ", ".join(core_lines[:5]),
-        "bbfs": " ".join(sorted(bbfs)),
-        "as_kop": MB.get(d0[0], '0') + ID.get(d0[1], '0'),
-        "kop_kep": TY.get(d0[1], '0') + ML.get(d0[2], '0'),
-        "shio": SHIO_MAP.get(int(d0[2:]) % 12, "N/A"),
-        "macau": f"{SHIO_MAP.get(int(d0[2:]) % 12)} - {SHIO_MAP.get((int(d0[2:]) % 12 + 6) % 12)}",
-        "twin": f"33, {bbfs[0]}{bbfs[0]}" # Antisipasi twin pindah ke belakang
-    }
+            "core": ", ".join(core_lines[:5]),
+            "bbfs": " ".join(sorted(bbfs_se)),
+            "as_kop": MB.get(d0[0], '0') + ID.get(d0[1], '0'),
+            "kop_kep": TY.get(d0[1], '0') + ML.get(d0[2], '0'),
+            "shio": SHIO_MAP.get(int(d0[2:]) % 12, "N/A"),
+            "macau": f"{SHIO_MAP.get(int(d0[2:]) % 12)} - {SHIO_MAP.get((int(d0[2:]) % 12 + 6) % 12)}",
+            "twin": f"33, {bbfs_se[0]}{bbfs_se[0]}"
+        }
+
     elif m_name == "JEJU":
-        d0 = all_res[0]
-        bbfs = get_refined_bbfs(all_res, limit=40)
+        bbfs_je = get_refined_bbfs(all_res, limit=40)
         l1 = TY.get(d0[2], '0') + MB.get(d0[3], '0')
         l2 = ID.get(d0[1], '0') + ML.get(d0[0], '0')
-        l3 = bbfs[0] + bbfs[1]
+        l3 = bbfs_je[0] + bbfs_je[1]
         l4 = d0[3] + ID.get(d0[3], '5')
         core_lines = list(dict.fromkeys([l1, l2, l3, l4, "10"]))
         return {
-        "core": ", ".join(core_lines[:5]),
-        "bbfs": " ".join(sorted(bbfs)),
-        "as_kop": ID.get(d0[0], '0') + TY.get(d0[1], '0'),
-        "kop_kep": MB.get(d0[1], '0') + ML.get(d0[2], '0'),
-        "shio": SHIO_MAP.get(int(d0[2:]) % 12, "N/A"),
-        "macau": f"{SHIO_MAP.get(int(d0[2:]) % 12)} - {SHIO_MAP.get((int(d0[2:]) % 12 + 6) % 12)}",
-        "twin": f"{d0[3]}{d0[3]}, {bbfs[0]}{bbfs[0]}"
-    }
+            "core": ", ".join(core_lines[:5]),
+            "bbfs": " ".join(sorted(bbfs_je)),
+            "as_kop": ID.get(d0[0], '0') + TY.get(d0[1], '0'),
+            "kop_kep": MB.get(d0[1], '0') + ML.get(d0[2], '0'),
+            "shio": SHIO_MAP.get(int(d0[2:]) % 12, "N/A"),
+            "macau": f"{SHIO_MAP.get(int(d0[2:]) % 12)} - {SHIO_MAP.get((int(d0[2:]) % 12 + 6) % 12)}",
+            "twin": f"{d0[3]}{d0[3]}, {bbfs_je[0]}{bbfs_je[0]}"
+        }
+
     elif m_name == "TORONTOMID": 
-        d0 = all_res[0]
-        bbfs = get_refined_bbfs(all_res, limit=35)
-        if '1' not in bbfs: bbfs.append('1')
+        bbfs_to = get_refined_bbfs(all_res, limit=35)
+        if '1' not in bbfs_to: bbfs_to.append('1')
         l1 = TY.get(d0[2], '0') + MB.get(d0[3], '0')
         l2 = ML.get(d0[0], '0') + ID.get(d0[1], '0')
-        l3 = "02" if "0" in bbfs else "39"
+        l3 = "02" if "0" in bbfs_to else "39"
         l4 = d0[3] + d0[2]
         core_lines = list(dict.fromkeys([l1, l2, l3, l4, "42", "72"]))
         return {
-        "core": ", ".join(core_lines[:5]),
-        "bbfs": " ".join(sorted(bbfs[:6])), # Batasi tetap 6 digit
-        "as_kop": TY.get(d0[0], '0') + TY.get(d0[1], '0'), # Antisipasi twin lagi
-        "kop_kep": ID.get(d0[1], '0') + MB.get(d0[2], '0'),
-        "shio": SHIO_MAP.get(int(d0[2:]) % 12, "N/A"),
-        "macau": f"{SHIO_MAP.get(int(d0[2:]) % 12)} - {SHIO_MAP.get((int(d0[2:]) % 12 + 6) % 12)}",
-        "twin": f"{d0[0]}{d0[0]}, 11" # Fokus twin 22 atau 11
-    }
+            "core": ", ".join(core_lines[:5]),
+            "bbfs": " ".join(sorted(bbfs_to[:6])),
+            "as_kop": TY.get(d0[0], '0') + TY.get(d0[1], '0'),
+            "kop_kep": ID.get(d0[1], '0') + MB.get(d0[2], '0'),
+            "shio": SHIO_MAP.get(int(d0[2:]) % 12, "N/A"),
+            "macau": f"{SHIO_MAP.get(int(d0[2:]) % 12)} - {SHIO_MAP.get((int(d0[2:]) % 12 + 6) % 12)}",
+            "twin": f"{d0[0]}{d0[0]}, 11"
+        }
+
     elif m_name == "HONGKONG LOTTO":
-        d0 = all_res[0]
         d1 = all_res[1]
-        bbfs = get_refined_bbfs(all_res, limit=50)
+        bbfs_hkl = get_refined_bbfs(all_res, limit=50)
         l1 = TY.get(d0[1], '0') + ML.get(d0[2], '0')
         l2 = ID.get(d0[0], '0') + MB.get(d0[3], '0')
         l3 = d0[2] + d1[3]
-        l4 = "05" if "0" in bbfs else "50"
-        if MB.get(d0[3]) not in bbfs: bbfs.append(MB.get(d0[3]))
+        l4 = "05" if "0" in bbfs_hkl else "50"
+        if MB.get(d0[3]) not in bbfs_hkl: bbfs_hkl.append(MB.get(d0[3]))
         core_lines = list(dict.fromkeys([l1, l2, l3, l4, "15", "51", "84"]))
         return {
             "core": ", ".join(core_lines[:5]),
-            "bbfs": " ".join(sorted(list(set(bbfs[:7])))), # BBFS 7 Digit lebih aman
+            "bbfs": " ".join(sorted(list(set(bbfs_hkl[:7])))),
             "as_kop": MB.get(d0[0], '0') + ID.get(d0[1], '0'),
             "kop_kep": TY.get(d0[1], '0') + ML.get(d0[2], '0'),
             "shio": SHIO_MAP.get(int(d0[2:]) % 12, "N/A"),
             "macau": f"{SHIO_MAP.get(int(d0[2:]) % 12)} - {SHIO_MAP.get((int(d0[2:]) % 12 + 6) % 12)}",
             "twin": f"55, 00, 11"
         }
+
     elif m_name == "HONGKONG POOLS":
-        d0 = all_res[0]
-        bbfs = get_refined_bbfs(all_res, limit=60)
+        bbfs_hkp = get_refined_bbfs(all_res, limit=60)
         l1 = ML.get(d0[3], '0') + TY.get(d0[0], '0')
         l2 = ID.get(d0[1], '0') + MB.get(d0[2], '0')
         l3 = d0[1] + ID.get(d0[3], '0') 
-        l4 = "29" if "2" in bbfs else "40"
-        if "0" not in bbfs: bbfs.append("0")
-        
+        l4 = "29" if "2" in bbfs_hkp else "40"
+        if "0" not in bbfs_hkp: bbfs_hkp.append("0")
         core_lines = list(dict.fromkeys([l1, l2, l3, l4, "75", "15"]))
         return {
             "core": ", ".join(core_lines[:5]),
-            "bbfs": " ".join(sorted(list(set(bbfs[:7])))),
+            "bbfs": " ".join(sorted(list(set(bbfs_hkp[:7])))),
             "as_kop": TY.get(d0[0], '0') + ML.get(d0[1], '0'),
             "kop_kep": ID.get(d0[1], '0') + MB.get(d0[2], '0'),
             "shio": SHIO_MAP.get(int(d0[2:]) % 12, "N/A"),
             "macau": f"{SHIO_MAP.get(int(d0[2:]) % 12)} - {SHIO_MAP.get((int(d0[2:]) % 12 + 6) % 12)}",
             "twin": f"99, 66, 00"
         }
+
     elif m_name == "CAMBODIA":
-        d0 = all_res[0]
         d1 = all_res[1] if len(all_res) > 1 else d0
-        jalur_main = ID.get(d0[0]) + ML.get(d0[3])
-        jalur_bom = TY.get(d0[1]) + ID.get(d0[2])
-        cadangan_presisi = d0[3] + TY.get(d0[3])
-        line.extend([jalur_main, jalur_bom, cadangan_presisi, d1[2]+d0[3]])
+        line.extend([ID.get(d0[0]) + ML.get(d0[3]), TY.get(d0[1]) + ID.get(d0[2]), d0[3] + TY.get(d0[3]), d1[2]+d0[3]])
+
     elif m_name == "SYDNEY LOTTO":
-        d0 = all_res[0]
         d1 = all_res[1]
-        bbfs = get_refined_bbfs(all_res, limit=45)
+        bbfs_sl = get_refined_bbfs(all_res, limit=45)
         line1 = TY.get(d0[3], '0') + ML.get(d0[2], '0')
         line2 = ID.get(d0[0], '0') + d1[3]
         selisih_idx = ID.get(str(abs(int(d0[1]) - int(d0[2]))), '0')
-        line3 = selisih_idx + bbfs[0]
-        line4 = "54" if "5" in bbfs else "58"
+        line3 = selisih_idx + bbfs_sl[0]
+        line4 = "54" if "5" in bbfs_sl else "58"
         core_lines = list(dict.fromkeys([line1, line2, line3, line4, "12", "37"]))
-        askop_final = MB.get(d0[0], '0') + ID.get(d0[1], '0')
-        kopkep_final = TY.get(d0[1], '0') + ML.get(d0[2], '0')
         return {
-        "core": ", ".join(core_lines[:5]), # Ambil 5 line terbaik
-        "bbfs": " ".join(sorted(bbfs)),
-        "as_kop": askop_final,
-        "kop_kep": kopkep_final,
-        "shio": SHIO_MAP.get(int(d0[2:]) % 12, "N/A"),
-        "macau": f"{SHIO_MAP.get(int(d0[2:]) % 12)} - {SHIO_MAP.get((int(d0[2:]) % 12 + 6) % 12)}",
-        "twin": f"{d0[3]}{d0[3]}, {bbfs[0]}{bbfs[0]}"
-    }
+            "core": ", ".join(core_lines[:5]),
+            "bbfs": " ".join(sorted(bbfs_sl)),
+            "as_kop": MB.get(d0[0], '0') + ID.get(d0[1], '0'),
+            "kop_kep": TY.get(d0[1], '0') + ML.get(d0[2], '0'),
+            "shio": SHIO_MAP.get(int(d0[2:]) % 12, "N/A"),
+            "macau": f"{SHIO_MAP.get(int(d0[2:]) % 12)} - {SHIO_MAP.get((int(d0[2:]) % 12 + 6) % 12)}",
+            "twin": f"{d0[3]}{d0[3]}, {bbfs_sl[0]}{bbfs_sl[0]}"
+        }
+
     elif m_name == "PHUKET":
-        d0 = all_res[0]
-        bbfs = get_engine_analytics(all_res, is_big=False)
+        bbfs_ph = get_engine_analytics(all_res, is_big=False)
         l1 = ID.get(d0[2], '0') + ML.get(d0[3], '0')
         l2 = TY.get(d0[0], '0') + MB.get(d0[1], '0')
-        l3 = "0" + bbfs[0]
-        l4 = "71" if "7" in bbfs else "12"
+        l3 = "0" + bbfs_ph[0]
+        l4 = "71" if "7" in bbfs_ph else "12"
         core_lines = list(dict.fromkeys([l1, l2, l3, l4, "17"]))
         return {
             "core": ", ".join(core_lines[:5]),
-            "bbfs": " ".join(sorted(bbfs)),
+            "bbfs": " ".join(sorted(bbfs_ph)),
             "as_kop": TY.get(d0[0], '0') + ID.get(d0[1], '0'),
             "kop_kep": MB.get(d0[1], '0') + ML.get(d0[2], '0'),
             "shio": SHIO_MAP.get(int(d0[2:]) % 12, "N/A"),
             "macau": f"{SHIO_MAP.get(int(d0[2:]) % 12)} - {SHIO_MAP.get((int(d0[2:]) % 12 + 6) % 12)}",
-            "twin": f"{d0[1]}{d0[1]}, {bbfs[0]}{bbfs[0]}"
+            "twin": f"{d0[1]}{d0[1]}, {bbfs_ph[0]}{bbfs_ph[0]}"
         }
+
     elif is_big:
         line.append(ID.get(d0[1]) + d0[3])
         line.append(TY.get(d0[0]) + ML.get(d0[3]))
 
+    # --- RETURN FALLBACK (LOGIKA UMUM) ---
     shio_idx = int(d0[2:]) % 12
     return {
         "core": ", ".join(list(dict.fromkeys(line))),
@@ -350,13 +350,11 @@ def fetch_results(market_code):
 # --- [ROUTE ANALYZE - FIX TOTAL] ---
 @app.route('/analyze', methods=['POST'])
 def analyze():
-    # Perbaikan 1: Inisialisasi results di awal agar tidak UnboundLocalError
     results = [] 
     try:
         market = request.form.get('market')
         if not market: return jsonify({"status": "error", "msg": "Pilih Pasaran"}), 400
 
-        # Perbaikan 2: Percabangan Terpisah untuk MACAU vs Pasaran Lain
         if market == "MACAU 4D":
             from .macau import fetch_macau_m17, calculate_macau_prediction 
             results = fetch_macau_m17()
@@ -366,7 +364,6 @@ def analyze():
             return jsonify({"status": "success", "market": "MACAU 4D (M17)", "last": results[0], "data": data})
 
         else:
-            # Pasaran Normal
             market_code = TARGET_POOLS.get(market)
             if not market_code: return jsonify({"status": "error", "msg": "Kode Pasaran Hilang"}), 400
             
