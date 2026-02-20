@@ -20,7 +20,8 @@ TARGET_POOLS = {
     'BUSAN POOLS':'p16063', 'OSAKA':'p28422', 'JEJU':'p22815', 'DANANG':'p22816',
     'PENANG':'p22817', 'SEOUL':'p28502', 'TORONTOMID':'p13976', 'SAPPORO':'p22814',
     'PHUKET':'p28435', 'WUHAN':'p28615','MACAU 4D':'MACAU_TRIGGER','OREGON 3':'p12521',
-    'WASHING-MID':'p24508','MIAMI-MID':'p24488','OREGON 6':'p12522','MONTANA':'p23588'
+    'WASHING-MID':'p24508','MIAMI-MID':'p24488','OREGON 6':'p12522','MONTANA':'p23588',
+    'OREGON 9':'p12523','BEIJING':'p24492','OREGON 12':'p12524'
 }
 
 # --- [CORE ENGINE V9.5 - TIDAK DISENTUH] ---
@@ -70,6 +71,66 @@ def get_comprehensive_logic(all_res, m_name):
             "shio": SHIO_MAP.get(int(d0[2:]) % 12, "N/A"),
             "macau": f"{SHIO_MAP.get(int(d0[2:]) % 12)} - {SHIO_MAP.get((int(d0[2:]) % 12 + 6) % 12)}",
             "twin": f"11, {bbfs_os[0]}{bbfs_os[0]}"
+        }
+    elif m_name == "OREGON 6":
+        # --- TEKNIK 1: RESIDUE ANALYSIS (Angka Dingin vs Panas) ---
+        # Mencari angka yang 'terjebak' di histori 10-20 hari terakhir
+        bbfs_or6 = get_refined_bbfs(all_res, limit=45) 
+        d0 = all_res[0] # Result: 4602
+        
+        # --- TEKNIK 2: DELTA PREDICTION ---
+        # Selisih AS+KOP dan KEP+EKOR
+        delta_front = (int(d0[0]) + int(d0[1])) % 10 # 4+6 = 0
+        delta_back = (int(d0[2]) + int(d0[3])) % 10  # 0+2 = 2
+        ai_main = str(delta_front) + str(delta_back)  # AI: 02 (Replay detect)
+        
+        # --- TEKNIK 3: MISTIK PROGRESSION ---
+        # Jika result genap semua/dominan genap, gunakan pola lompatan ganjil
+        l1 = MB.get(d0[1], '0') + TY.get(d0[3], '0') # Mistik Kop + Taysen Ekor
+        l2 = ID.get(d0[0], '0') + ML.get(d0[2], '0') # Indeks As + Mistik Lama Kep
+        l3 = "13" if "1" in bbfs_or6 else "87"
+        
+        core_lines = list(dict.fromkeys([l1, l2, l3, "16", "38"]))
+        
+        return {
+            "core": ", ".join(core_lines[:5]),
+            "bbfs": " ".join(sorted(bbfs_or6)),
+            "as_kop": ML.get(d0[0]) + ID.get(d0[1]),
+            "kop_kep": TY.get(d0[1]) + MB.get(d0[2]),
+            "shio": "MACAN / MONYET",
+            "macau": f"{delta_front} - {delta_back}",
+            "twin": "66, 11, 00"
+        }
+
+    elif m_name == "MONTANA":
+        # --- TEKNIK 1: TWIN REBOUND ---
+        # Montana baru result 3622. Twin di ekor biasanya rebound ke angka Mistik.
+        d0 = all_res[0] # Result: 3622
+        bbfs_mon = get_refined_bbfs(all_res, limit=35)
+        
+        # --- TEKNIK 2: THE "7-STEP" GAP ---
+        # Mengambil data 7 hari lalu untuk melihat pola perulangan mingguan
+        d7 = get_historical_gap(all_res, 7)
+        
+        # --- TEKNIK 3: KOP+KEP DOMINANCE ---
+        # Seringkali KOP+KEP menjadi angka main (6+2 = 8)
+        ai_8 = str((int(d0[1]) + int(d0[2])) % 10)
+        
+        l1 = ai_8 + MB.get(d0[3], '0') # 8 + Mistik Baru Ekor (2->6) = 86
+        l2 = TY.get(d0[0], '0') + d0[2] # Taysen As + Kepala
+        l3 = ID.get(d7[3], '0') + d0[3] # Indeks Ekor 7 hari lalu + Ekor sekarang
+        l4 = "70" # Angka tarikan abadi Montana
+        
+        core_lines = list(dict.fromkeys([l1, l2, l3, l4, "15", "62"]))
+        
+        return {
+            "core": ", ".join(core_lines[:5]),
+            "bbfs": " ".join(sorted(bbfs_mon)),
+            "as_kop": ID.get(d0[0]) + TY.get(d0[1]),
+            "kop_kep": ML.get(d0[1]) + MB.get(d0[2]),
+            "shio": "ULAR / AYAM",
+            "macau": f"{ai_8} - {d0[0]}",
+            "twin": "22, 66, 77"
         }
     elif m_name == "WASHING-MID":
         # Logika V10.3: Berdasarkan Result 8402
