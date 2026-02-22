@@ -3,103 +3,185 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Engine V12.1</title>
+    <title>AI ENGINE V12.1 - FUTURISTIC ANALYTICS</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: radial-gradient(circle at center, #1a1c2c 0%, #0a0b10 100%);
+            font-family: 'Rajdhani', sans-serif;
+        }
+        .font-orbitron { font-family: 'Orbitron', sans-serif; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+        }
+        .neon-border {
+            border: 1px solid #00f2ff;
+            box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+        }
+        .btn-gradient {
+            background: linear-gradient(90deg, #00f2ff, #0066ff);
+            transition: all 0.3s ease;
+        }
+        .btn-gradient:hover {
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.6);
+            transform: translateY(-2px);
+        }
+        @media (max-width: 640px) {
+            .text-responsive { font-size: 0.8rem; }
+        }
+    </style>
 </head>
-<body class="bg-slate-900 text-white min-h-screen p-5">
-    <div class="max-w-2xl mx-auto bg-slate-800 p-6 rounded-xl shadow-2xl border border-slate-700">
-        <h1 class="text-2xl font-bold text-center mb-6 text-yellow-500">AI ENGINE V12.1 SUPER SYNCHRONIZED</h1>
-        
-        <form method="POST" class="space-y-4">
-            <select name="market" class="w-full p-3 bg-slate-700 rounded border border-slate-600 focus:outline-none focus:ring-2 focus:ring-yellow-500">
-                {% for m in markets %}
-                <option value="{{ m }}" {% if selected == m %}selected{% endif %}>{{ m }}</option>
-                {% endfor %}
-            </select>
-            <button type="submit" class="w-full bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 rounded transition">ANALOGI DATA</button>
-        </form>
+<body class="text-gray-100 min-h-screen p-4 md:p-10">
+
+    <div class="max-w-4xl mx-auto">
+        <div class="text-center mb-10">
+            <h1 class="font-orbitron text-3xl md:text-5xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600 mb-2">
+                AI ENGINE V12.1
+            </h1>
+            <p class="text-cyan-500 tracking-[0.3em] text-sm uppercase">Super Synchronized Logic</p>
+        </div>
+
+        <div class="glass-card rounded-2xl p-6 mb-8">
+            <form method="POST" class="flex flex-col md:flex-row gap-4">
+                <select name="market" class="flex-grow bg-gray-900/50 border border-gray-700 rounded-lg p-3 text-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                    {% for m in markets %}
+                    <option value="{{ m }}" {% if selected == m %}selected{% endif %}>{{ m }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn-gradient px-8 py-3 rounded-lg font-bold uppercase tracking-wider text-white">
+                    Generate Analysis
+                </button>
+            </form>
+        </div>
 
         {% if analysis == "error" %}
-        <div class="mt-6 p-4 bg-red-900/50 border border-red-500 rounded text-center">Data tidak cukup untuk analisa.</div>
+        <div class="glass-card border-red-500/50 p-6 rounded-xl text-center text-red-400">
+            [!] DATA HISTORIS TIDAK CUKUP UNTUK ANALISA SISTEM
+        </div>
         {% elif analysis %}
-        <div class="mt-8 space-y-6">
-            <div class="grid grid-cols-2 gap-4 border-b border-slate-700 pb-4">
-                <div><p class="text-slate-400 text-sm">LAST RESULT</p><p class="text-xl font-mono">{{ analysis.last_res }}</p></div>
-                <div><p class="text-slate-400 text-sm">SHIO ON</p><p class="text-xl font-bold text-yellow-500">{{ analysis.shio }}</p></div>
-            </div>
-
-            <div class="bg-slate-900 p-4 rounded-lg">
-                <p class="text-slate-400 text-sm mb-1">BBFS REKOMENDASI</p>
-                <p class="text-2xl tracking-widest font-bold text-green-400">[ {{ analysis.bbfs }} ]</p>
-                <p class="text-xs mt-2 text-slate-500">MACAU: {{ analysis.macau }} | TWIN: {{ analysis.twin }}</p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="bg-slate-700 p-3 rounded">
-                    <h3 class="text-yellow-500 font-bold mb-2">TOP 10 LINE 2D</h3>
-                    <p class="font-mono text-sm leading-relaxed">{{ analysis.top2d | join(' * ') }}</p>
+        
+        <div id="capture-area" class="glass-card rounded-2xl overflow-hidden border border-gray-800">
+            <div class="bg-gradient-to-r from-cyan-900/20 to-transparent p-6 border-b border-gray-800 flex justify-between items-center">
+                <div>
+                    <h2 class="text-2xl font-orbitron font-bold text-cyan-400">{{ selected }}</h2>
+                    <p class="text-xs text-gray-500">System Analysis Date: <span id="current-date"></span></p>
                 </div>
-                <div class="bg-slate-700 p-3 rounded">
-                    <h3 class="text-yellow-500 font-bold mb-2">TOP 10 LINE 3D</h3>
-                    <div class="grid grid-cols-2 gap-2 font-mono text-sm">
-                        {% for i in range(0, 10, 2) %}
-                        <span>{{ analysis.top3d[i] }}</span> <span>{{ analysis.top3d[i+1] }}</span>
+                <div class="text-right">
+                    <span class="block text-xs text-gray-400 uppercase">Last Result</span>
+                    <span class="text-2xl font-mono font-bold text-white">{{ analysis.last_res }}</span>
+                </div>
+            </div>
+
+            <div class="p-6 space-y-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="md:col-span-2 p-4 bg-black/40 rounded-xl border-l-4 border-cyan-500">
+                        <span class="text-xs uppercase text-cyan-500 font-bold">BBFS Rekomendasi</span>
+                        <div class="text-4xl md:text-5xl font-mono tracking-tighter text-white mt-1">{{ analysis.bbfs }}</div>
+                    </div>
+                    <div class="p-4 bg-black/40 rounded-xl border-l-4 border-blue-500 text-center">
+                        <span class="text-xs uppercase text-blue-500 font-bold">Shio On</span>
+                        <div class="text-3xl font-bold text-white mt-1">{{ analysis.shio }}</div>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-4 justify-between text-sm">
+                    <div class="bg-gray-800/50 px-4 py-2 rounded-full border border-gray-700">
+                        <span class="text-cyan-500">MACAU:</span> {{ analysis.macau }}
+                    </div>
+                    <div class="bg-gray-800/50 px-4 py-2 rounded-full border border-gray-700">
+                        <span class="text-cyan-500">TWIN:</span> {{ analysis.twin }}
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-cyan-400 font-bold mb-3 border-b border-cyan-900/50 pb-2">TOP 10 LINE 2D</h3>
+                        <div class="flex flex-wrap gap-2">
+                            {% for n in analysis.top2d %}
+                            <span class="bg-cyan-900/30 border border-cyan-500/30 px-3 py-1 rounded font-mono">{{ n }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-blue-400 font-bold mb-3 border-b border-blue-900/50 pb-2">TOP 10 LINE 3D</h3>
+                        <div class="grid grid-cols-2 gap-2 font-mono text-center">
+                            {% for i in range(0, 10, 2) %}
+                            <div class="bg-blue-900/20 p-1 rounded">{{ analysis.top3d[i] }}</div>
+                            <div class="bg-blue-900/20 p-1 rounded">{{ analysis.top3d[i+1] }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-purple-400 font-bold mb-3 border-b border-purple-900/50 pb-2 text-center">TOP 10 LINE 4D</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-3 font-mono text-center">
+                        {% for n in analysis.top4d %}
+                        <div class="bg-purple-900/20 border border-purple-500/20 p-2 rounded text-purple-200">{{ n }}</div>
                         {% endfor %}
                     </div>
                 </div>
             </div>
-
-            <div class="bg-slate-700 p-3 rounded">
-                <h3 class="text-yellow-500 font-bold mb-2 text-center">TOP 10 LINE 4D</h3>
-                <div class="grid grid-cols-2 gap-4 text-center font-mono">
-                    {% for i in range(0, 10, 2) %}
-                    <div class="bg-slate-800 p-1 rounded">{{ analysis.top4d[i] }}</div>
-                    <div class="bg-slate-800 p-1 rounded">{{ analysis.top4d[i+1] }}</div>
-                    {% endfor %}
-                </div>
+            
+            <div class="bg-cyan-900/10 p-4 text-center text-[10px] text-gray-600 uppercase tracking-widest">
+                AI Engine V12.1 Digital Signature: {{ selected }}-{{ analysis.last_res }}-OK
             </div>
         </div>
-        {% endif %}
-    </div>
-<div class="flex justify-between items-center mb-4">
-    <h2 class="text-lg font-bold text-yellow-500">HASIL ANALISA: {{ selected }}</h2>
-    <button onclick="copyAnalysis()" class="bg-blue-600 hover:bg-blue-500 text-xs px-3 py-1 rounded flex items-center gap-2">
-        <span>📋</span> Salin Analisa
-    </button>
-</div>
 
-<textarea id="copyTarget" class="hidden">
-PASARAN: {{ selected }}
+        <div class="grid grid-cols-2 gap-4 mt-8">
+            <button onclick="copyAnalysis()" class="bg-gray-800 hover:bg-gray-700 p-4 rounded-xl flex items-center justify-center gap-3 transition border border-gray-700">
+                <span>📋</span> SALIN TEKS
+            </button>
+            <button onclick="takeScreenshot()" class="bg-gray-800 hover:bg-gray-700 p-4 rounded-xl flex items-center justify-center gap-3 transition border border-gray-700">
+                <span>📸</span> SCREENSHOT
+            </button>
+        </div>
+
+        <textarea id="copyTarget" class="hidden">
+MARKET: {{ selected }}
 RESULT: {{ analysis.last_res }}
-BBFS: {{ analysis.bbfs }}
+BBFS: [ {{ analysis.bbfs }} ]
 SHIO: {{ analysis.shio }}
 MACAU: {{ analysis.macau }}
 TWIN: {{ analysis.twin }}
 
-TOP 2D:
-{{ analysis.top2d | join(' - ') }}
+2D: {{ analysis.top2d | join(' - ') }}
+3D: {{ analysis.top3d | join(' - ') }}
+4D: {{ analysis.top4d | join(' - ') }}
+        </textarea>
+        {% endif %}
+    </div>
 
-TOP 3D:
-{% for i in range(0, 10, 2) %}{{ analysis.top3d[i] }} | {{ analysis.top3d[i+1] }}{% if not loop.last %}
-{% endif %}{% endfor %}
+    <script>
+        // Set Realtime Date
+        document.getElementById('current-date').innerText = new Date().toLocaleString('id-ID');
 
-TOP 4D:
-{% for i in range(0, 10, 2) %}{{ analysis.top4d[i] }} | {{ analysis.top4d[i+1] }}{% if not loop.last %}
-{% endif %}{% endfor %}
-</textarea>
+        function copyAnalysis() {
+            var copyText = document.getElementById("copyTarget");
+            copyText.select();
+            navigator.clipboard.writeText(copyText.value);
+            alert("✅ Analisa {{ selected }} berhasil disalin ke clipboard!");
+        }
 
-<script>
-function copyAnalysis() {
-    var copyText = document.getElementById("copyTarget");
-    copyText.select();
-    copyText.setSelectionRange(0, 99999); // Untuk perangkat mobile
-
-    navigator.clipboard.writeText(copyText.value).then(() => {
-        alert("Analisa " + "{{ selected }}" + " berhasil disalin!");
-    }).catch(err => {
-        console.error('Gagal menyalin: ', err);
-    });
-}
-</script>
+        function takeScreenshot() {
+            const area = document.getElementById('capture-area');
+            html2canvas(area, {
+                backgroundColor: '#0a0b10',
+                scale: 2, // Kualitas HD
+                logging: false,
+                useCORS: true
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'Analisa-{{ selected }}.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        }
+    </script>
 </body>
 </html>
