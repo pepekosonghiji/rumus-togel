@@ -133,7 +133,7 @@ def fetch_results(market_code):
                     return [tds[1].text.strip() for row in table.find('tbody').find_all('tr') 
                             if (tds := row.find_all('td')) and len(tds) >= 2 and tds[1].text.strip().isdigit()][:40]
             else:
-                url = f"https://dk9if7ik34.salamrupiah.com/history/result-mobile/{market_code}-pool-1"
+                url = f"https://y6thn5aurl.salamrupiah.com/history/result-mobile/{market_code}-pool-1"
                 r = client.get(url, headers=headers)
                 soup = BeautifulSoup(r.text, 'html.parser')
                 table = soup.find('table', class_='table-history')
