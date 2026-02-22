@@ -25,7 +25,7 @@ TARGET_POOLS = {
     'OREGON 3':'p12521', 'OREGON 6':'p12522', 'OREGON 9':'p12523', 'OSAKA':'p28422',
     'PENANG':'p22817', 'PHUKET':'p28435', 'SAPPORO':'p22814', 'SEOUL':'p28502',
     'SINGAPORE POOLS': 'p2264', 'SYDNEY LOTTO': 'p2262', 'TORONTOMID':'p13976',
-    'WASHING-MID':'p24508', 'WUHAN':'p28615', 'MACAU': 'm17','GREECE':'p8584',
+    'WASHINGMID':'p24508', 'WUHAN':'p28615', 'MACAU': 'm17','GREECE':'p8584',
     'MANHATTAN':'p23590','TORONTOEVE':'p13975','ORLANDO':'p21384','COLORADO':'p23589'
 }
 
@@ -110,13 +110,11 @@ def get_weighted_bbfs_v13(all_res, market_name):
     
 def generate_titanium_lines(bbfs_list, all_res, market_name, count=10):
     """
-    METODE: TRIPLE-LAYER ENCRYPTION VERIFICATION (TLEV)
-    Layer 1: Positional Flux (AS-KOP-KEP-EKOR Alignment)
-    Layer 2: Sum-Biji & Difference Filter
-    Layer 3: Cross-Market Shadow Match
+    METODE: DYNAMIC POSITIONAL RESONANCE (DPR)
+    V13.5 Premium Edition - Fokus pada akurasi tembakan spesifik 2D/3D/4D
     """
     d0 = all_res[0]
-    # Pool diperluas dengan Taysen & Mistik Utama
+    # Pool diperluas dengan perlindungan angka cadangan
     ext_pool = list(set(bbfs_list[:6] + [ML.get(bbfs_list[0]), TY.get(bbfs_list[0])]))
     all_pairs = list(itertools.permutations(ext_pool, 2))
     
@@ -126,37 +124,57 @@ def generate_titanium_lines(bbfs_list, all_res, market_name, count=10):
         h, t = int(p[0]), int(p[1])
         score = 0
         
-        # --- LAYER 1: POSITIONAL FLUX ---
-        # Jika Kepala adalah Mistik dari Ekor sebelumnya, skor naik
-        if p[0] == ML.get(d0[3]): score += 15
+        # --- LAYER 1: POSITIONAL RESONANCE ---
+        # Verifikasi Kepala: Harus punya resonansi kuat dengan Ekor/Kepala sebelumnya
+        if p[0] in [ML.get(d0[3]), ID.get(d0[2]), TY.get(d0[3])]: 
+            score += 20
         
-        # --- LAYER 2: SUM & DIFF (ORLANDO/OREGON/COLORADO SPECIAL) ---
+        # --- LAYER 2: SUM-BIJI & RATIO FILTER ---
         sum_val = (h + t) % 10
-        if market_name in ['ORLANDO', 'COLORADO', 'MANHATTAN'] or 'OREGON' in market_name:
-            if sum_val in [1, 5, 8, 9]: score += 25 
+        # Filter khusus Cluster Amerika & Oregon
+        if market_name in ['ORLANDO', 'COLORADO', 'MANHATTAN','WASHINGMID'] or 'OREGON' in market_name:
+            if sum_val in [1, 5, 8, 9]: score += 30 
+        # Filter khusus Cluster Asia (HK, Macau, Cambodia)
+        elif market_name in ['HONGKONG POOLS', 'MACAU', 'CAMBODIA', 'SINGAPORE POOLS']:
+            if sum_val in [0, 3, 4, 7]: score += 25
         else:
-            if sum_val in [2, 4, 6, 8]: score += 15
+            if sum_val in [2, 6, 8]: score += 15
         
-        # Anti-Twin Dinamis (Kecuali setelah result Twin)
+        # Respon terhadap pola Twin
         if h == t:
-            score += 25 if d0[2] == d0[3] else -20
+            score += 35 if d0[2] == d0[3] else -25
             
         verified_2d.append((line, score))
 
     verified_2d.sort(key=lambda x: x[1], reverse=True)
     top2 = [x[0] for x in verified_2d[:count]]
 
-    # --- LAYER 3: 3D/4D PRECISION ---
+    # --- LAYER 3: 4D PRECISION TARGETING (PENEMBAK JITU) ---
     top3, top4 = [], []
     for i in range(count):
-        # Injeksi Presisi Khusus Colorado
+        # Penentuan AS & KOP tidak lagi statis, tapi berdasarkan 'Vibrasi' result terakhir
+        # Jika result genap, gunakan Mistik Baru. Jika ganjil, gunakan Taysen.
+        is_odd = int(d0[3]) % 2 != 0
+        
         if market_name == 'COLORADO':
             as_final = ML.get(d0[0]) if i < 5 else ID.get(d0[3])
             kop_final = TY.get(d0[2]) if i % 2 == 0 else bbfs_list[1]
-        else:
-            as_final = MB.get(d0[0]) if i < 5 else bbfs_list[0]
-            kop_final = ID.get(d0[2]) if i % 2 == 0 else TY.get(d0[1])
         
+        elif market_name in ['HONGKONG POOLS', 'MACAU']:
+            # Karakter Asia: AS sering kali Mirror (Index) dari Ekor terakhir
+            as_final = ID.get(d0[3]) if i < 5 else TY.get(d0[0])
+            kop_final = MB.get(d0[1]) if i % 2 == 0 else ML.get(d0[2])
+            
+        else:
+            # Karakter Global: Mengikuti vibrasi ganjil/genap
+            if is_odd:
+                as_final = TY.get(d0[0]) if i < 5 else bbfs_list[0]
+                kop_final = ML.get(d0[1]) if i % 2 == 0 else ID.get(d0[2])
+            else:
+                as_final = MB.get(d0[0]) if i < 5 else ID.get(d0[1])
+                kop_final = TY.get(d0[3]) if i % 2 == 0 else bbfs_list[2]
+        
+        # Final Assembly
         line_2d = top2[i]
         line_3d = f"{kop_final}{line_2d}"
         line_4d = f"{as_final}{line_3d}"
@@ -165,7 +183,7 @@ def generate_titanium_lines(bbfs_list, all_res, market_name, count=10):
         top4.append(line_4d)
 
     return top2, top3, top4
-
+    
 def get_comprehensive_logic(all_res, m_name):
     d0 = all_res[0]
     bbfs_raw = get_weighted_bbfs_v13(all_res, m_name) 
