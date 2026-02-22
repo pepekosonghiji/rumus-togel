@@ -92,19 +92,31 @@ def generate_verified_lines(bbfs_list, all_res, count=10):
     return top2, top3, top4
 
 def get_comprehensive_logic(all_res, m_name):
-    d0 = all_res[0]
+    d0 = all_res[0] # Result terakhir (misal: 1234)
     bbfs_raw = get_weighted_bbfs_v12(all_res)
+    bbfs_final = sorted(list(set(bbfs_raw)))[:7]
     
-    # Pastikan BBFS unik
-    bbfs_final = []
-    for x in bbfs_raw:
-        if x not in bbfs_final: bbfs_final.append(x)
-    bbfs_final = bbfs_final[:7]
+    # --- LOGIKA TAMBAHAN AKURASI TINGGI ---
     
+    # 1. Angka Main (AM): 4 digit yang paling mendominasi struktur 2D belakang
+    # Diambil dari skor tertinggi bbfs_raw
+    am = sorted(bbfs_raw[:4])
+    
+    # 2. Angka Lari (AL): Angka pelarian berdasarkan Mistik Lama/Baru dari Ekor terakhir
+    # Seringkali muncul sebagai kejutan di posisi Kop atau Kepala
+    al = [ML.get(d0[3], '0'), MB.get(d0[3], '0')]
+    
+    # 3. Angka Ikut (AI): Angka yang diprediksi kuat akan hadir (2-3 digit)
+    # Diambil dari Index angka Kepala dan Ekor result sebelumnya
+    ai = sorted(list(set([ID.get(d0[2], '0'), ID.get(d0[3], '0'), TY.get(d0[2], '0')])))[:3]
+
     top2, top3, top4 = generate_verified_lines(bbfs_final, all_res)
     
     return {
-        "bbfs": " ".join(sorted(bbfs_final)),
+        "bbfs": " ".join(bbfs_final),
+        "am": " ".join(am),
+        "al": " ".join(al),
+        "ai": " ".join(ai),
         "top2d": top2, 
         "top3d": top3, 
         "top4d": top4,
