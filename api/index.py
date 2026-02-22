@@ -4,8 +4,9 @@ import httpx
 import itertools
 from collections import Counter
 from bs4 import BeautifulSoup
-
-app = Flask(__name__, template_folder='../templates')
+import os
+template_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'templates'))
+app = Flask(__name__, template_folder=template_dir)
 
 # --- [DATABASE & LOGIC - Tetap Sama] ---
 ML = {'1':'0', '2':'5', '3':'8', '4':'7', '6':'9', '0':'1', '5':'2', '8':'3', '7':'4', '9':'6'}
@@ -118,6 +119,5 @@ def index():
 
     return render_template('index.html', markets=markets, analysis=analysis, selected=selected)
 
-# Vercel handler
-def handler(event, context):
-    return app(event, context)
+if __name__ == "__main__":
+    app.run(debug=True)
