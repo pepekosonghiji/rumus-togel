@@ -2,16 +2,14 @@ import os
 from flask import Flask, render_template, request
 import re
 import httpx
-import itertools
 from collections import Counter
 from bs4 import BeautifulSoup
 
-# Setup template directory secara eksplisit untuk Vercel
+# Setup Flask
 base_dir = os.path.dirname(os.path.abspath(__file__))
-template_dir = os.path.join(base_dir, '..', 'templates')
-app = Flask(__name__, template_folder=template_dir)
+app = Flask(__name__)
 
-# --- [DATABASE MASTER POLA ABADI] ---
+# --- [DATABASE MASTER POLA V12.4] ---
 ML = {'1':'0', '2':'5', '3':'8', '4':'7', '6':'9', '0':'1', '5':'2', '8':'3', '7':'4', '9':'6'}
 TY = {'0':'7', '1':'4', '2':'9', '3':'6', '4':'1', '5':'8', '6':'3', '7':'0', '8':'5', '9':'2'}
 ID = {'0':'5', '1':'6', '2':'7', '3':'8', '4':'9', '5':'0', '6':'1', '7':'2', '8':'3', '9':'4'}
@@ -28,108 +26,105 @@ TARGET_POOLS = {
     'WASHING-MID':'p24508', 'WUHAN':'p28615'
 }
 
-# --- [V12.3 ENGINE LOGIC] ---
+# --- [V12.4 CORE ENGINE LOGIC] ---
 
-def get_weighted_bbfs_v12(all_res):
-    """Logika Penimbangan Berbasis Posisi & Tren Jarak"""
+def get_weighted_bbfs_v124(all_res, market):
+    """Pertajaman BBFS Khusus Danang & Penyeimbang Umum"""
     scores = {str(n): 0 for n in range(10)}
-    freq = Counter("".join(all_res[:35]))
-    for n in freq: scores[n] += freq[n] * 1.2
+    freq = Counter("".join(all_res[:40]))
+    for n in freq: scores[n] += freq[n] * 1.5
     
-    # Analisa Posisi
-    for i, res in enumerate(all_res[:5]):
-        weight = 5 - i
-        scores[res[0]] += weight * 0.5 # AS
-        scores[res[1]] += weight * 0.5 # KOP
-        scores[res[2]] += weight * 1.0 # KEPALA
-        scores[res[3]] += weight * 1.0 # EKOR
+    # Analisa Struktur Posisi
+    for i, res in enumerate(all_res[:7]):
+        w = 7 - i
+        # Jika Danang, perkuat deteksi angka AS (Depan)
+        as_weight = 1.2 if market == 'DANANG' else 0.8
+        scores[res[0]] += w * as_weight  
+        scores[res[1]] += w * 0.6  
+        scores[res[2]] += w * 1.2  
+        scores[res[3]] += w * 1.2  
 
-    d0 = all_res[0]
-    m_seeds = [ML.get(d0[2], '0'), ID.get(d0[3], '0'), TY.get(d0[3], '0'), MB.get(d0[2], '0')]
-    for s in m_seeds: scores[s] += 7
+    d0 = all_res[0] # Result Terakhir
+    
+    # EKSPANSI MISTIK (Menangkap Angka Hilang Seperti '7')
+    # Mengambil pelarian dari posisi AS terakhir untuk Danang
+    exp_seeds = [
+        ML.get(d0[0], '0'), MB.get(d0[0], '0'), # Pelarian AS
+        ID.get(d0[1], '0'), TY.get(d0[1], '0'), # Pelarian KOP
+        ML.get(d0[2], '0'), ID.get(d0[3], '0')  
+    ]
+    for s in exp_seeds: scores[s] += 10 if market == 'DANANG' else 7 
 
     sorted_res = sorted(scores.items(), key=lambda x: x[1], reverse=True)
     return [x[0] for x in sorted_res[:7]]
 
-def generate_verified_lines(bbfs_list, all_res, count=10):
-    """V12.3: Cross-Positional Verification untuk 2D, 3D, dan 4D"""
+def generate_lines_v124(bbfs_list, all_res, market, count=10):
+    """Generator Line 2D, 3D, 4D dengan Filter Akurasi Tinggi"""
     d0 = all_res[0]
     
-    # 1. GENERATE 2D TERBAIK (KEPALA x EKOR)
-    heads = bbfs_list[:4] 
-    tails = bbfs_list[2:] 
+    # 1. TOP 2D (Optimasi Jarak Danang)
+    heads = bbfs_list[:5]
+    tails = bbfs_list[::-1][:5]
     raw_2d = [f"{h}{t}" for h in heads for t in tails if h != t]
     
-    verified_2d_list = []
+    v2d = []
     for line in raw_2d:
-        score = 0
-        h_digit, t_digit = int(line[0]), int(line[1])
-        if abs(h_digit - t_digit) > 1: score += 2 # Filter Jarak
-        if line[1] == ML.get(d0[3]): score += 3  # Filter Mistik
-        verified_2d_list.append((line, score))
+        sc = 0
+        h, t = int(line[0]), int(line[1])
+        # Danang cenderung memiliki selisih angka > 1
+        if abs(h - t) >= 2: sc += 5 if market == 'DANANG' else 3
+        if line[1] in [d0[2], d0[3]]: sc += 2 
+        v2d.append((line, sc))
     
-    verified_2d_list.sort(key=lambda x: x[1], reverse=True)
-    top2 = [x[0] for x in verified_2d_list[:count]]
+    v2d.sort(key=lambda x: x[1], reverse=True)
+    top2 = [x[0] for x in v2d[:count]]
 
-    # 2. GENERATE 3D & 4D (GABUNGAN AS/KOP + TOP 2D)
-    # Mencari digit AS dan KOP terkuat dari BBFS
-    top_as = bbfs_list[0]
-    top_kop = bbfs_list[1]
-    
-    top3 = []
-    top4 = []
-    
+    # 2. TOP 3D & 4D (Locking System)
+    top3, top4 = [], []
     for i in range(count):
-        # 3D: Menggunakan KOP (digit ke-2) + 2D
-        # Kita variasikan KOP agar tidak monoton
-        kop_variasi = bbfs_list[i % 3] 
-        top3.append(f"{kop_variasi}{top2[i]}")
+        # Gunakan digit BBFS yang tidak ada di 2D sebagai KOP/AS
+        kop = bbfs_list[i % 3]
+        top3.append(f"{kop}{top2[i]}")
         
-        # 4D: Menggunakan AS + KOP + 2D
-        as_variasi = bbfs_list[(i+1) % 3]
-        top4.append(f"{as_variasi}{kop_variasi}{top2[i]}")
+        as_ptr = bbfs_list[(i+2) % 4]
+        top4.append(f"{as_ptr}{kop}{top2[i]}")
 
     return top2, top3, top4
 
 def get_comprehensive_logic(all_res, m_name):
-    d0 = all_res[0] # Result terakhir (misal: 1234)
-    bbfs_raw = get_weighted_bbfs_v12(all_res)
-    bbfs_final = sorted(list(set(bbfs_raw)))[:7]
+    d0 = all_res[0]
+    bbfs_raw = get_weighted_bbfs_v124(all_res, m_name)
+    bbfs_sorted = "".join(sorted(bbfs_raw))
     
-    # --- LOGIKA TAMBAHAN AKURASI TINGGI ---
+    # AM: 4 Digit Dominan
+    am = "".join(sorted(bbfs_raw[:4]))
     
-    # 1. Angka Main (AM): 4 digit yang paling mendominasi struktur 2D belakang
-    # Diambil dari skor tertinggi bbfs_raw
-    am = sorted(bbfs_raw[:4])
+    # AL: Pelarian (Mistik AS & Ekor)
+    al = "".join(sorted(list(set([ML.get(d0[0]), TY.get(d0[3])]))))
     
-    # 2. Angka Lari (AL): Angka pelarian berdasarkan Mistik Lama/Baru dari Ekor terakhir
-    # Seringkali muncul sebagai kejutan di posisi Kop atau Kepala
-    al = [ML.get(d0[3], '0'), MB.get(d0[3], '0')]
-    
-    # 3. Angka Ikut (AI): Angka yang diprediksi kuat akan hadir (2-3 digit)
-    # Diambil dari Index angka Kepala dan Ekor result sebelumnya
-    ai = sorted(list(set([ID.get(d0[2], '0'), ID.get(d0[3], '0'), TY.get(d0[2], '0')])))[:3]
+    # AI: Angka Ikut (Kuncian Danang dari 3D 093)
+    ai = "".join(sorted(list(set([ID.get(d0[1]), MB.get(d0[2]), d0[3]])))[:3])
 
-    top2, top3, top4 = generate_verified_lines(bbfs_final, all_res)
+    top2, top3, top4 = generate_lines_v124(bbfs_raw, all_res, m_name)
     
     return {
-        "bbfs": " ".join(bbfs_final),
-        "am": " ".join(am),
-        "al": " ".join(al),
-        "ai": " ".join(ai),
+        "bbfs": bbfs_sorted,
+        "am": am,
+        "al": al,
+        "ai": ai,
         "top2d": top2, 
         "top3d": top3, 
         "top4d": top4,
         "shio": SHIO_MAP.get(int(d0[2:]) % 12 or 12),
-        "macau": f"{bbfs_final[0]}{bbfs_final[1]} - {bbfs_final[2]}{bbfs_final[3]}",
-        "twin": f"{bbfs_final[0]}{bbfs_final[0]}, {bbfs_final[1]}{bbfs_final[1]}"
+        "macau": f"{bbfs_raw[0]}{bbfs_raw[1]} - {bbfs_raw[2]}{bbfs_raw[3]}",
+        "twin": f"{bbfs_raw[0]}{bbfs_raw[0]}, {bbfs_raw[1]}{bbfs_raw[1]}"
     }
 
 # --- [SCRAPER ENGINE] ---
 def fetch_results(market_code):
     headers = {'User-Agent': 'Mozilla/5.0'}
     try:
-        with httpx.Client(timeout=8.0, verify=False) as client:
+        with httpx.Client(timeout=10.0, verify=False) as client:
             if market_code == "HK_SPECIAL":
                 r = client.get("https://tabelsemalam.com/", headers=headers)
                 soup = BeautifulSoup(r.text, 'html.parser')
