@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 # Setup template directory secara eksplisit untuk Vercel
 base_dir = os.path.dirname(os.path.abspath(__file__))
 # Menggunakan deteksi path yang lebih stabil untuk menghindari Error 500
-template_dir = os.path.join(base_dir, 'templates') 
+template_dir = os.path.join(base_dir, '..', 'templates')
 app = Flask(__name__, template_folder=template_dir)
 
 # --- [DATABASE MASTER POLA ABADI] ---
