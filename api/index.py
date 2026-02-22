@@ -8,7 +8,6 @@ from bs4 import BeautifulSoup
 
 # Setup template directory secara eksplisit untuk Vercel
 base_dir = os.path.dirname(os.path.abspath(__file__))
-# Menggunakan deteksi path yang lebih stabil untuk menghindari Error 500
 template_dir = os.path.join(base_dir, '..', 'templates')
 app = Flask(__name__, template_folder=template_dir)
 
@@ -29,43 +28,43 @@ TARGET_POOLS = {
     'WASHING-MID':'p24508', 'WUHAN':'p28615'
 }
 
-# --- [V12.4 ENGINE LOGIC - OPTIMIZED] ---
+# --- [V12.4 SUB-LOGIC INJECTOR FOR PENANG] ---
 
-def get_weighted_bbfs_v12(all_res):
-    """Logika Penimbangan Berbasis Posisi & Tren Jarak - Versi Tajam"""
+def get_weighted_bbfs_v12(all_res, market_name):
+    """Logika BBFS dengan Injector Khusus Penang"""
     scores = {str(n): 0 for n in range(10)}
     freq = Counter("".join(all_res[:35]))
-    for n in freq: scores[n] += freq[n] * 1.5 # Menaikkan bobot frekuensi
+    for n in freq: scores[n] += freq[n] * 1.5 
     
-    # Analisa Posisi - Disesuaikan untuk menangkap AS/KOP lebih kuat
-    for i, res in enumerate(all_res[:8]): # Menambah jangkauan history ke 8
+    for i, res in enumerate(all_res[:8]):
         weight = 8 - i
-        scores[res[0]] += weight * 1.2 # AS diperkuat (Belajar dari kasus angka 7)
+        scores[res[0]] += weight * 1.2 # AS
         scores[res[1]] += weight * 0.8 # KOP
         scores[res[2]] += weight * 1.5 # KEPALA
         scores[res[3]] += weight * 1.5 # EKOR
 
     d0 = all_res[0]
-    # Penajaman Seed berdasarkan struktur Mistik/Indeks dari AS, KEPALA, dan EKOR
+
+    # >>> PERBAIKAN: SUB-LOGIC PENANG <<<
+    if market_name == 'PENANG':
+        as_last = d0[0]
+        scores[ML.get(as_last, '0')] += 15 
+        scores[ID.get(as_last, '0')] += 10 
+        scores[d0[1]] += 12 
+        scores[TY.get(d0[3], '0')] += 8
+
     m_seeds = [
-        ML.get(d0[0], '0'), # Pelarian AS
-        ML.get(d0[2], '0'), # Pelarian KEPALA
-        ID.get(d0[3], '0'), # Indeks EKOR
-        TY.get(d0[3], '0'), # Taysen EKOR
-        MB.get(d0[2], '0')  # Mistik Baru KEPALA
+        ML.get(d0[0], '0'), ML.get(d0[2], '0'),
+        ID.get(d0[3], '0'), TY.get(d0[3], '0'), MB.get(d0[2], '0')
     ]
-    for s in m_seeds: scores[s] += 10 # Menaikkan bonus seed
+    for s in m_seeds: scores[s] += 10
 
     sorted_res = sorted(scores.items(), key=lambda x: x[1], reverse=True)
-    # Mengambil 7 digit terkuat
     return [x[0] for x in sorted_res[:7]]
 
-def generate_verified_lines(bbfs_list, all_res, count=10):
-    """V12.4: Cross-Positional Verification - Penajaman Filter 2D/3D/4D"""
+def generate_verified_lines(bbfs_list, all_res, market_name, count=10):
+    """Filter Line Khusus Penang"""
     d0 = all_res[0]
-    
-    # 1. GENERATE 2D TERBAIK (Filter Jarak & Pola)
-    # Menggunakan kombinasi dinamis dari bbfs_list
     all_pairs = list(itertools.permutations(bbfs_list, 2))
     
     verified_2d_list = []
@@ -74,26 +73,21 @@ def generate_verified_lines(bbfs_list, all_res, count=10):
         score = 0
         h_digit, t_digit = int(p[0]), int(p[1])
         
-        # Penajaman Filter: Danang jarang angka berurutan/kembar di 2D belakang
         if abs(h_digit - t_digit) > 1: score += 5 
-        if line[1] == ML.get(d0[3]): score += 3 # Ekor Mistik
-        if line[0] == ID.get(d0[2]): score += 2 # Kepala Indeks
+        
+        if market_name == 'PENANG':
+            if h_digit % 2 == t_digit % 2: score += 4
+            if line == d0[2:]: score -= 20 
         
         verified_2d_list.append((line, score))
     
     verified_2d_list.sort(key=lambda x: x[1], reverse=True)
     top2 = [x[0] for x in verified_2d_list[:count]]
 
-    # 2. GENERATE 3D & 4D (Sinkronisasi dengan posisi BBFS terkuat)
-    top3 = []
-    top4 = []
-    
+    top3, top4 = [], []
     for i in range(count):
-        # 3D: KOP (diambil dari bbfs posisi 1 & 2)
         kop = bbfs_list[(i % 2) + 1] 
         top3.append(f"{kop}{top2[i]}")
-        
-        # 4D: AS (diambil dari bbfs posisi 0) + KOP
         as_digit = bbfs_list[0] if i < 5 else bbfs_list[(i % 3)]
         top4.append(f"{as_digit}{kop}{top2[i]}")
 
@@ -101,19 +95,19 @@ def generate_verified_lines(bbfs_list, all_res, count=10):
 
 def get_comprehensive_logic(all_res, m_name):
     d0 = all_res[0]
-    bbfs_raw = get_weighted_bbfs_v12(all_res)
-    # BBFS Final diurutkan agar rapi di tampilan
+    # PERBAIKAN: Menambahkan parameter m_name agar sub-logic aktif
+    bbfs_raw = get_weighted_bbfs_v12(all_res, m_name)
     bbfs_final = sorted(bbfs_raw)
     
-    # --- LOGIKA TAMBAHAN AKURASI TINGGI ---
     am = sorted(bbfs_raw[:4])
     al = sorted(list(set([ML.get(d0[3], '0'), MB.get(d0[3], '0'), TY.get(d0[3], '0')])))[:3]
     ai = sorted(list(set([ID.get(d0[2], '0'), ID.get(d0[3], '0'), TY.get(d0[2], '0')])))[:3]
 
-    top2, top3, top4 = generate_verified_lines(bbfs_raw, all_res)
+    # PERBAIKAN: Menambahkan parameter m_name
+    top2, top3, top4 = generate_verified_lines(bbfs_raw, all_res, m_name)
     
     return {
-        "bbfs": "".join(bbfs_final), # Menggabungkan tanpa spasi agar rapi
+        "bbfs": "".join(bbfs_final),
         "am": "".join(am),
         "al": "".join(al),
         "ai": "".join(ai),
