@@ -46,7 +46,27 @@ def get_weighted_bbfs_v12(all_res, market_name):
     d0 = all_res[0]
 
     # >>> PERBAIKAN: SUB-LOGIC PENANG <<<
-    if market_name == 'PENANG':
+    # >>> SUB-LOGIC HONGKONG POOLS & LOTTO <<<
+    if market_name == 'HONGKONG POOLS':
+        # HK Pools sering mengeluarkan angka "Dingin" (Low Frequency)
+        # Kita paksa masukkan Indeks dari KEPALA dan EKOR terakhir
+        scores[ID.get(d0[2], '0')] += 15
+        scores[ID.get(d0[3], '0')] += 15
+        # Booster khusus angka rendah jika result sebelumnya angka tinggi
+        if int(d0[0]) > 5:
+            scores['0'] += 10
+            scores['1'] += 10
+            scores['2'] += 10
+
+    elif market_name == 'HONGKONG LOTTO':
+        # HK Lotto sangat kuat di pola Mistik Baru (MB)
+        # Kita beri booster pada MB dari KOP dan KEPALA
+        scores[MB.get(d0[1], '0')] += 12
+        scores[MB.get(d0[2], '0')] += 12
+        # Tambahkan deteksi Twin Tengah (seperti kasus 44 tadi)
+        scores[d0[1]] += 10 
+    # >>> --------------------------------- <<<
+    elif market_name == 'PENANG':
         as_last = d0[0]
         scores[ML.get(as_last, '0')] += 15 
         scores[ID.get(as_last, '0')] += 10 
