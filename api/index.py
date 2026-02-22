@@ -70,15 +70,22 @@ def get_weighted_bbfs_v12(all_res, market_name):
         scores[d0[1]] += 12 
         scores[TY.get(d0[3], '0')] += 8
 
-    # >>> NEW SUB-LOGIC GREECE (Result 1535 Detector) <<<
     elif market_name == 'GREECE':
-        # Detector Ganjil Kuat (1, 3, 5)
         if int(d0[3]) % 2 != 0:
             for n in ['1', '3', '5', '7', '9']: scores[n] += 12
-        # Booster Mistik Lama dari AS (1 -> 0)
         scores[ML.get(d0[0], '0')] += 15
-        # Step-up logic dari Kepala (3 -> 4)
         scores[str((int(d0[2]) + 1) % 10)] += 10
+
+    # >>> NEW SUB-LOGIC MANHATTAN & TORONTO (Shadow Logic) <<<
+    elif market_name in ['MANHATTAN', 'TORONTOEVE']:
+        # Priority on Shadow Numbers (Mistik of previous result)
+        for digit in d0:
+            scores[ML.get(digit, '0')] += 12
+        # Polar Shift: Jika AS kecil, dorong EKOR besar
+        if int(d0[0]) < 5:
+            for n in ['5','6','7','8','9']: scores[n] += 10
+        # Indexing Middle
+        scores[ID.get(d0[1], '0')] += 15
 
     m_seeds = [
         ML.get(d0[0], '0'), ML.get(d0[2], '0'),
@@ -90,10 +97,6 @@ def get_weighted_bbfs_v12(all_res, market_name):
     return [x[0] for x in sorted_res[:7]]
 
 def generate_verified_lines(bbfs_list, all_res, market_name, count=10):
-    """
-    METODE ANALISA TERBAIK: CROSS-VERIFICATION POSITIONAL (CVP)
-    Memverifikasi Line berdasarkan Sum, Gap, dan Pola History
-    """
     d0 = all_res[0]
     all_pairs = list(itertools.permutations(bbfs_list, 2))
     verified_2d_list = []
@@ -103,18 +106,17 @@ def generate_verified_lines(bbfs_list, all_res, market_name, count=10):
         score = 0
         h, t = int(p[0]), int(p[1])
         
-        # 1. Global Rule: Filter Jumlah (Sum 2D) - Favorit Bandar vs Player
-        if (h + t) in [7, 8, 9, 10, 11]: score += 8
+        # Penyesuaian Sum 2D untuk Pasaran Amerika (Sering Jml 8, 10, 11)
+        if market_name in ['MANHATTAN', 'TORONTOEVE']:
+            if (h + t) in [8, 10, 11, 13]: score += 20
+        else:
+            if (h + t) in [7, 8, 9, 10, 11]: score += 8
         
-        # 2. Global Rule: Filter Selisih (Gap)
         if abs(h - t) > 1: score += 5 
         
-        # 3. Market Specific Verification
         if market_name in ['PENANG', 'MACAU', 'GREECE']:
-            # Cek keselarasan Ganjil/Genap dengan result terakhir
             if (h % 2 == int(d0[2]) % 2) or (t % 2 == int(d0[3]) % 2):
                 score += 10
-            # Buang line yang sama persis dengan 2D kemarin
             if line == d0[2:]: score -= 25 
         
         verified_2d_list.append((line, score))
@@ -122,16 +124,17 @@ def generate_verified_lines(bbfs_list, all_res, market_name, count=10):
     verified_2d_list.sort(key=lambda x: x[1], reverse=True)
     top2 = [x[0] for x in verified_2d_list[:count]]
 
-    # --- GENERASI 3D & 4D DENGAN VERIFIKASI POSISI AS/KOP ---
     top3, top4 = [], []
     for i in range(count):
-        # KOP Verifikasi: Menggunakan Index atau Mistik dari KOP sebelumnya
-        kop_options = [bbfs_list[1], bbfs_list[2], ID.get(d0[1], '0'), MB.get(d0[1], '0')]
-        kop_final = kop_options[i % len(kop_options)]
-        
-        # AS Verifikasi: Menggunakan Mistik Lama dari AS sebelumnya
-        as_options = [bbfs_list[0], ML.get(d0[0], '0'), TY.get(d0[0], '0')]
-        as_final = as_options[i % len(as_options)]
+        # KOP Verifikasi Khusus Amerika: Mistik Baru dari KOP Terakhir
+        if market_name in ['MANHATTAN', 'TORONTOEVE']:
+            kop_final = MB.get(d0[1], bbfs_list[1])
+            as_final = ID.get(d0[0], bbfs_list[0])
+        else:
+            kop_options = [bbfs_list[1], bbfs_list[2], ID.get(d0[1], '0'), MB.get(d0[1], '0')]
+            kop_final = kop_options[i % len(kop_options)]
+            as_options = [bbfs_list[0], ML.get(d0[0], '0'), TY.get(d0[0], '0')]
+            as_final = as_options[i % len(as_options)]
         
         top3.append(f"{kop_final}{top2[i]}")
         top4.append(f"{as_final}{kop_final}{top2[i]}")
@@ -142,11 +145,7 @@ def get_comprehensive_logic(all_res, m_name):
     d0 = all_res[0]
     bbfs_raw = get_weighted_bbfs_v12(all_res, m_name)
     bbfs_final = sorted(bbfs_raw)
-    
-    # Ambi 4 digit terkuat untuk Angka Main
     am = sorted(bbfs_raw[:4])
-    
-    # Logic AL/AI diperkuat dengan Master Pola
     al = sorted(list(set([ML.get(d0[3], '0'), MB.get(d0[3], '0'), TY.get(d0[3], '0')])))[:3]
     ai = sorted(list(set([ID.get(d0[2], '0'), ID.get(d0[3], '0'), TY.get(d0[2], '0')])))[:3]
 
@@ -169,10 +168,8 @@ def fetch_results(market_code):
                 url = "https://tabelsemalam.com/"
             else:
                 url = f"https://4upk6k0qz6.salamrupiah.com/history/result-mobile/{market_code}-pool-1"
-            
             r = client.get(url, headers=headers)
             soup = BeautifulSoup(r.text, 'html.parser')
-            
             if market_code == "HK_SPECIAL":
                 table = soup.find('table')
                 return [tds[1].text.strip() for row in table.find('tbody').find_all('tr') 
@@ -190,8 +187,7 @@ def fetch_results(market_code):
                         if len(clean_val) == 4:
                             results.append(clean_val)
                 return results[:40]
-    except:
-        return []
+    except: return []
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -204,8 +200,7 @@ def index():
             if res and len(res) >= 8:
                 analysis = get_comprehensive_logic(res, selected)
                 analysis['last_res'] = res[0]
-            else:
-                analysis = "error"
+            else: analysis = "error"
     return render_template('index.html', markets=markets, analysis=analysis, selected=selected)
 
 if __name__ == "__main__":
