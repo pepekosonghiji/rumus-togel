@@ -28,7 +28,7 @@ TARGET_POOLS = {
     'WASHING-MID':'p24508', 'WUHAN':'p28615', 'MACAU': 'm17','GREECE':'p8584'
 }
 
-# --- [V12.4 ENGINE WITH MULTI-SUB-LOGIC] ---
+# --- [V12.4 ENGINE WITH GLOBAL VERIFICATION UPGRADE] ---
 
 def get_weighted_bbfs_v12(all_res, market_name):
     scores = {str(n): 0 for n in range(10)}
@@ -46,13 +46,11 @@ def get_weighted_bbfs_v12(all_res, market_name):
 
     # >>> INJEKSI SUB-LOGIC BERDASARKAN MARKET <<<
     if market_name == 'MACAU':
-        # Macau sering Pola Tangga (Urutan)
-        # Kita beri bobot pada angka tetangga dari EKOR terakhir
         next_val = str((int(d0[3]) + 1) % 10)
         prev_val = str((int(d0[3]) - 1) % 10)
         scores[next_val] += 12
         scores[prev_val] += 12
-        scores[ID.get(d0[1], '0')] += 10 # Indeks KOP
+        scores[ID.get(d0[1], '0')] += 10 
 
     elif market_name == 'HONGKONG POOLS':
         scores[ID.get(d0[2], '0')] += 15
@@ -63,13 +61,23 @@ def get_weighted_bbfs_v12(all_res, market_name):
     elif market_name == 'HONGKONG LOTTO':
         scores[MB.get(d0[1], '0')] += 12
         scores[MB.get(d0[2], '0')] += 12
-        scores[d0[1]] += 10 
+        scores[d0[1]] += 10  
 
     elif market_name == 'PENANG':
         scores[ML.get(d0[0], '0')] += 15 
         scores[ID.get(d0[0], '0')] += 10 
         scores[d0[1]] += 12 
         scores[TY.get(d0[3], '0')] += 8
+
+    # >>> NEW SUB-LOGIC GREECE (Result 1535 Detector) <<<
+    elif market_name == 'GREECE':
+        # Detector Ganjil Kuat (1, 3, 5)
+        if int(d0[3]) % 2 != 0:
+            for n in ['1', '3', '5', '7', '9']: scores[n] += 12
+        # Booster Mistik Lama dari AS (1 -> 0)
+        scores[ML.get(d0[0], '0')] += 15
+        # Step-up logic dari Kepala (3 -> 4)
+        scores[str((int(d0[2]) + 1) % 10)] += 10
 
     m_seeds = [
         ML.get(d0[0], '0'), ML.get(d0[2], '0'),
@@ -81,38 +89,66 @@ def get_weighted_bbfs_v12(all_res, market_name):
     return [x[0] for x in sorted_res[:7]]
 
 def generate_verified_lines(bbfs_list, all_res, market_name, count=10):
+    """
+    METODE ANALISA TERBAIK: CROSS-VERIFICATION POSITIONAL (CVP)
+    Memverifikasi Line berdasarkan Sum, Gap, dan Pola History
+    """
     d0 = all_res[0]
     all_pairs = list(itertools.permutations(bbfs_list, 2))
     verified_2d_list = []
+    
     for p in all_pairs:
         line = f"{p[0]}{p[1]}"
         score = 0
-        h_digit, t_digit = int(p[0]), int(p[1])
-        if abs(h_digit - t_digit) > 1: score += 5 
+        h, t = int(p[0]), int(p[1])
         
-        if market_name == 'PENANG' or market_name == 'MACAU':
-            if h_digit % 2 == t_digit % 2: score += 4
-            if line == d0[2:]: score -= 20 
+        # 1. Global Rule: Filter Jumlah (Sum 2D) - Favorit Bandar vs Player
+        if (h + t) in [7, 8, 9, 10, 11]: score += 8
+        
+        # 2. Global Rule: Filter Selisih (Gap)
+        if abs(h - t) > 1: score += 5 
+        
+        # 3. Market Specific Verification
+        if market_name in ['PENANG', 'MACAU', 'GREECE']:
+            # Cek keselarasan Ganjil/Genap dengan result terakhir
+            if (h % 2 == int(d0[2]) % 2) or (t % 2 == int(d0[3]) % 2):
+                score += 10
+            # Buang line yang sama persis dengan 2D kemarin
+            if line == d0[2:]: score -= 25 
         
         verified_2d_list.append((line, score))
     
     verified_2d_list.sort(key=lambda x: x[1], reverse=True)
     top2 = [x[0] for x in verified_2d_list[:count]]
+
+    # --- GENERASI 3D & 4D DENGAN VERIFIKASI POSISI AS/KOP ---
     top3, top4 = [], []
     for i in range(count):
-        kop = bbfs_list[(i % 2) + 1] 
-        top3.append(f"{kop}{top2[i]}")
-        as_digit = bbfs_list[0] if i < 5 else bbfs_list[(i % 3)]
-        top4.append(f"{as_digit}{kop}{top2[i]}")
+        # KOP Verifikasi: Menggunakan Index atau Mistik dari KOP sebelumnya
+        kop_options = [bbfs_list[1], bbfs_list[2], ID.get(d0[1], '0'), MB.get(d0[1], '0')]
+        kop_final = kop_options[i % len(kop_options)]
+        
+        # AS Verifikasi: Menggunakan Mistik Lama dari AS sebelumnya
+        as_options = [bbfs_list[0], ML.get(d0[0], '0'), TY.get(d0[0], '0')]
+        as_final = as_options[i % len(as_options)]
+        
+        top3.append(f"{kop_final}{top2[i]}")
+        top4.append(f"{as_final}{kop_final}{top2[i]}")
+
     return top2, top3, top4
 
 def get_comprehensive_logic(all_res, m_name):
     d0 = all_res[0]
     bbfs_raw = get_weighted_bbfs_v12(all_res, m_name)
     bbfs_final = sorted(bbfs_raw)
+    
+    # Ambi 4 digit terkuat untuk Angka Main
     am = sorted(bbfs_raw[:4])
+    
+    # Logic AL/AI diperkuat dengan Master Pola
     al = sorted(list(set([ML.get(d0[3], '0'), MB.get(d0[3], '0'), TY.get(d0[3], '0')])))[:3]
     ai = sorted(list(set([ID.get(d0[2], '0'), ID.get(d0[3], '0'), TY.get(d0[2], '0')])))[:3]
+
     top2, top3, top4 = generate_verified_lines(bbfs_raw, all_res, m_name)
     
     return {
@@ -124,7 +160,6 @@ def get_comprehensive_logic(all_res, m_name):
         "twin": f"{bbfs_raw[0]}{bbfs_raw[0]}, {bbfs_raw[1]}{bbfs_raw[1]}"
     }
 
-# --- [PERBAIKAN SCRAPER UNTUK MACAU] ---
 def fetch_results(market_code):
     headers = {'User-Agent': 'Mozilla/5.0'}
     try:
@@ -148,7 +183,6 @@ def fetch_results(market_code):
                 for row in rows:
                     tds = row.find_all('td')
                     if len(tds) >= 3:
-                        # Logika khusus Macau: ambil teks dari dalam link <a>
                         anchor = tds[2].find('a')
                         val = anchor.text.strip() if anchor else tds[2].text.strip()
                         clean_val = re.sub(r'\D', '', val)
@@ -158,7 +192,6 @@ def fetch_results(market_code):
     except:
         return []
 
-# --- [ROUTES] ---
 @app.route('/', methods=['GET', 'POST'])
 def index():
     analysis, selected = None, None
