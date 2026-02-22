@@ -61,5 +61,45 @@
         </div>
         {% endif %}
     </div>
+<div class="flex justify-between items-center mb-4">
+    <h2 class="text-lg font-bold text-yellow-500">HASIL ANALISA: {{ selected }}</h2>
+    <button onclick="copyAnalysis()" class="bg-blue-600 hover:bg-blue-500 text-xs px-3 py-1 rounded flex items-center gap-2">
+        <span>📋</span> Salin Analisa
+    </button>
+</div>
+
+<textarea id="copyTarget" class="hidden">
+PASARAN: {{ selected }}
+RESULT: {{ analysis.last_res }}
+BBFS: {{ analysis.bbfs }}
+SHIO: {{ analysis.shio }}
+MACAU: {{ analysis.macau }}
+TWIN: {{ analysis.twin }}
+
+TOP 2D:
+{{ analysis.top2d | join(' - ') }}
+
+TOP 3D:
+{% for i in range(0, 10, 2) %}{{ analysis.top3d[i] }} | {{ analysis.top3d[i+1] }}{% if not loop.last %}
+{% endif %}{% endfor %}
+
+TOP 4D:
+{% for i in range(0, 10, 2) %}{{ analysis.top4d[i] }} | {{ analysis.top4d[i+1] }}{% if not loop.last %}
+{% endif %}{% endfor %}
+</textarea>
+
+<script>
+function copyAnalysis() {
+    var copyText = document.getElementById("copyTarget");
+    copyText.select();
+    copyText.setSelectionRange(0, 99999); // Untuk perangkat mobile
+
+    navigator.clipboard.writeText(copyText.value).then(() => {
+        alert("Analisa " + "{{ selected }}" + " berhasil disalin!");
+    }).catch(err => {
+        console.error('Gagal menyalin: ', err);
+    });
+}
+</script>
 </body>
 </html>
