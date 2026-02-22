@@ -121,7 +121,7 @@ def generate_verified_lines(bbfs_list, all_res, market_name, count=10):
         if (h + t) in [7, 8, 9, 10, 11, 12]: score += 15
         
         # --- LAYER 2: MARKET SPECIFIC FILTERS ---
-        if market_name in ['MANHATTAN', 'TORONTOEVE', 'OREGON 3', 'OREGON 6', 'OREGON 9', 'OREGON 12']:
+        if market_name in ['MANHATTAN', 'TORONTOEVE', 'OREGON 3', 'OREGON 6', 'OREGON 9', 'OREGON 12', 'ORLANDO', 'COLORADO', 'TORONTOMID']:
             if (h + t) in [8, 10, 11, 13]: score += 20 # American-style Sum
             if (h < 5 and t >= 5) or (h >= 5 and t < 5): score += 15 # Polar opposites
         
