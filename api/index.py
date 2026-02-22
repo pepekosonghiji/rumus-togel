@@ -76,16 +76,20 @@ def get_weighted_bbfs_v12(all_res, market_name):
         scores[ML.get(d0[0], '0')] += 15
         scores[str((int(d0[2]) + 1) % 10)] += 10
 
-    # >>> NEW SUB-LOGIC MANHATTAN & TORONTO (Shadow Logic) <<<
     elif market_name in ['MANHATTAN', 'TORONTOEVE']:
-        # Priority on Shadow Numbers (Mistik of previous result)
-        for digit in d0:
-            scores[ML.get(digit, '0')] += 12
-        # Polar Shift: Jika AS kecil, dorong EKOR besar
+        for digit in d0: scores[ML.get(digit, '0')] += 12
         if int(d0[0]) < 5:
             for n in ['5','6','7','8','9']: scores[n] += 10
-        # Indexing Middle
         scores[ID.get(d0[1], '0')] += 15
+
+    # >>> NEW SUB-LOGIC OREGON 3 (Anti-Jump Logic) <<<
+    elif market_name in ['OREGON 3', 'OREGON 6', 'OREGON 9', 'OREGON 12']:
+        for digit in d0:
+            scores[ML.get(digit, '0')] += 15
+            scores[TY.get(digit, '0')] += 10
+        recent_digits = "".join(all_res[:3])
+        for n in ['0', '4', '5', '9']:
+            if n not in recent_digits: scores[n] += 18
 
     m_seeds = [
         ML.get(d0[0], '0'), ML.get(d0[2], '0'),
@@ -97,43 +101,54 @@ def get_weighted_bbfs_v12(all_res, market_name):
     return [x[0] for x in sorted_res[:7]]
 
 def generate_verified_lines(bbfs_list, all_res, market_name, count=10):
+    """
+    METODE: MULTI-LAYER VERIFICATION (MLV)
+    Filter Berlapis: Statistical -> Positional -> Shadow
+    """
     d0 = all_res[0]
-    all_pairs = list(itertools.permutations(bbfs_list, 2))
-    verified_2d_list = []
+    # Extended Pool: BBFS + Angka Bayangan dari AS
+    extended_pool = list(set(bbfs_list[:6] + [ML.get(bbfs_list[0]), TY.get(bbfs_list[0])]))
+    all_pairs = list(itertools.permutations(extended_pool, 2))
     
+    layer_filtered_2d = []
     for p in all_pairs:
         line = f"{p[0]}{p[1]}"
         score = 0
         h, t = int(p[0]), int(p[1])
         
-        # Penyesuaian Sum 2D untuk Pasaran Amerika (Sering Jml 8, 10, 11)
-        if market_name in ['MANHATTAN', 'TORONTOEVE']:
-            if (h + t) in [8, 10, 11, 13]: score += 20
-        else:
-            if (h + t) in [7, 8, 9, 10, 11]: score += 8
+        # --- LAYER 1: SUM & GAP GLOBAL ---
+        # Pola Sum Favorit (7, 8, 9, 10, 11, 12)
+        if (h + t) in [7, 8, 9, 10, 11, 12]: score += 15
         
-        if abs(h - t) > 1: score += 5 
+        # --- LAYER 2: MARKET SPECIFIC FILTERS ---
+        if market_name in ['MANHATTAN', 'TORONTOEVE', 'OREGON 3', 'OREGON 6', 'OREGON 9', 'OREGON 12']:
+            if (h + t) in [8, 10, 11, 13]: score += 20 # American-style Sum
+            if (h < 5 and t >= 5) or (h >= 5 and t < 5): score += 15 # Polar opposites
         
-        if market_name in ['PENANG', 'MACAU', 'GREECE']:
-            if (h % 2 == int(d0[2]) % 2) or (t % 2 == int(d0[3]) % 2):
-                score += 10
-            if line == d0[2:]: score -= 25 
-        
-        verified_2d_list.append((line, score))
-    
-    verified_2d_list.sort(key=lambda x: x[1], reverse=True)
-    top2 = [x[0] for x in verified_2d_list[:count]]
+        # Anti-Twin kecuali memang sedang musim twin
+        if h == t: score -= 15
+        else: score += 10
 
+        # Anti-History (Jangan sama dengan 2D kemarin)
+        if line == d0[2:]: score -= 30
+        
+        layer_filtered_2d.append((line, score))
+    
+    layer_filtered_2d.sort(key=lambda x: x[1], reverse=True)
+    top2 = [x[0] for x in layer_filtered_2d[:count]]
+
+    # --- LAYER 3: POSITIONAL SHADOW (3D & 4D) ---
     top3, top4 = [], []
     for i in range(count):
-        # KOP Verifikasi Khusus Amerika: Mistik Baru dari KOP Terakhir
-        if market_name in ['MANHATTAN', 'TORONTOEVE']:
+        # Kunci KOP: Menggunakan Indeks Kepala atau Mistik Baru KOP
+        if market_name in ['MANHATTAN', 'TORONTOEVE', 'OREGON 3']:
             kop_final = MB.get(d0[1], bbfs_list[1])
             as_final = ID.get(d0[0], bbfs_list[0])
         else:
-            kop_options = [bbfs_list[1], bbfs_list[2], ID.get(d0[1], '0'), MB.get(d0[1], '0')]
+            # Global Logic: Rolling Shadow Positional
+            kop_options = [ID.get(d0[2], '0'), TY.get(d0[1], '0'), bbfs_list[1]]
             kop_final = kop_options[i % len(kop_options)]
-            as_options = [bbfs_list[0], ML.get(d0[0], '0'), TY.get(d0[0], '0')]
+            as_options = [ML.get(d0[0], '0'), TY.get(d0[0], '0'), bbfs_list[0]]
             as_final = as_options[i % len(as_options)]
         
         top3.append(f"{kop_final}{top2[i]}")
