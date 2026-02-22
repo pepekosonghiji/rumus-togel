@@ -3,229 +3,257 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI ENGINE V12.3 - FUTURISTIC ANALYTICS</title>
+    <title>AI ENGINE V12.3 - PREDIKSI PRESISI</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --neon-cyan: #00f2ff;
+            --neon-purple: #bc13fe;
+            --bg-dark: #05060b;
+        }
         body {
-            background: radial-gradient(circle at center, #1a1c2c 0%, #0a0b10 100%);
+            background-color: var(--bg-dark);
+            background-image: radial-gradient(circle at 50% 50%, #1a1c2c 0%, #05060b 100%);
             font-family: 'Rajdhani', sans-serif;
             color: #e2e8f0;
+            overflow-x: hidden;
         }
         .font-orbitron { font-family: 'Orbitron', sans-serif; }
+        
         .glass-card {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(12px);
+            background: rgba(15, 17, 26, 0.8);
+            backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
         }
-        .neon-text-cyan { text-shadow: 0 0 10px rgba(0, 242, 255, 0.5); }
-        .btn-gradient {
-            background: linear-gradient(90deg, #00f2ff, #0066ff);
-            transition: all 0.3s ease;
+
+        .neon-text { text-shadow: 0 0 10px rgba(0, 242, 255, 0.7); }
+        
+        /* Animasi Shimmer untuk Angka */
+        @keyframes shimmer {
+            0% { opacity: 0.8; }
+            50% { opacity: 1; text-shadow: 0 0 20px var(--neon-cyan); }
+            100% { opacity: 0.8; }
         }
-        .btn-gradient:hover {
-            box-shadow: 0 0 20px rgba(0, 242, 255, 0.6);
-            transform: translateY(-2px);
+        .animate-shimmer { animation: shimmer 2s infinite; }
+
+        .capture-wrapper {
+            background: #0d1117;
+            border-radius: 24px;
+            border: 1px solid #30363d;
+            overflow: hidden;
         }
-        .number-box {
-            background: rgba(0, 0, 0, 0.4);
-            border-left: 3px solid #00f2ff;
+
+        .gradient-border-bottom {
+            border-bottom: 2px solid;
+            border-image: linear-gradient(to right, transparent, #00f2ff, transparent) 1;
         }
     </style>
 </head>
-<body class="min-h-screen p-4 md:p-8">
+<body class="min-h-screen p-4 md:p-10">
 
-    <div class="max-w-5xl mx-auto">
-        <div class="text-center mb-10">
-            <h1 class="font-orbitron text-3xl md:text-5xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600 mb-2">
-                AI ENGINE V12.3
-            </h1>
-            <p class="text-cyan-500 tracking-[0.4em] text-xs uppercase font-bold neon-text-cyan">Advanced Neural Analytics System</p>
-        </div>
-
-        <div class="glass-card rounded-2xl p-6 mb-8 border-cyan-500/20">
+    <div class="max-w-4xl mx-auto">
+        <div class="glass-card rounded-3xl p-6 mb-8 border-cyan-500/20">
             <form method="POST" class="flex flex-col md:flex-row gap-4">
-                <select name="market" class="flex-grow bg-gray-900/80 border border-gray-700 rounded-lg p-3 text-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-500 font-bold">
-                    {% for m in markets %}
-                    <option value="{{ m }}" {% if selected == m %}selected{% endif %}>{{ m }}</option>
-                    {% endfor %}
-                </select>
-                <button type="submit" class="btn-gradient px-10 py-3 rounded-lg font-bold uppercase tracking-widest text-white shadow-lg">
-                    Process Data
+                <div class="flex-grow relative">
+                    <select name="market" class="w-full bg-gray-900 border border-gray-700 rounded-2xl p-4 text-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 font-bold appearance-none cursor-pointer uppercase tracking-widest">
+                        {% for m in markets %}
+                        <option value="{{ m }}" {% if selected == m %}selected{% endif %}>{{ m }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-cyan-500">▼</div>
+                </div>
+                <button type="submit" class="bg-gradient-to-r from-cyan-600 to-blue-700 hover:scale-105 active:scale-95 transition-all px-10 py-4 rounded-2xl font-bold uppercase tracking-[0.2em] text-white shadow-[0_0_20px_rgba(0,242,255,0.3)]">
+                    Mulai Analisa
                 </button>
             </form>
         </div>
 
         {% if analysis == "error" %}
-        <div class="glass-card border-red-500/50 p-8 rounded-xl text-center">
-            <p class="text-red-400 font-bold tracking-widest">[!] SYSTEM FAILURE: INSUFFICIENT HISTORICAL DATA</p>
+        <div class="glass-card p-12 rounded-3xl text-center border-red-500/30">
+            <h3 class="text-red-500 font-orbitron font-bold tracking-widest">ERROR: DATA HISTORIS TIDAK CUKUP</h3>
+            <p class="text-gray-500 text-sm mt-2 uppercase">Minimal diperlukan 8 data result untuk sinkronisasi neural</p>
         </div>
         {% elif analysis %}
-        
-        <div id="capture-area" class="glass-card rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
-            <div class="bg-gradient-to-r from-cyan-900/30 to-blue-900/10 p-6 border-b border-white/10 flex justify-between items-center">
-                <div>
-                    <h2 class="text-3xl font-orbitron font-bold text-cyan-400 tracking-tighter">{{ selected }}</h2>
-                    <p class="text-[10px] text-gray-500 uppercase tracking-widest mt-1">Generated: <span id="current-date"></span></p>
-                </div>
-                <div class="text-right">
-                    <span class="block text-[10px] text-cyan-500 uppercase font-bold tracking-widest">Last Result</span>
-                    <span class="text-4xl font-mono font-bold text-white neon-text-cyan">{{ analysis.last_res }}</span>
-                </div>
-            </div>
 
-            <div class="p-6 md:p-8 space-y-8">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="bg-black/40 p-4 rounded-xl border border-cyan-500/30">
-                        <span class="text-[10px] uppercase text-cyan-500 tracking-[0.2em] font-bold">Angka Main (AM)</span>
-                        <div class="text-3xl font-orbitron text-white mt-2">{{ analysis.am }}</div>
-                    </div>
-                    <div class="bg-black/40 p-4 rounded-xl border border-purple-500/30">
-                        <span class="text-[10px] uppercase text-purple-500 tracking-[0.2em] font-bold">Angka Lari (AL)</span>
-                        <div class="text-3xl font-orbitron text-purple-200 mt-2 italic">{{ analysis.al }}</div>
-                    </div>
-                    <div class="bg-black/40 p-4 rounded-xl border border-blue-500/30">
-                        <span class="text-[10px] uppercase text-blue-500 tracking-[0.2em] font-bold">Angka Ikut (AI)</span>
-                        <div class="text-3xl font-orbitron text-white mt-2">{{ analysis.ai }}</div>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div class="md:col-span-3 number-box p-6 rounded-xl">
-                        <span class="text-xs uppercase text-cyan-400 font-bold tracking-widest">BBFS Rekomendasi V12.3</span>
-                        <div class="text-4xl md:text-6xl font-mono font-bold tracking-[0.2em] text-white mt-2">{{ analysis.bbfs }}</div>
-                    </div>
-                    <div class="bg-blue-600/10 p-6 rounded-xl border border-blue-500/30 text-center flex flex-col justify-center">
-                        <span class="text-xs uppercase text-blue-400 font-bold">Shio On</span>
-                        <div class="text-3xl font-bold text-white mt-1">{{ analysis.shio }}</div>
-                    </div>
-                </div>
-
-                <div class="flex flex-wrap gap-4 justify-center md:justify-start text-sm font-bold">
-                    <div class="bg-gray-800/80 px-6 py-2 rounded-full border border-cyan-500/30 shadow-inner">
-                        <span class="text-cyan-400 mr-2 uppercase">Macau:</span> {{ analysis.macau }}
-                    </div>
-                    <div class="bg-gray-800/80 px-6 py-2 rounded-full border border-red-500/30 shadow-inner">
-                        <span class="text-red-400 mr-2 uppercase">Twin:</span> {{ analysis.twin }}
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div class="space-y-4">
-                        <h3 class="text-cyan-400 font-bold text-sm tracking-widest border-b border-cyan-900 pb-2 uppercase">Top 10 Line 2D (Verified)</h3>
-                        <div class="grid grid-cols-5 gap-2">
-                            {% for n in analysis.top2d %}
-                            <div class="bg-cyan-900/20 border border-cyan-500/20 p-2 rounded text-center font-mono text-lg hover:bg-cyan-500/20 transition cursor-default">{{ n }}</div>
-                            {% endfor %}
+        <div id="capture-area" class="p-1">
+            <div class="capture-wrapper shadow-2xl">
+                <div class="bg-gradient-to-b from-[#1c2128] to-[#0d1117] p-8 border-b border-gray-800 relative">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="bg-cyan-500/10 text-cyan-400 text-[10px] px-3 py-1 rounded-full font-bold tracking-[0.3em] uppercase">Intelligence V12.3</span>
+                            <h2 class="text-5xl font-orbitron font-bold text-white mt-4 tracking-tighter">{{ selected }}</h2>
+                            <p id="current-time" class="text-[10px] text-gray-500 mt-2 font-mono uppercase"></p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[10px] text-gray-500 font-bold tracking-widest uppercase mb-1">Last Result</p>
+                            <div class="text-5xl font-mono font-bold text-white tracking-tighter neon-text">{{ analysis.last_res }}</div>
                         </div>
                     </div>
-                    <div class="space-y-4">
-                        <h3 class="text-blue-400 font-bold text-sm tracking-widest border-b border-blue-900 pb-2 uppercase">Top 10 Line 3D (Positional)</h3>
-                        <div class="grid grid-cols-2 gap-2 font-mono">
-                            {% for i in range(0, 10, 2) %}
-                            <div class="flex gap-2">
-                                <div class="bg-blue-900/20 w-full p-2 rounded text-center border border-blue-500/10">{{ analysis.top3d[i] }}</div>
-                                <div class="bg-blue-900/20 w-full p-2 rounded text-center border border-blue-500/10">{{ analysis.top3d[i+1] }}</div>
+                </div>
+
+                <div class="p-8 space-y-10">
+                    <div class="grid grid-cols-3 gap-6">
+                        <div class="text-center group">
+                            <p class="text-[10px] text-cyan-500 font-bold tracking-widest uppercase mb-2">Angka Main</p>
+                            <div class="bg-cyan-500/5 border border-cyan-500/20 rounded-2xl p-4 text-3xl font-orbitron font-bold text-white animate-shimmer">{{ analysis.am }}</div>
+                        </div>
+                        <div class="text-center group">
+                            <p class="text-[10px] text-purple-500 font-bold tracking-widest uppercase mb-2">Angka Lari</p>
+                            <div class="bg-purple-500/5 border border-purple-500/20 rounded-2xl p-4 text-3xl font-orbitron font-purple-300 italic">{{ analysis.al }}</div>
+                        </div>
+                        <div class="text-center group">
+                            <p class="text-[10px] text-blue-500 font-bold tracking-widest uppercase mb-2">Angka Ikut</p>
+                            <div class="bg-blue-500/5 border border-blue-500/20 rounded-2xl p-4 text-3xl font-orbitron font-bold text-white">{{ analysis.ai }}</div>
+                        </div>
+                    </div>
+
+                    <div class="relative py-6 gradient-border-bottom">
+                        <p class="text-xs text-gray-400 font-bold tracking-[0.5em] uppercase mb-4 text-center">BBFS Target Utama</p>
+                        <div class="text-5xl md:text-7xl text-center font-mono font-bold tracking-[0.3em] text-cyan-400 drop-shadow-[0_0_15px_rgba(0,242,255,0.4)]">
+                            {{ analysis.bbfs }}
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="bg-gray-900/50 p-4 rounded-2xl border border-gray-800 flex justify-between items-center">
+                            <span class="text-[10px] text-gray-500 font-bold uppercase">Shio</span>
+                            <span class="font-bold text-white text-lg uppercase">{{ analysis.shio }}</span>
+                        </div>
+                        <div class="bg-gray-900/50 p-4 rounded-2xl border border-gray-800 flex justify-between items-center">
+                            <span class="text-[10px] text-gray-500 font-bold uppercase">Macau</span>
+                            <span class="font-bold text-white text-lg">{{ analysis.macau }}</span>
+                        </div>
+                        <div class="bg-gray-900/50 p-4 rounded-2xl border border-gray-800 flex justify-between items-center">
+                            <span class="text-[10px] text-gray-500 font-bold uppercase">Twin</span>
+                            <span class="font-bold text-red-400 text-lg">{{ analysis.twin }}</span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10 pt-4">
+                        <div class="space-y-4">
+                            <h4 class="text-xs font-bold text-cyan-600 tracking-widest uppercase flex items-center gap-2">
+                                <span class="w-8 h-[1px] bg-cyan-900"></span> TOP 10 LINE 2D
+                            </h4>
+                            <div class="grid grid-cols-5 gap-2">
+                                {% for n in analysis.top2d %}
+                                <div class="bg-[#0d1117] border border-gray-800 p-2 rounded-lg text-center font-mono text-white text-lg">{{ n }}</div>
+                                {% endfor %}
                             </div>
+                        </div>
+                        <div class="space-y-4">
+                            <h4 class="text-xs font-bold text-blue-600 tracking-widest uppercase flex items-center gap-2">
+                                <span class="w-8 h-[1px] bg-blue-900"></span> TOP 10 LINE 3D
+                            </h4>
+                            <div class="grid grid-cols-2 gap-2">
+                                {% for n in analysis.top3d %}
+                                <div class="bg-[#0d1117] border border-gray-800 p-2 rounded-lg text-center font-mono text-white text-sm">{{ n }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h4 class="text-xs font-bold text-purple-600 tracking-widest uppercase text-center flex items-center justify-center gap-4">
+                            <span class="w-12 h-[1px] bg-purple-900"></span> 4D INVEST PRECISION <span class="w-12 h-[1px] bg-purple-900"></span>
+                        </h4>
+                        <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                            {% for n in analysis.top4d %}
+                            <div class="bg-gradient-to-b from-gray-900 to-black border border-purple-900/30 p-3 rounded-xl text-center font-mono text-purple-200 font-bold">{{ n }}</div>
                             {% endfor %}
                         </div>
                     </div>
                 </div>
 
-                <div class="space-y-4 pt-4">
-                    <h3 class="text-purple-400 font-bold text-sm tracking-widest border-b border-purple-900 pb-2 uppercase text-center">Top 10 Line 4D (High Accuracy)</h3>
-                    <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
-                        {% for n in analysis.top4d %}
-                        <div class="bg-purple-900/10 border border-purple-500/20 p-3 rounded-lg text-center font-mono text-xl text-purple-200 tracking-tighter">{{ n }}</div>
-                        {% endfor %}
-                    </div>
+                <div class="bg-black/50 p-4 text-center border-t border-gray-800">
+                    <p class="text-[9px] text-gray-600 tracking-[0.6em] font-bold uppercase">Digital Signature: {{ selected }}-V12.3-SUCCESS</p>
                 </div>
-            </div>
-            
-            <div class="bg-black/60 p-4 text-center">
-                <p class="text-[9px] text-gray-600 uppercase tracking-[0.5em]">Neural Network Analysis • Security Encrypted • V12.3 Engine</p>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-10">
-            <button onclick="copyAnalysis()" class="bg-gray-900/50 hover:bg-gray-800 p-5 rounded-2xl flex items-center justify-center gap-4 transition-all border border-gray-700 hover:border-cyan-500 group">
-                <span class="text-2xl group-hover:scale-125 transition">📋</span>
-                <span class="font-bold tracking-widest uppercase text-sm">Salin Analisa Teks</span>
+        <div class="grid grid-cols-2 gap-6 mt-10 mb-20">
+            <button onclick="copyAnalysis()" class="group bg-gray-900/80 hover:bg-gray-800 p-5 rounded-3xl flex items-center justify-center gap-4 border border-gray-800 hover:border-cyan-500 transition-all active:scale-95">
+                <span class="text-2xl group-hover:rotate-12 transition">📋</span>
+                <span class="text-xs font-bold uppercase tracking-widest">Salin Teks</span>
             </button>
-            <button onclick="takeScreenshot()" class="bg-gray-900/50 hover:bg-gray-800 p-5 rounded-2xl flex items-center justify-center gap-4 transition-all border border-gray-700 hover:border-blue-500 group">
-                <span class="text-2xl group-hover:scale-125 transition">📸</span>
-                <span class="font-bold tracking-widest uppercase text-sm">Simpan Hasil (PNG)</span>
+            <button id="ss-btn" onclick="takeScreenshot()" class="group bg-cyan-500/10 hover:bg-cyan-500/20 p-5 rounded-3xl flex items-center justify-center gap-4 border border-cyan-500/30 transition-all active:scale-95">
+                <span class="text-2xl group-hover:bounce transition">📸</span>
+                <span class="text-xs font-bold uppercase tracking-widest text-cyan-400">Simpan Gambar</span>
             </button>
         </div>
 
         <textarea id="copyTarget" class="hidden">
-📊 ANALISA AI V12.3 - {{ selected }}
-━━━━━━━━━━━━━━━━━━━━━━
+📊 ANALISA AI V12.3 [{{ selected }}]
+━━━━━━━━━━━━━━━━━━━━━
 Result Terakhir: {{ analysis.last_res }}
-AM: {{ analysis.am }}
-AL: {{ analysis.al }}
-AI: {{ analysis.ai }}
-━━━━━━━━━━━━━━━━━━━━━━
+AM: {{ analysis.am }} | AL: {{ analysis.al }} | AI: {{ analysis.ai }}
+━━━━━━━━━━━━━━━━━━━━━
 BBFS: [ {{ analysis.bbfs }} ]
-SHIO: {{ analysis.shio }}
-MACAU: {{ analysis.macau }}
-TWIN: {{ analysis.twin }}
-━━━━━━━━━━━━━━━━━━━━━━
-TOP 2D:
+SHIO: {{ analysis.shio }} | MACAU: {{ analysis.macau }}
+━━━━━━━━━━━━━━━━━━━━━
+TOP 2D VERIFIED:
 {{ analysis.top2d | join(' - ') }}
 
-TOP 3D:
+TOP 3D POSITIONAL:
 {{ analysis.top3d | join(' - ') }}
 
-TOP 4D:
+4D PRECISION:
 {{ analysis.top4d | join(' - ') }}
-━━━━━━━━━━━━━━━━━━━━━━
-Generated by AI Engine V12.3
+━━━━━━━━━━━━━━━━━━━━━
+Generated by Intelligence Engine V12.3
         </textarea>
         {% endif %}
-
-        <footer class="mt-20 text-center text-gray-600 pb-10">
-            <p class="text-[10px] tracking-widest uppercase">&copy; 2026 AI Predictor System • Intelligence Verified</p>
-        </footer>
     </div>
 
     <script>
-        // Update current date-time
-        const now = new Date();
-        document.getElementById('current-date').innerText = now.toLocaleString('id-ID', { 
-            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' 
-        });
+        // Real-time Date
+        const updateTime = () => {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+            const el = document.getElementById('current-time');
+            if(el) el.innerText = now.toLocaleString('id-ID', options);
+        };
+        setInterval(updateTime, 1000);
+        updateTime();
 
-        // Copy Text Function
+        // Copy Text
         function copyAnalysis() {
             const copyText = document.getElementById("copyTarget");
             copyText.select();
-            copyText.setSelectionRange(0, 99999); 
-            navigator.clipboard.writeText(copyText.value).then(() => {
-                alert("✅ ANALISA {{ selected }} BERHASIL DISALIN!");
-            });
+            navigator.clipboard.writeText(copyText.value);
+            alert("Analisa Berhasil Disalin!");
         }
 
-        // Screenshot Function
-        function takeScreenshot() {
+        // HD Screenshot
+        async function takeScreenshot() {
             const area = document.getElementById('capture-area');
-            const btn = event.currentTarget;
-            btn.innerHTML = "<span>⏳</span> PROCESSING...";
-            
-            html2canvas(area, {
-                backgroundColor: '#0a0b10',
-                scale: 2, 
-                useCORS: true,
-                logging: false
-            }).then(canvas => {
+            const btn = document.getElementById('ss-btn');
+            btn.innerHTML = "<span>⌛</span> <span class='text-xs font-bold uppercase text-gray-400'>Processing...</span>";
+
+            try {
+                const canvas = await html2canvas(area, {
+                    backgroundColor: '#05060b',
+                    scale: 3, // HD Quality
+                    useCORS: true,
+                    allowTaint: false,
+                    scrollX: 0,
+                    scrollY: -window.scrollY,
+                    windowWidth: document.documentElement.offsetWidth,
+                    windowHeight: document.documentElement.offsetHeight
+                });
+
                 const link = document.createElement('a');
-                link.download = 'AI-ANALYSIS-{{ selected }}-' + now.getTime() + '.png';
-                link.href = canvas.toDataURL('image/png');
+                link.download = `AI-ANALISA-${'{{ selected }}'}-${Date.now()}.png`;
+                link.href = canvas.toDataURL("image/png", 1.0);
                 link.click();
-                btn.innerHTML = "<span>📸</span> SIMPAN HASIL (PNG)";
-            });
+            } catch (err) {
+                console.error(err);
+                alert("Gagal menyimpan gambar.");
+            } finally {
+                btn.innerHTML = "<span class='text-2xl'>📸</span> <span class='text-xs font-bold uppercase text-cyan-400'>Simpan Gambar</span>";
+            }
         }
     </script>
 </body>
