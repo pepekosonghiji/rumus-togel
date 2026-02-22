@@ -3,236 +3,211 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AI ENGINE V12.3 HD</title>
+    <title>AI ENGINE V12.3</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <style>
-        :root { --neon: #00f2ff; --bg: #050608; }
+        :root { --neon: #00f2ff; --bg: #0a0b10; }
         body { 
             background: var(--bg); 
             color: #e2e8f0; 
             font-family: 'Rajdhani', sans-serif;
-            margin: 0; padding: 15px;
-            -webkit-font-smoothing: antialiased;
+            margin: 0; padding: 10px;
         }
         .font-orbitron { font-family: 'Orbitron', sans-serif; }
         
-        /* Container khusus agar tampilan mobile rapi */
-        .app-container { max-width: 450px; margin: 0 auto; }
+        /* Container Utama yang Flexible */
+        .main-container { max-width: 500px; margin: 0 auto; }
 
-        /* Panel Glassmorphism */
+        /* Card Style */
         .glass-panel {
-            background: rgba(20, 22, 30, 0.9);
-            border: 1px solid rgba(0, 242, 255, 0.15);
-            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
             padding: 15px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
-        /* AREA CAPTURE - Dioptimalkan untuk Ketajaman Maksimal */
+        /* Area Screenshot yang Solid */
         #capture-area { 
             background: #0d1117; 
-            width: 400px; /* Lock width agar densitas pixel konsisten */
-            margin: 0 auto;
-            border-radius: 24px;
-            overflow: hidden;
-            border: 1px solid #30363d;
+            border-radius: 20px; 
+            padding: 15px;
+            width: 100%;
+            box-sizing: border-box;
         }
 
-        .inner-capture { padding: 20px; }
-
-        /* Grid Angka - Anti Blur */
-        .grid-2d { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
-        .grid-34d { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        /* Grid Khusus Angka agar tidak Tabrakan */
+        .number-grid-2d { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+        .number-grid-3d { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
         
-        .num-badge {
-            background: #161b22;
-            border: 1px solid #30363d;
-            border-radius: 8px;
-            padding: 8px 2px;
-            text-align: center;
-            font-family: monospace;
+        /* Button Style */
+        .btn-action {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
             font-weight: bold;
-            font-size: 14px;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 1px;
+            transition: 0.3s;
         }
 
-        /* CSS khusus untuk menyembunyikan scrollbar saat capture */
-        .no-scrollbar::-webkit-scrollbar { display: none; }
+        /* Penanganan khusus layar sangat kecil */
+        @media (max-width: 360px) {
+            .number-grid-2d { grid-template-columns: repeat(4, 1fr); }
+            .text-huge { font-size: 2rem !important; }
+        }
     </style>
 </head>
 <body>
 
-<div class="app-container">
+<div class="main-container">
     
     <div class="glass-panel">
-        <form method="POST" class="space-y-4">
-            <select name="market" class="w-full bg-[#161b22] text-cyan-400 p-4 rounded-xl border border-cyan-900/50 outline-none font-bold uppercase tracking-widest">
+        <form method="POST" class="space-y-3">
+            <select name="market" class="w-full bg-gray-900 text-cyan-400 p-3 rounded-xl border border-gray-700 outline-none font-bold uppercase">
                 {% for m in markets %}
                 <option value="{{ m }}" {% if selected == m %}selected{% endif %}>{{ m }}</option>
                 {% endfor %}
             </select>
-            <button type="submit" class="w-full bg-gradient-to-r from-cyan-600 to-blue-700 text-white p-4 rounded-xl font-bold uppercase tracking-widest shadow-lg active:scale-95 transition">
-                🚀 ANALISA SEKARANG
-            </button>
+            <button type="submit" class="btn-action bg-cyan-600 text-white">Proses Analisa</button>
         </form>
     </div>
 
     {% if analysis == "error" %}
-    <div class="glass-panel text-center text-red-400 font-bold uppercase py-10">⚠️ Data Tidak Mencukupi</div>
+    <div class="glass-panel text-center text-red-500 font-bold uppercase text-xs">Data Tidak Cukup</div>
     {% elif analysis %}
 
-    <div class="overflow-x-auto no-scrollbar mb-6">
-        <div id="capture-area">
-            <div class="inner-capture">
-                <div class="flex justify-between items-center border-b border-gray-800 pb-5 mb-5">
-                    <div>
-                        <p class="text-[10px] text-cyan-500 font-bold tracking-[4px] uppercase italic">AI V12.3 HD</p>
-                        <h2 class="text-3xl font-orbitron font-bold text-white uppercase tracking-tighter">{{ selected }}</h2>
-                        <p id="time-stamp" class="text-[9px] text-gray-500 mt-1 uppercase font-bold"></p>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-[10px] text-gray-400 uppercase tracking-widest">Result</p>
-                        <p class="text-3xl font-bold text-white font-mono leading-none">{{ analysis.last_res }}</p>
-                    </div>
-                </div>
+    <div id="capture-area" class="border border-gray-800">
+        <div class="flex justify-between items-start border-b border-gray-800 pb-4 mb-4">
+            <div>
+                <div class="text-[10px] text-cyan-500 font-bold tracking-widest uppercase mb-1 italic">Intelligence Engine</div>
+                <h2 class="text-2xl font-orbitron font-bold text-white uppercase">{{ selected }}</h2>
+                <div id="date-now" class="text-[9px] text-gray-500 mt-1 uppercase"></div>
+            </div>
+            <div class="text-right">
+                <div class="text-[9px] text-gray-400 uppercase">Last Result</div>
+                <div class="text-2xl font-bold text-white font-mono">{{ analysis.last_res }}</div>
+            </div>
+        </div>
 
-                <div class="grid grid-cols-3 gap-3 mb-6">
-                    <div class="bg-black/40 border border-gray-800 p-3 rounded-xl text-center">
-                        <p class="text-[9px] text-cyan-500 font-bold mb-1 uppercase">Main</p>
-                        <p class="text-xl font-bold text-white">{{ analysis.am }}</p>
-                    </div>
-                    <div class="bg-black/40 border border-gray-800 p-3 rounded-xl text-center">
-                        <p class="text-[9px] text-purple-500 font-bold mb-1 uppercase">Lari</p>
-                        <p class="text-xl font-bold text-purple-300 italic">{{ analysis.al }}</p>
-                    </div>
-                    <div class="bg-black/40 border border-gray-800 p-3 rounded-xl text-center">
-                        <p class="text-[9px] text-blue-500 font-bold mb-1 uppercase">Ikut</p>
-                        <p class="text-xl font-bold text-white">{{ analysis.ai }}</p>
-                    </div>
-                </div>
+        <div class="grid grid-cols-3 gap-2 mb-4 text-center">
+            <div class="bg-black/50 p-2 rounded-lg border border-gray-800">
+                <div class="text-[8px] text-cyan-500 font-bold mb-1">AM</div>
+                <div class="text-lg font-bold text-white">{{ analysis.am }}</div>
+            </div>
+            <div class="bg-black/50 p-2 rounded-lg border border-gray-800">
+                <div class="text-[8px] text-purple-500 font-bold mb-1">AL</div>
+                <div class="text-lg font-bold text-purple-300">{{ analysis.al }}</div>
+            </div>
+            <div class="bg-black/50 p-2 rounded-lg border border-gray-800">
+                <div class="text-[8px] text-blue-500 font-bold mb-1">AI</div>
+                <div class="text-lg font-bold text-white">{{ analysis.ai }}</div>
+            </div>
+        </div>
 
-                <div class="bg-gradient-to-r from-cyan-900/20 to-transparent border-l-4 border-cyan-500 p-5 rounded-r-2xl mb-6">
-                    <p class="text-[10px] text-gray-500 uppercase font-bold tracking-[5px] mb-2">Target BBFS</p>
-                    <p class="text-5xl font-bold text-cyan-400 tracking-[6px] font-mono drop-shadow-[0_0_8px_rgba(0,242,255,0.3)]">{{ analysis.bbfs }}</p>
-                </div>
+        <div class="bg-cyan-500/5 border-l-4 border-cyan-500 p-4 rounded-r-xl mb-4 text-center">
+            <div class="text-[10px] text-gray-500 uppercase font-bold tracking-[3px] mb-2">Target BBFS Utama</div>
+            <div class="text-3xl md:text-4xl font-bold text-cyan-400 tracking-wider font-mono">{{ analysis.bbfs }}</div>
+        </div>
 
-                <div class="grid grid-cols-3 gap-3 mb-8">
-                    <div class="text-center py-2 bg-[#161b22] rounded-lg border border-gray-800">
-                        <p class="text-[8px] text-gray-500 uppercase">Shio</p>
-                        <p class="text-sm font-bold text-white uppercase">{{ analysis.shio }}</p>
-                    </div>
-                    <div class="text-center py-2 bg-[#161b22] rounded-lg border border-gray-800">
-                        <p class="text-[8px] text-gray-500 uppercase">Macau</p>
-                        <p class="text-sm font-bold text-white">{{ analysis.macau }}</p>
-                    </div>
-                    <div class="text-center py-2 bg-[#161b22] rounded-lg border border-gray-800">
-                        <p class="text-[8px] text-gray-500 uppercase">Twin</p>
-                        <p class="text-sm font-bold text-red-500">{{ analysis.twin }}</p>
-                    </div>
-                </div>
+        <div class="grid grid-cols-3 gap-2 mb-4">
+            <div class="bg-gray-900 p-2 rounded-lg text-center border border-gray-800">
+                <div class="text-[8px] text-gray-500 mb-1">SHIO</div>
+                <div class="text-[11px] font-bold text-white uppercase">{{ analysis.shio }}</div>
+            </div>
+            <div class="bg-gray-900 p-2 rounded-lg text-center border border-gray-800">
+                <div class="text-[8px] text-gray-500 mb-1">MACAU</div>
+                <div class="text-[11px] font-bold text-white">{{ analysis.macau }}</div>
+            </div>
+            <div class="bg-gray-900 p-2 rounded-lg text-center border border-gray-800">
+                <div class="text-[8px] text-gray-500 mb-1">TWIN</div>
+                <div class="text-[11px] font-bold text-red-500">{{ analysis.twin }}</div>
+            </div>
+        </div>
 
-                <div class="space-y-6">
-                    <div>
-                        <p class="text-[10px] text-cyan-700 font-bold uppercase mb-3 border-b border-cyan-900 pb-1">Top 10 Line 2D</p>
-                        <div class="grid-2d">
-                            {% for n in analysis.top2d %}
-                            <div class="num-badge text-white">{{ n }}</div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                    
-                    <div class="grid grid-cols-2 gap-6">
-                        <div>
-                            <p class="text-[10px] text-blue-700 font-bold uppercase mb-3 border-b border-blue-900 pb-1">Top 10 Line 3D</p>
-                            <div class="space-y-2">
-                                {% for n in analysis.top3d %}
-                                <div class="num-badge text-blue-200 text-xs">{{ n }}</div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        <div>
-                            <p class="text-[10px] text-purple-700 font-bold uppercase mb-3 border-b border-purple-900 pb-1">Top 10 Line 4D</p>
-                            <div class="space-y-2">
-                                {% for n in analysis.top4d %}
-                                <div class="num-badge text-purple-200 text-xs">{{ n }}</div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
+        <div class="space-y-4">
+            <div>
+                <div class="text-[10px] text-cyan-700 font-bold uppercase mb-2">Top 10 Line 2D</div>
+                <div class="number-grid-2d">
+                    {% for n in analysis.top2d %}
+                    <div class="bg-gray-900 p-2 rounded text-center font-mono text-sm text-white">{{ n }}</div>
+                    {% endfor %}
                 </div>
+            </div>
+            
+            <div>
+                <div class="text-[10px] text-blue-700 font-bold uppercase mb-2">Top 10 Line 3D</div>
+                <div class="number-grid-3d">
+                    {% for n in analysis.top3d %}
+                    <div class="bg-gray-900 p-2 rounded text-center font-mono text-xs text-blue-200">{{ n }}</div>
+                    {% endfor %}
+                </div>
+            </div>
 
-                <div class="mt-8 pt-4 border-t border-gray-800 text-center opacity-30">
-                    <p class="text-[8px] text-white uppercase tracking-[4px]">Neural Intelligence System V12.3 Verified</p>
+            <div>
+                <div class="text-[10px] text-purple-700 font-bold uppercase mb-2">Top 10 Line 4D Invest</div>
+                <div class="number-grid-3d">
+                    {% for n in analysis.top4d %}
+                    <div class="bg-gray-900 p-2 rounded text-center font-mono text-xs text-purple-200">{{ n }}</div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
+
+        <div class="mt-4 pt-3 border-t border-gray-800 text-center">
+            <div class="text-[8px] text-gray-600 uppercase tracking-widest italic font-bold">V12.3 Neural System Analysis Success</div>
+        </div>
     </div>
 
-    <div class="grid grid-cols-2 gap-4 pb-10">
-        <button onclick="copyAnalysis()" class="p-4 bg-gray-900 rounded-2xl border border-gray-800 font-bold text-xs uppercase tracking-widest text-gray-400 active:bg-gray-800 transition">
-            📋 Salin Teks
-        </button>
-        <button id="ss-btn" onclick="takeScreenshot()" class="p-4 bg-cyan-700 rounded-2xl font-bold text-xs uppercase tracking-widest text-white shadow-[0_0_15px_rgba(6,182,212,0.4)] active:scale-95 transition">
-            📸 Simpan HD
-        </button>
+    <div class="mt-6 flex flex-col gap-3 pb-10">
+        <button onclick="copyAnalysis()" class="btn-action bg-gray-800 text-gray-300 border border-gray-700 italic">Salin Teks</button>
+        <button id="ss-btn" onclick="takeScreenshot()" class="btn-action bg-cyan-700 text-white shadow-lg">Simpan Gambar (HD)</button>
     </div>
 
     <textarea id="copyTarget" class="hidden">
-📊 ANALISA AI V12.3 - {{ selected }}
+📊 ANALISA AI V12.3 [{{ selected }}]
 AM: {{ analysis.am }} | AL: {{ analysis.al }} | AI: {{ analysis.ai }}
-BBFS: [ {{ analysis.bbfs }} ]
-2D: {{ analysis.top2d | join(', ') }}
+BBFS: {{ analysis.bbfs }}
+SHIO: {{ analysis.shio }}
+TOP 2D: {{ analysis.top2d | join(', ') }}
     </textarea>
     {% endif %}
 
 </div>
 
 <script>
-    // Live Time
-    const updateTime = () => {
-        const d = new Date();
-        const options = { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' };
-        document.getElementById('time-stamp').innerText = d.toLocaleString('id-ID', options);
-    };
-    if(document.getElementById('time-stamp')) updateTime();
+    // Update Date
+    const d = new Date();
+    document.getElementById('date-now').innerText = d.toLocaleString('id-ID', {weekday:'short', day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'});
 
     function copyAnalysis() {
         const copyText = document.getElementById("copyTarget");
         copyText.select();
         navigator.clipboard.writeText(copyText.value);
-        alert("Analisa disalin ke clipboard!");
+        alert("Berhasil disalin!");
     }
 
     async function takeScreenshot() {
         const area = document.getElementById('capture-area');
         const btn = document.getElementById('ss-btn');
-        btn.innerText = "PROSES HD...";
-        
-        // Kunci utama ketajaman: scale minimal 4 dan penggunaan window.devicePixelRatio
-        try {
-            const canvas = await html2canvas(area, {
-                backgroundColor: '#0d1117',
-                scale: 4, // 4x lipat resolusi standar agar tidak blur saat zoom
-                useCORS: true,
-                allowTaint: false,
-                imageTimeout: 0,
-                onclone: (clonedDoc) => {
-                    // Pastikan area capture terlihat sepenuhnya saat render
-                    clonedDoc.getElementById('capture-area').style.display = 'block';
-                }
-            });
+        btn.innerText = "MOHON TUNGGU...";
 
-            const link = document.createElement('a');
-            link.download = `AI-ANALISA-${'{{ selected }}'}-${Date.now()}.png`;
-            link.href = canvas.toDataURL("image/png", 1.0);
-            link.click();
-        } catch (err) {
-            console.error(err);
-            alert("Gagal memproses gambar.");
-        } finally {
-            btn.innerText = "📸 SIMPAN HD";
-        }
+        // Set Scale Tinggi khusus HP agar gambar sangat tajam
+        const canvas = await html2canvas(area, {
+            backgroundColor: '#0d1117',
+            scale: 3, 
+            logging: false,
+            useCORS: true
+        });
+
+        const link = document.createElement('a');
+        link.download = `AI_${'{{ selected }}'}_${Date.now()}.png`;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+        btn.innerText = "Simpan Gambar (HD)";
     }
 </script>
 </body>
