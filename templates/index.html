@@ -2,252 +2,64 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PREDIKSI ENGINE V9.1</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <style>
-        /* --- [BASE STYLING - UNIVERSAL] --- */
-        body {
-            background-color: #000;
-            color: #fff;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            padding: 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 600px; /* Batas lebar di komputer agar tidak meluber */
-            box-sizing: border-box;
-        }
-
-        /* --- [FORM & INPUT] --- */
-        .control-panel {
-            background: #111;
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            border: 1px solid #333;
-        }
-
-        select, button {
-            width: 100%;
-            padding: 12px;
-            margin: 8px 0;
-            border-radius: 8px;
-            border: none;
-            font-size: 16px; /* Mencegah auto-zoom di iPhone */
-            font-weight: bold;
-        }
-
-        select {
-            background: #222;
-            color: #0f0;
-            border: 1px solid #0f0;
-        }
-
-        button#analyzeBtn {
-            background: #0f0;
-            color: #000;
-            cursor: pointer;
-        }
-
-        button#capBtn {
-            background: #444;
-            color: #fff;
-            margin-top: 10px;
-        }
-
-        /* --- [CAPTURE AREA - LOGIKA GRID ADAPTIF] --- */
-        #captureArea {
-            background: #000;
-            padding: 15px;
-            border: 2px solid #0f0;
-            border-radius: 15px;
-            display: grid;
-            grid-template-columns: repeat(2, 1fr); /* Default 2 kolom */
-            gap: 10px;
-        }
-
-        .header-box {
-            grid-column: span 2;
-            text-align: center;
-            border: 2px solid #0f0;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 5px;
-        }
-
-        .header-box h1 { color: #fff; margin: 0; font-size: 24px; text-transform: uppercase; }
-        .header-box h2 { color: #0f0; margin: 5px 0 0; font-size: 20px; }
-
-        .card {
-            background: #080808;
-            border: 1px solid #333;
-            padding: 12px;
-            border-radius: 10px;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .card h3 { color: #888; font-size: 12px; margin: 0 0 8px; text-transform: uppercase; }
-        .card .value { color: #0f0; font-size: 28px; font-weight: bold; word-wrap: break-word; }
-
-        /* Khusus Shio dan Twin agar lebih proporsional */
-        .shio-value { font-size: 22px !important; color: #0f0; }
-        .twin-value { color: #ff3131 !important; font-size: 22px !important; }
-
-        /* --- [RESPONSIVE ADJUSTMENTS] --- */
-        @media (max-width: 480px) {
-            .header-box h1 { font-size: 20px; }
-            .header-box h2 { font-size: 18px; }
-            .card .value { font-size: 22px; }
-            .container { padding: 5px; }
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Engine V12.1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-
-<div class="container">
-    <div class="control-panel">
-        <select id="marketSelect">
-            <option value="">-- PILIH PASARAN --</option>
-            {% for m in markets %}
-            <option value="{{ m }}">{{ m }}</option>
-            {% endfor %}
-        </select>
-        <button id="analyzeBtn">GET PREDICTION</button>
-        <button id="copyBtn" onclick="copyToClipboard()" style="background: #007bff; color: white;">COPY TEXT DATA</button>
-        <button id="capBtn" onclick="takeScreenshot()">DOWNLOAD SCREENSHOT</button>
-        <a href="https://live-hasil.vercel.app/" id="capBtn" style="text-decoration: none;">
-    <button type="button" style="width: 100%; cursor: pointer;">GO TO LIVE HASIL</button>
-</a>
-    </div>
-
-    <div id="captureArea">
-        <div class="header-box">
-            <h1 id="r_market">NAMA PASARAN</h1>
-            <h2 id="r_last">LAST: 0000</h2>
-        </div>
-
-        <div class="card">
-            <h3>CORE 2D</h3>
-            <div id="r_core" class="value">-</div>
-        </div>
-
-        <div class="card">
-            <h3>BBFS</h3>
-            <div id="r_bbfs" class="value">-</div>
-        </div>
-
-        <div class="card">
-            <h3>AS + KOP</h3>
-            <div id="r_askop" class="value">-</div>
-        </div>
-
-        <div class="card">
-            <h3>KOP + KEP</h3>
-            <div id="r_kopkep" class="value">-</div>
-        </div>
-
-        <div class="card">
-            <h3>SHIO</h3>
-            <div id="r_shio" class="value shio-value">-</div>
-        </div>
-
-        <div class="card">
-            <h3>MACAU / TWIN</h3>
-            <div id="r_macau" class="value shio-value">-</div>
-            <div id="r_twin" class="value twin-value">-</div>
-        </div>
-    </div>
-</div>
-
-<script>
-    $('#analyzeBtn').click(function() {
-        const market = $('#marketSelect').val();
-        if(!market) return alert("Pilih Pasaran Bos!");
-
-        $(this).text("SYNCING...").prop('disabled', true);
-
-        $.post('/analyze', { market: market }, function(res) {
-            if(res.status === 'success') {
-                $('#r_market').text(res.market);
-                $('#r_last').text("LAST: " + res.last);
-                $('#r_core').text(res.data.core);
-                $('#r_bbfs').text(res.data.bbfs);
-                $('#r_askop').text(res.data.as_kop);
-                $('#r_kopkep').text(res.data.kop_kep);
-                $('#r_shio').text(res.data.shio);
-                $('#r_macau').text(res.data.macau.split(' - ')[0]);
-                $('#r_twin').text(res.data.twin);
-            } else {
-                alert(res.msg);
-            }
-            $('#analyzeBtn').text("GET PREDICTION").prop('disabled', false);
-        });
-    });
-
-    function takeScreenshot() {
-        const element = document.querySelector("#captureArea");
-        const marketName = $('#r_market').text();
+<body class="bg-slate-900 text-white min-h-screen p-5">
+    <div class="max-w-2xl mx-auto bg-slate-800 p-6 rounded-xl shadow-2xl border border-slate-700">
+        <h1 class="text-2xl font-bold text-center mb-6 text-yellow-500">AI ENGINE V12.1 SUPER SYNCHRONIZED</h1>
         
-        $('#capBtn').text("GENERATING...").prop('disabled', true);
+        <form method="POST" class="space-y-4">
+            <select name="market" class="w-full p-3 bg-slate-700 rounded border border-slate-600 focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                {% for m in markets %}
+                <option value="{{ m }}" {% if selected == m %}selected{% endif %}>{{ m }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="w-full bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 rounded transition">ANALOGI DATA</button>
+        </form>
 
-        html2canvas(element, {
-            backgroundColor: "#000",
-            scale: 3,
-            windowWidth: 600, // Simulasi lebar HP di screenshot agar tidak berantakan
-            onclone: (clonedDoc) => {
-                const clonedEl = clonedDoc.querySelector("#captureArea");
-                clonedEl.style.width = "500px";
-                clonedEl.style.display = "grid";
-            }
-        }).then(canvas => {
-            const link = document.createElement('a');
-            link.download = `PREDIKSI-${marketName}.png`;
-            link.href = canvas.toDataURL("image/png");
-            link.click();
-            $('#capBtn').text("DOWNLOAD SCREENSHOT").prop('disabled', false);
-        });
-    }
-    function copyToClipboard() {
-    const market = $('#r_market').text();
-    const last = $('#r_last').text();
-    const core = $('#r_core').text();
-    const bbfs = $('#r_bbfs').text();
-    const askop = $('#r_askop').text();
-    const kopkep = $('#r_kopkep').text();
-    const shio = $('#r_shio').text();
-    const twin = $('#r_twin').text();
+        {% if analysis == "error" %}
+        <div class="mt-6 p-4 bg-red-900/50 border border-red-500 rounded text-center">Data tidak cukup untuk analisa.</div>
+        {% elif analysis %}
+        <div class="mt-8 space-y-6">
+            <div class="grid grid-cols-2 gap-4 border-b border-slate-700 pb-4">
+                <div><p class="text-slate-400 text-sm">LAST RESULT</p><p class="text-xl font-mono">{{ analysis.last_res }}</p></div>
+                <div><p class="text-slate-400 text-sm">SHIO ON</p><p class="text-xl font-bold text-yellow-500">{{ analysis.shio }}</p></div>
+            </div>
 
-    const textToCopy = `
-🎯 PREDIKSI ${market}
-📝 ${last}
----------------------------
-🚀 CORE 2D : ${core}
-🎡 BBFS    : ${bbfs}
-📐 AS+KOP  : ${askop}
-📏 KOP+KEP : ${kopkep}
-🐉 SHIO    : ${shio}
-👯 TWIN    : ${twin}
----------------------------
-Cek Terus: rumus-togel.vercel.app
-    `.trim();
+            <div class="bg-slate-900 p-4 rounded-lg">
+                <p class="text-slate-400 text-sm mb-1">BBFS REKOMENDASI</p>
+                <p class="text-2xl tracking-widest font-bold text-green-400">[ {{ analysis.bbfs }} ]</p>
+                <p class="text-xs mt-2 text-slate-500">MACAU: {{ analysis.macau }} | TWIN: {{ analysis.twin }}</p>
+            </div>
 
-    navigator.clipboard.writeText(textToCopy).then(() => {
-        alert("Data Berhasil di Copy!");
-    }).catch(err => {
-        console.error('Gagal copy: ', err);
-    });
-}
-</script>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-slate-700 p-3 rounded">
+                    <h3 class="text-yellow-500 font-bold mb-2">TOP 10 LINE 2D</h3>
+                    <p class="font-mono text-sm leading-relaxed">{{ analysis.top2d | join(' * ') }}</p>
+                </div>
+                <div class="bg-slate-700 p-3 rounded">
+                    <h3 class="text-yellow-500 font-bold mb-2">TOP 10 LINE 3D</h3>
+                    <div class="grid grid-cols-2 gap-2 font-mono text-sm">
+                        {% for i in range(0, 10, 2) %}
+                        <span>{{ analysis.top3d[i] }}</span> <span>{{ analysis.top3d[i+1] }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
 
+            <div class="bg-slate-700 p-3 rounded">
+                <h3 class="text-yellow-500 font-bold mb-2 text-center">TOP 10 LINE 4D</h3>
+                <div class="grid grid-cols-2 gap-4 text-center font-mono">
+                    {% for i in range(0, 10, 2) %}
+                    <div class="bg-slate-800 p-1 rounded">{{ analysis.top4d[i] }}</div>
+                    <div class="bg-slate-800 p-1 rounded">{{ analysis.top4d[i+1] }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
 </body>
 </html>
