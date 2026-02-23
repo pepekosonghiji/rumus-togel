@@ -190,27 +190,25 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         scores['6'] += 15
         
     elif market_name == 'OSAKA':
-        # --- OSAKA DELTA-VIBRATION LOGIC V14.9 ---
+        # --- OSAKA SHADOW-DETECTION V15.2 ---
         
-        # 1. Delta Head-to-Head (P2 vs P3)
-        # Menghitung selisih angka depan P2 (6) dan P3 (8)
+        # 1. Lindungi Angka Indeks & Tyseen (Anti-Meleset 96)
+        # Ambil angka dari AM dan cari bayangannya
+        for n in "12345": 
+            scores[ID.get(n)] += 15 # Indeks (4 jadi 9)
+            scores[TY.get(n)] += 15 # Tyseen (3 jadi 6)
+            
+        # 2. Twin Front Protection
+        # Jika P1 terakhir tidak ada twin, maka potensi twin di periode depan naik
+        if len(set(d0_p1)) == 4:
+            scores[d0_p1[0]] += 20 # Kuatkan angka depan untuk potensi Twin
+            
+        # 3. Delta P2-P3 (Tetap digunakan)
         if len(all_res_data[0]) >= 3:
             p2_head = int(all_res_data[0][1][0])
             p3_head = int(all_res_data[0][2][0])
-            delta_head = str(abs(p2_head - p3_head))
-            scores[delta_head] += 30  # Skor tinggi untuk angka selisih
-            scores[ID.get(delta_head)] += 20 # Indeks dari selisih
-            
-        # 2. Ekor P1 Resonance (8975 -> 5)
-        # Osaka sering memutar balik angka ekor via Mistik Baru/Lama
-        ekor_p1 = d0_p1[3]
-        scores[MB.get(ekor_p1, '0')] += 25
-        scores[ML.get(ekor_p1, '0')] += 20
-        
-        # 3. Middle-High Tracking (Fokus angka 1, 2, 3, 5 sesuai AM Mamang)
-        # Kita sinkronkan agar AM yang muncul lebih kuat di BBFS
-        for n in "1235":
-            scores[n] += 15
+            delta = str(abs(p2_head - p3_head))
+            scores[delta] += 25
     
     # --- 3. GLOBAL SEED VERIFICATION ---
     seeds = [ML.get(d0_p1[0]), ID.get(d0_p1[2]), TY.get(d0_p1[3]), MB.get(d0_p1[1])]
