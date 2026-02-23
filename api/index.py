@@ -78,20 +78,6 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         # 4. Washing AI Anchor (AI 38)
         scores['3'] += 20
         scores['8'] += 20
-            
-        # 2. Mid-Vibration (P1: 0483)
-        # Indeks Kop (4 -> 9) dan Tyseen Kepala (8 -> 3)
-        scores[ID.get(d0_p1[1], '0')] += 35 # Angka 9 (Sangat Kuat)
-        scores[TY.get(d0_p1[2], '0')] += 30 # Angka 3 (Sesuai AI 38)
-        
-        # 3. Tail-Echo (Merespon Ekor 9 di P2 & P3)
-        # Jika Prize bawah punya ekor kembar, biasanya lari ke Mistik di P1
-        scores[ML.get('9')] += 25 # Mistik Lama 9 adalah 6
-        scores[MB.get('9')] += 20 # Mistik Baru 9 adalah 3
-        
-        # 4. Washing AI Anchor (AI 38)
-        scores['3'] += 20
-        scores['8'] += 20
 
     elif market_name == 'CAMBODIA':
         # --- CAMBODIA ELITE SUB-LOGIC V14.6 ---
