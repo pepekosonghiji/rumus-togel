@@ -149,7 +149,25 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         for n in "0123456789":
             if int(n) % 3 == 0 and n != '0':
                 scores[n] += 18
-
+    
+    elif market_name == 'JEJU':
+        # --- JEJU MIRROR-BRIDGE LOGIC V14.9 ---
+        
+        # 1. P3 to P1 Bridge (The Jeju Special)
+        # Jeju sering mengambil angka dari Prize 3 (3905) dan mengubahnya via Mistik/Indeks
+        p3_digits = all_res_data[0][2]
+        for d in p3_digits:
+            scores[ID.get(d)] += 28 # Indeks (3->8, 9->4, 0->5, 5->0)
+            scores[ML.get(d)] += 18 # Mistik Lama
+            
+        # 2. Resonansi Angka 7 (Angka Keramat Jeju)
+        # Secara statistik, Jeju punya frekuensi angka 7 yang cukup tinggi
+        scores['7'] += 20
+        
+        # 3. Delta P1-P2 (Selisih As P1 dan As P2)
+        # Seringkali selisih ini muncul di posisi Kop atau Kepala
+        delta_as = abs(int(d0_p1[0]) - int(all_res_data[0][1][0]))
+        scores[str(delta_as)] += 25
     # --- 3. GLOBAL SEED VERIFICATION ---
     seeds = [ML.get(d0_p1[0]), ID.get(d0_p1[2]), TY.get(d0_p1[3]), MB.get(d0_p1[1])]
     for s in seeds: scores[s] += 12
@@ -208,6 +226,17 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, count=10):
             # Verifikasi Mistik Baru dari Ekor P1 terakhir
             if t == MB.get(last_p1[3]): score += 30
 
+        elif market_name == 'JEJU':
+            # Jeju dominan di Biji 1, 5, 8
+            if biji_f in [1, 5, 8]: score += 65
+            
+            # Pattern Bridge: Jika ekor adalah Mistik/Indeks dari Kepala P3 (3905 -> 3)
+            # Kepala P3 adalah 3, maka ekor jitu adalah 8 (ID) atau 6 (TY)
+            if t in [ID.get(last_p1[2]), TY.get(last_p1[2])]: score += 40
+            
+            # Anti-Clutter: Jeju jarang mengeluarkan angka berurutan (12, 23, dll)
+            if abs(int(h) - int(t)) == 1: score -= 15
+                
         # --- [GENERAL MARKETS] ---
         else:
             if market_name in ['HONGKONG POOLS', 'MACAU', 'SINGAPORE POOLS']:
