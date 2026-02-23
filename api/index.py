@@ -391,6 +391,31 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         eko_p1_last = d0_p1[3]
         scores[TY.get(eko_p1_last)] += 25 # Angka 9 tetap kuat
         scores['0'] += 15 # Angka 0 tetap dijaga karena muncul di 7101
+
+    elif 'OREGON' in market_name:
+        # --- [V16.6 OREGON SINGLE-PRIZE LOGIC] ---
+        # Karena Oregon hanya P1, kita gunakan perbandingan antar periode (T-1, T-2)
+        
+        # 1. Vertical Jump (Ekor T-1 ke Kepala T-0)
+        # Sering terjadi angka ekor periode lalu ditarik jadi kepala
+        eko_last = d0_p1[3] 
+        scores[eko_last] += 35
+        scores[ID.get(eko_last)] += 20 # Proteksi Indeks ekor
+        
+        # 2. As-Kop Compression
+        # Oregon sering melakukan penjumlahan As+Kop P1 untuk jadi AI
+        ai_oregon = str((int(d0_p1[0]) + int(d0_p1[1])) % 10)
+        scores[ai_oregon] += 30
+        scores[TY.get(ai_oregon)] += 20
+        
+        # 3. Mistik-Series (Mengunci angka 3, 4, 7 yang sering muncul di Oregon)
+        for n in "347":
+            scores[n] += 15
+            
+        # 4. Shadow Check
+        # Jika periode sebelumnya tidak ada angka 0, maka 0 wajib diwaspadai
+        if '0' not in d0_p1:
+            scores['0'] += 25
         
     # --- 3. GLOBAL SEED VERIFICATION ---
     seeds = [ML.get(d0_p1[0]), ID.get(d0_p1[2]), TY.get(d0_p1[3]), MB.get(d0_p1[1])]
@@ -578,7 +603,6 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             if line[0] in [ID.get(x) for x in all_res_data[0][1]]:
                 score += 30
 
-        # --- [V16.3 MANHATTAN MAXIMAL PRECISION] ---
         # --- [V16.5 MANHATTAN MAXIMAL PRECISION] ---
         elif market_name == 'MANHATTAN':
             # 1. BIJI HARMONY MANHATTAN (Biji 1, 3, 5, 8) -> Result 7101 biji 9/0
@@ -601,6 +625,27 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
                 score -= 35 
             else:
                 score += 20 # Beri bonus untuk angka non-twin di belakang
+
+        # --- [V16.6 OREGON MAXIMAL PRECISION] ---
+        elif 'OREGON' in market_name:
+            # 1. BIJI KHUSUS OREGON (Biji 3, 4, 6, 8, 9)
+            if biji_f in [3, 4, 6, 8, 9]: 
+                score += 85 
+            
+            # 2. VERTICAL VERIFICATION
+            # Bonus jika Angka Depan 2D (Kepala) sama dengan Ekor P1 periode lalu
+            if h == last_p1[3]: score += 50
+            
+            # 3. KOP VIBRATION
+            # Oregon sering bawa Kop periode lalu (last_p1[1]) jadi As/Kop lagi
+            if line[0] == last_p1[1] or line[1] == last_p1[1]:
+                score += 35
+                
+            # 4. ANTI-TWIN (Oregon jarang twin murni di belakang)
+            if h == t: 
+                score -= 40
+            else:
+                score += 15
                 
         # --- [GENERAL MARKETS] ---
         else:
