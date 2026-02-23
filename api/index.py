@@ -89,6 +89,27 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         scores[str((int(d0_p1[3]) - 1) % 10)] += 15
         scores[ID.get(d0_p1[1], '0')] += 10 
 
+    elif market_name == 'SYDNEY LOTTO':
+        # --- SYDNEY SEQUENTIAL SUB-LOGIC V14.6 ---
+        # 1. Pola Angka Tetangga (Neighboring Digits)
+        # Sydney sering mengeluarkan angka yang bergeser +/- 1 dari P1 terakhir
+        for digit in d0_p1:
+            val = int(digit)
+            scores[str((val + 1) % 10)] += 22
+            scores[str((val - 1) % 10)] += 22
+            
+        # 2. Resonansi Mistik Baru (MB)
+        # Sydney memiliki keterikatan kuat dengan pola Mistik Baru
+        for digit in d0_p1:
+            scores[MB.get(digit, '0')] += 25
+            
+        # 3. Analisa Angka "Dingin" (Cold Numbers)
+        # Mengambil angka yang tidak muncul di 5 periode terakhir P1
+        p1_short = "".join([res[0] for res in all_res_data[:5]])
+        for n in "0123456789":
+            if n not in p1_short:
+                scores[n] += 30 # Angka yang lama tidak muncul di Sydney sering meledak
+    
     elif market_name == 'COLORADO':
         scores[MB.get(d0_p1[1], '0')] += 20
         scores[ID.get(d0_p1[2], '0')] += 20
@@ -106,83 +127,78 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
 
 def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, count=10):
     """
-    ULTIMATE MULTI-LAYER VERIFICATION ENGINE V14.6 - ELITE EDITION
-    Special Sub-Logic: Cambodia Recursive Pattern
+    ULTIMATE MULTI-LAYER VERIFICATION ENGINE V14.6
+    Special Sub-Logic: Sydney & Cambodia Optimization
     """
-    # 1. POSITIONAL MAPPING & RESONANCE (LAYER 1)
+    # 1. POSITIONAL MAPPING
     res_map = {
         'as': [n for n in bbfs_list if n in [ML.get(last_p1[0]), TY.get(last_p1[0]), ID.get(last_p1[0])]],
         'kop': [n for n in bbfs_list if n in [ML.get(last_p1[1]), TY.get(last_p1[1]), ID.get(last_p1[1])]],
         'kep': [n for n in bbfs_list if n in [ML.get(last_p1[2]), TY.get(last_p1[2]), ID.get(last_p1[2])]],
         'eko': [n for n in bbfs_list if n in [ML.get(last_p1[3]), TY.get(last_p1[3]), ID.get(last_p1[3])]]
     }
-
     for pos in res_map:
         if not res_map[pos]: res_map[pos] = bbfs_list
 
-    # 2. BRUTE-FORCE PROBABILITY SCORING (LAYER 2)
+    # 2. SCORING LAYER
     scored_2d = []
     raw_combinations = list(itertools.permutations(bbfs_list, 2))
     
-    for combo in raw_combinations:
-        h, t = combo
+    for h, t in raw_combinations:
         line = f"{h}{t}"
         score = 0
-        
-        # --- [UNIVERSAL SCORING] ---
-        if h in [ML.get(last_p1[2]), ID.get(last_p1[2])]: score += 15
-        if t in [ML.get(last_p1[3]), ID.get(last_p1[3])]: score += 15
-        
         biji = (int(h) + int(t))
-        biji_final = (biji if biji < 10 else biji % 9 or 9)
+        biji_f = (biji if biji < 10 else biji % 9 or 9)
         
-        # --- [CAMBODIA RECURSIVE SUB-LOGIC] ---
-        if market_name == 'CAMBODIA':
-            # Cambodia Sangat Kuat di Pola Biji Segitiga (1, 4, 7)
-            if biji_final in [1, 4, 7]: score += 60 
+        # --- [SYDNEY SPECIFIC RACIKAN] ---
+        if market_name == 'SYDNEY LOTTO':
+            # Sydney sangat identik dengan Biji 2, 5, 8 (Pola Diagonal)
+            if biji_f in [2, 5, 8]: score += 65
+            # Bonus jika angka 2D adalah urutan naik/turun (Sequential)
+            if abs(int(h) - int(t)) == 1: score += 40
+            # Verifikasi terhadap Mistik Baru Ekor terakhir
+            if t == MB.get(last_p1[3]): score += 35
             
-            # Gema Tyseen (Ekor P1 terakhir sering memantul ke 2D depan/belakang)
+        # --- [CAMBODIA SPECIFIC RACIKAN] ---
+        elif market_name == 'CAMBODIA':
+            if biji_f in [1, 4, 7]: score += 60
             if t == TY.get(last_p1[3]): score += 45
-            if h == TY.get(last_p1[2]): score += 35
-            
-            # Delta Resonance: Selisih P1 terakhir
             delta = abs(int(last_p1[2]) - int(last_p1[3]))
             if str(delta) in line: score += 25
-        
-        # --- [OTHER MARKETS SCORING] ---
+
+        # --- [GENERAL MARKETS] ---
         else:
             if market_name in ['HONGKONG POOLS', 'MACAU', 'SINGAPORE POOLS']:
-                if biji_final in [1, 4, 7, 9]: score += 30
+                if biji_f in [1, 4, 7, 9]: score += 30
             else:
-                if biji_final in [2, 5, 8, 3]: score += 30
-            
+                if biji_f in [2, 5, 8, 3]: score += 30
+        
         if h == t: score -= 20
         scored_2d.append((line, score))
 
     scored_2d.sort(key=lambda x: x[1], reverse=True)
     top2 = [x[0] for x in scored_2d[:count]]
 
-    # 3. 3D & 4D PRECISION INJECTION (LAYER 3 & 4)
+    # 3. 3D & 4D CONSTRUCTION (LAYER 3 & 4)
     top3, top4 = [], []
-    
-    for i, line_2d in enumerate(top2):
+    for i, l2 in enumerate(top2):
         k_idx = i % len(res_map['kop'])
         a_idx = i % len(res_map['as'])
         
         kop = res_map['kop'][k_idx]
-        as_node = res_map['as'][a_idx]
+        asn = res_map['as'][a_idx]
         
-        # Validasi Anti-Crash Posisi
-        if kop == line_2d[0]:
+        # Sydney Anti-Crash: Jika angka Kop ganjil, pastikan As genap (atau sebaliknya)
+        # Pola keseimbangan ini sering terjadi di Sydney Lotto
+        if market_name == 'SYDNEY LOTTO':
+            if int(kop) % 2 == int(l2[0]) % 2:
+                kop = bbfs_list[(bbfs_list.index(kop) + 1) % len(bbfs_list)]
+
+        if kop == l2[0]: 
             kop = bbfs_list[(bbfs_list.index(kop) + 1) % len(bbfs_list)]
             
-        # Untuk Cambodia, konstruksi 4D menggunakan pola ganjil-genap yang lebih variatif
-        if market_name == 'CAMBODIA' and i > 5:
-             # Rotasi tambahan untuk 5 line terbawah agar tidak monoton
-             as_node = bbfs_list[(a_idx + 2) % len(bbfs_list)]
-
-        top3.append(f"{kop}{line_2d}")
-        top4.append(f"{as_node}{kop}{line_2d}")
+        top3.append(f"{kop}{l2}")
+        top4.append(f"{asn}{kop}{l2}")
 
     return top2, top3, top4
 
