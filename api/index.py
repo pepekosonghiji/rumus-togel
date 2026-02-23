@@ -163,27 +163,43 @@ def fetch_results(market_code):
             if market_code == "HK_SPECIAL":
                 table = soup.find('table')
                 return [[tds[1].text.strip()] for row in table.find('tbody').find_all('tr') if (tds := row.find_all('td')) and len(tds) >= 2 and tds[1].text.strip().isdigit()][:40]
+            
             else:
                 table = soup.find('table', class_='table-history')
                 if not table: return []
                 results = []
-                for row in table.find('tbody').find_all('tr'):
+                
+                rows = table.find('tbody').find_all('tr')
+                for row in rows:
                     tds = row.find_all('td')
                     if len(tds) >= 3:
-                        # Logic Deteksi Kolom Prize 1, 2, 3
-                        if market_code == 'm17' or len(tds) < 5:
-                            p1 = re.sub(r'\D', '', tds[2].text.strip())
-                            if len(p1) == 4: results.append([p1])
-                        else:
-                            p1 = re.sub(r'\D', '', tds[3].text.strip())
-                            p2 = re.sub(r'\D', '', tds[4].text.strip())
-                            p3 = re.sub(r'\D', '', tds[5].text.strip())
+                        # --- PENENTUAN INDEKS PRESISI ---
+                        # Jika kolom banyak (Cambodia/Washingmid), Prize 1 ada di index 3
+                        # Jika kolom sedikit (Macau), Prize 1 ada di index 2
+                        
+                        if len(tds) >= 6: # Struktur Cambodia (6 kolom: Tgl, Hari, Periode, P1, P2, P3)
+                            p1_raw = tds[3]
+                            p2_raw = tds[4]
+                            p3_raw = tds[5]
+                            
+                            p1 = re.sub(r'\D', '', p1_raw.find('a').text if p1_raw.find('a') else p1_raw.text)
+                            p2 = re.sub(r'\D', '', p2_raw.find('a').text if p2_raw.find('a') else p2_raw.text)
+                            p3 = re.sub(r'\D', '', p3_raw.find('a').text if p3_raw.find('a') else p3_raw.text)
+                            
                             if len(p1) == 4: results.append([p1, p2, p3])
+                        
+                        else: # Struktur Macau / Standar (3-4 kolom)
+                            target_idx = 2
+                            p1_raw = tds[target_idx]
+                            p1 = re.sub(r'\D', '', p1_raw.find('a').text if p1_raw.find('a') else p1_raw.text)
+                            
+                            if len(p1) == 4: results.append([p1])
+                            
                 return results[:40]
     except Exception as e:
         print(f"Fetch Error: {e}")
         return []
-
+        
 @app.route('/', methods=['GET', 'POST'])
 def index():
     analysis, selected = None, None
