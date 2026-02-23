@@ -392,6 +392,27 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         scores[TY.get(eko_p1_last)] += 25 # Angka 9 tetap kuat
         scores['0'] += 15 # Angka 0 tetap dijaga karena muncul di 7101
 
+    elif market_name == 'TORONTOEVE':
+        # --- [V16.7 TORONTOEVE MIRROR-CHAIN LOGIC] ---
+        
+        # 1. P2 Mirror Impact (P2: 7916)
+        # Toronto sering menarik Indeks dari As/Kop P2 (79 -> 24)
+        as_p2 = all_res_data[0][1][0]
+        kop_p2 = all_res_data[0][1][1]
+        scores[ID.get(as_p2)] += 28 # Indeks 7 adalah 2
+        scores[ID.get(kop_p2)] += 28 # Indeks 9 adalah 4
+
+        # 2. Ekor Jump (P1: 0265 -> 5)
+        # Ekor 5 sering berubah jadi Tyseen (8) atau Mistik Lama (2)
+        eko_p1 = d0_p1[3]
+        scores[TY.get(eko_p1)] += 25 # Angka 8
+        scores[ML.get(eko_p1)] += 20 # Angka 2
+
+        # 3. Toronto AI Strength (AI 01)
+        # Menjaga angka 0 dan 1 tetap stabil di posisi atas
+        scores['0'] += 15
+        scores['1'] += 15
+
     elif 'OREGON' in market_name:
         # --- [V16.6 OREGON SINGLE-PRIZE LOGIC] ---
         # Karena Oregon hanya P1, kita gunakan perbandingan antar periode (T-1, T-2)
@@ -625,6 +646,24 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
                 score -= 35 
             else:
                 score += 20 # Beri bonus untuk angka non-twin di belakang
+
+        # --- [V16.7 TORONTOEVE MAXIMAL PRECISION] ---
+        elif market_name == 'TORONTOEVE':
+            # 1. BIJI FAVORIT TORONTO (Biji 1, 2, 4, 7)
+            if biji_f in [1, 2, 4, 7]: 
+                score += 85 
+            
+            # 2. POSITION VERIFICATION
+            # Jika Kepala 2D adalah Mistik Baru dari Ekor P1 (5 -> 4)
+            if h == MB.get(last_p1[3]): score += 45
+            
+            # 3. CHAIN-INDEX CHECK
+            # Jika Ekor 2D adalah Indeks dari As P1 (0 -> 5)
+            if t == ID.get(last_p1[0]): score += 40
+            
+            # 4. ANTI-TWIN POSITIVE
+            # Toronto jarang twin, tapi kalau ada twin biasanya di tengah (Kop-Kepala)
+            if h == t: score -= 30
 
         # --- [V16.6 OREGON MAXIMAL PRECISION] ---
         elif 'OREGON' in market_name:
