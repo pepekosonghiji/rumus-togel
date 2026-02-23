@@ -195,9 +195,9 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
 
     # URUTKAN & PAKSA 6 DIGIT
     sorted_res = sorted(scores.items(), key=lambda x: x[1], reverse=True)
-    return [x[0] for x in sorted_res[:6]]
+    return [x[0] for x in sorted_res[:6]], scores
 
-def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, count=10):
+def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, count=10):
     """
     ULTIMATE MULTI-LAYER VERIFICATION ENGINE V14.8
     Special Sub-Logic: Sydney, Cambodia, & Busan Pools Optimization
@@ -337,13 +337,13 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, count=10):
 
 def get_comprehensive_logic(all_res_data, m_name):
     d0_p1 = all_res_data[0][0] # Ambil P1 terakhir (4 digit)
-    bbfs_raw = get_weighted_bbfs_v14_1(all_res_data, m_name) 
+    bbfs_raw, scores_data = get_weighted_bbfs_v14_1(all_res_data, m_name) 
     
     # 2D Belakang untuk Shio
     dua_d_belakang = int(d0_p1[2:])
     shio_idx = dua_d_belakang % 12
     
-    top2, top3, top4 = generate_titanium_lines_v14(bbfs_raw, d0_p1, m_name)
+    top2, top3, top4 = generate_titanium_lines_v14(bbfs_raw, d0_p1, m_name, scores_data)
     
     return {
         "bbfs": "".join(sorted(bbfs_raw)),
@@ -422,4 +422,6 @@ def index():
                 analysis = "error"
                 
     return render_template('index.html', markets=markets, analysis=analysis, selected=selected)
+
+if __name__ == '__main__':
     app.run(debug=True)
