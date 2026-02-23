@@ -225,26 +225,45 @@ def fetch_results(market_code):
                 url = "https://tabelsemalam.com/"
             else:
                 url = f"https://4upk6k0qz6.salamrupiah.com/history/result-mobile/{market_code}-pool-1"
+            
             r = client.get(url, headers=headers)
             soup = BeautifulSoup(r.text, 'html.parser')
+            
             if market_code == "HK_SPECIAL":
                 table = soup.find('table')
+                if not table: return []
                 return [tds[1].text.strip() for row in table.find('tbody').find_all('tr') 
                         if (tds := row.find_all('td')) and len(tds) >= 2 and tds[1].text.strip().isdigit()][:40]
+            
             else:
                 table = soup.find('table', class_='table-history')
+                if not table: return []
+                
                 rows = table.find('tbody').find_all('tr')
                 results = []
+                
                 for row in rows:
                     tds = row.find_all('td')
                     if len(tds) >= 3:
-                        anchor = tds[2].find('a')
-                        val = anchor.text.strip() if anchor else tds[2].text.strip()
+                        # LOGIC DETEKSI KOLOM:
+                        # Jika pasaran Cambodia/Lainnya, result biasanya ada di kolom indeks 3 (kolom ke-4)
+                        # karena ada kolom Periode di indeks 2.
+                        # Khusus Macau biasanya result langsung di indeks 2.
+                        
+                        target_idx = 3 if len(tds) >= 4 and market_code != 'm17' else 2
+                        
+                        val_cell = tds[target_idx]
+                        anchor = val_cell.find('a')
+                        val = anchor.text.strip() if anchor else val_cell.text.strip()
+                        
                         clean_val = re.sub(r'\D', '', val)
                         if len(clean_val) == 4:
                             results.append(clean_val)
+                            
                 return results[:40]
-    except: return []
+    except Exception as e:
+        print(f"Error fetching: {e}")
+        return []
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
