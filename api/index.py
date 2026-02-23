@@ -64,7 +64,26 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         # Verifikasi vibrasi angka tengah terakhir
         scores[ID.get(d0_p1[1], '0')] += 22
         scores[TY.get(d0_p1[2], '0')] += 20
-        
+
+    elif market_name == 'CAMBODIA':
+        # --- CAMBODIA ELITE SUB-LOGIC V14.6 ---
+        # 1. Lindungi Angka Indeks/Mirror dari P1, P2, P3 (Anti-Meleset)
+        all_p_digits = "".join([res[0] for res in all_res_data[:1]]) 
+        if len(all_res_data[0]) > 2:
+            all_p_digits += all_res_data[0][1] + all_res_data[0][2]
+            
+        for digit in set(all_p_digits):
+            scores[ID.get(digit)] += 28  # Indeks punya bobot tertinggi di Cambodia
+            scores[ML.get(digit)] += 18  # Mistik Lama sebagai cadangan
+            
+        # 2. Analisa Selisih (Delta) Kepala-Ekor
+        # Pola Cambodia sering muncul dari selisih P1 periode sebelumnya
+        d_kep = int(d0_p1[2])
+        d_eko = int(d0_p1[3])
+        delta = str(abs(d_kep - d_eko))
+        scores[delta] += 30
+        scores[TY.get(delta, '0')] += 20 # Tyseen dari selisih
+    
     elif market_name == 'MACAU':
         scores[str((int(d0_p1[3]) + 1) % 10)] += 15
         scores[str((int(d0_p1[3]) - 1) % 10)] += 15
@@ -87,11 +106,10 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
 
 def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, count=10):
     """
-    ULTIMATE MULTI-LAYER VERIFICATION ENGINE V14.5
-    Metode: Pathfinding Statistik + Cross-Validation Matrix
+    ULTIMATE MULTI-LAYER VERIFICATION ENGINE V14.6 - ELITE EDITION
+    Special Sub-Logic: Cambodia Recursive Pattern
     """
     # 1. POSITIONAL MAPPING & RESONANCE (LAYER 1)
-    # Mencari resonansi angka berdasarkan pola abadi dunia
     res_map = {
         'as': [n for n in bbfs_list if n in [ML.get(last_p1[0]), TY.get(last_p1[0]), ID.get(last_p1[0])]],
         'kop': [n for n in bbfs_list if n in [ML.get(last_p1[1]), TY.get(last_p1[1]), ID.get(last_p1[1])]],
@@ -99,14 +117,11 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, count=10):
         'eko': [n for n in bbfs_list if n in [ML.get(last_p1[3]), TY.get(last_p1[3]), ID.get(last_p1[3])]]
     }
 
-    # Fail-safe jika resonansi kosong (menggunakan global bbfs)
     for pos in res_map:
         if not res_map[pos]: res_map[pos] = bbfs_list
 
     # 2. BRUTE-FORCE PROBABILITY SCORING (LAYER 2)
-    # Kita tidak hanya pakai BBFS, tapi mengkalkulasi ulang semua kemungkinan 2D dari BBFS
     scored_2d = []
-    # Mengambil semua kombinasi unik dari BBFS (bolak-balik)
     raw_combinations = list(itertools.permutations(bbfs_list, 2))
     
     for combo in raw_combinations:
@@ -114,47 +129,58 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, count=10):
         line = f"{h}{t}"
         score = 0
         
-        # Verifikasi Pola Mistik/Indeks (Berlapis)
-        # Jika angka kepala/ekor adalah bayangan dari result terakhir, skor naik
+        # --- [UNIVERSAL SCORING] ---
         if h in [ML.get(last_p1[2]), ID.get(last_p1[2])]: score += 15
         if t in [ML.get(last_p1[3]), ID.get(last_p1[3])]: score += 15
         
-        # Verifikasi Sum-Biji (Metode 9-Root)
         biji = (int(h) + int(t))
         biji_final = (biji if biji < 10 else biji % 9 or 9)
         
-        # Filter Biji Sakti berdasarkan Cluster Market
-        if market_name in ['HONGKONG POOLS', 'MACAU', 'CAMBODIA', 'SINGAPORE POOLS']:
-            if biji_final in [1, 4, 7, 9]: score += 30
-        else:
-            if biji_final in [2, 5, 8, 3]: score += 30
+        # --- [CAMBODIA RECURSIVE SUB-LOGIC] ---
+        if market_name == 'CAMBODIA':
+            # Cambodia Sangat Kuat di Pola Biji Segitiga (1, 4, 7)
+            if biji_final in [1, 4, 7]: score += 60 
             
-        # Anti-Twin Jitu Filter
-        if h == t: score -= 20
+            # Gema Tyseen (Ekor P1 terakhir sering memantul ke 2D depan/belakang)
+            if t == TY.get(last_p1[3]): score += 45
+            if h == TY.get(last_p1[2]): score += 35
+            
+            # Delta Resonance: Selisih P1 terakhir
+            delta = abs(int(last_p1[2]) - int(last_p1[3]))
+            if str(delta) in line: score += 25
         
+        # --- [OTHER MARKETS SCORING] ---
+        else:
+            if market_name in ['HONGKONG POOLS', 'MACAU', 'SINGAPORE POOLS']:
+                if biji_final in [1, 4, 7, 9]: score += 30
+            else:
+                if biji_final in [2, 5, 8, 3]: score += 30
+            
+        if h == t: score -= 20
         scored_2d.append((line, score))
 
-    # Sortir 2D terbaik berdasarkan skor probabilitas dunia
     scored_2d.sort(key=lambda x: x[1], reverse=True)
     top2 = [x[0] for x in scored_2d[:count]]
 
     # 3. 3D & 4D PRECISION INJECTION (LAYER 3 & 4)
-    # Melakukan cross-check posisi As dan Kop untuk membentuk 3D/4D
     top3, top4 = [], []
     
     for i, line_2d in enumerate(top2):
-        # Seleksi Kop Berdasarkan Resonansi Statistik
-        # Menggunakan rotasi indeks agar distribusi angka merata namun tetap terverifikasi
         k_idx = i % len(res_map['kop'])
         a_idx = i % len(res_map['as'])
         
         kop = res_map['kop'][k_idx]
         as_node = res_map['as'][a_idx]
         
-        # Validasi Akhir: Jika angka Kop sama dengan angka Kepala, geser ke indeks berikutnya
+        # Validasi Anti-Crash Posisi
         if kop == line_2d[0]:
-            kop = res_map['kop'][(k_idx + 1) % len(res_map['kop'])]
+            kop = bbfs_list[(bbfs_list.index(kop) + 1) % len(bbfs_list)]
             
+        # Untuk Cambodia, konstruksi 4D menggunakan pola ganjil-genap yang lebih variatif
+        if market_name == 'CAMBODIA' and i > 5:
+             # Rotasi tambahan untuk 5 line terbawah agar tidak monoton
+             as_node = bbfs_list[(a_idx + 2) % len(bbfs_list)]
+
         top3.append(f"{kop}{line_2d}")
         top4.append(f"{as_node}{kop}{line_2d}")
 
