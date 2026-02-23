@@ -75,25 +75,6 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         scores[delta] += 30
         scores[TY.get(delta, '0')] += 20 # Tyseen dari selisih
 
-    elif market_name == 'WASHINGMID':
-        # --- [V16.10 WASHINGMID MID-PULSE LOGIC] ---
-        # 1. Cluster History (Data 2 Periode Lalu)
-        if len(all_res_data) > 2:
-            d2 = all_res_data[2][0] 
-            for digit in d2: scores[digit] += 18
-            
-        # 2. Mid-Vibration (P1: 0483)
-        # Indeks Kop (4 -> 9) dan Tyseen Kepala (8 -> 3)
-        scores[ID.get(d0_p1[1], '0')] += 35 
-        scores[TY.get(d0_p1[2], '0')] += 30 
-        
-        # 3. Tail-Echo (Merespon Ekor 9 di P2 & P3)
-        scores[ML.get('9')] += 25 
-        scores[MB.get('9')] += 20 
-        
-        # 4. Washing AI Anchor (AI 38)
-        scores['3'] += 20
-        scores['8'] += 20
     
     elif market_name == 'MACAU':
         scores[str((int(d0_p1[3]) + 1) % 10)] += 15
@@ -494,25 +475,6 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             # NEW: Mirror Balance (Jika H dan T adalah pasangan Indeks, skor naik)
             if ID.get(h) == t: score += 35
 
-        # --- [V16.10 WASHINGMID MAXIMAL PRECISION] ---
-        elif market_name == 'WASHINGMID':
-            # 1. BIJI HARMONY WASHINGMID (Biji 1, 3, 4, 8)
-            if biji_f in [1, 3, 4, 8]: 
-                score += 85 
-            
-            # 2. POSITION VERIFICATION (The 3-Anchor)
-            # Karena AI Mamang 38, verifikasi posisi 3 sebagai Kepala atau Ekor
-            if line[2] == '3' or line[3] == '3':
-                score += 45
-            
-            # 3. KOP-VIBRATION (Indeks Kop P1: 4 -> 9)
-            # Bonus jika Kop 4D menggunakan angka 9 atau 4
-            if line[1] in ['9', '4']:
-                score += 40
-                
-            # 4. ANTI-TWIN (Washingmid jarang twin di 2D belakang)
-            if h == t: score -= 35
-                
         # --- [CAMBODIA SPECIFIC RACIKAN] ---
         elif market_name == 'CAMBODIA':
             if biji_f in [1, 4, 7]: score += 60
