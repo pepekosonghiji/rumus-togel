@@ -56,30 +56,7 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
             shadow = "".join(res[1:])
             for n in set(shadow): scores[n] += 5
 
-    # --- 2. CLUSTER SUB-LOGIC ---
-    if market_name == 'WASHINGMID':
-        # --- [V16.10 WASHINGMID MID-PULSE LOGIC] ---
-        
-        # 1. Cluster History (Mempertahankan Logic Mamang)
-        if len(all_res_data) > 2:
-            d2 = all_res_data[2][0] 
-            for digit in d2: scores[digit] += 18
-            
-        # 2. Mid-Vibration (P1: 0483)
-        # Indeks Kop (4 -> 9) dan Tyseen Kepala (8 -> 3)
-        scores[ID.get(d0_p1[1], '0')] += 35 # Angka 9 (Sangat Kuat)
-        scores[TY.get(d0_p1[2], '0')] += 30 # Angka 3 (Sesuai AI 38)
-        
-        # 3. Tail-Echo (Merespon Ekor 9 di P2 & P3)
-        # Jika Prize bawah punya ekor kembar, biasanya lari ke Mistik di P1
-        scores[ML.get('9')] += 25 # Mistik Lama 9 adalah 6
-        scores[MB.get('9')] += 20 # Mistik Baru 9 adalah 3
-        
-        # 4. Washing AI Anchor (AI 38)
-        scores['3'] += 20
-        scores['8'] += 20
-
-    elif market_name == 'CAMBODIA':
+    if market_name == 'CAMBODIA':
         # --- CAMBODIA ELITE SUB-LOGIC V14.6 ---
         # 1. Lindungi Angka Indeks/Mirror dari P1, P2, P3 (Anti-Meleset)
         all_p_digits = "".join([res[0] for res in all_res_data[:1]]) 
@@ -97,6 +74,26 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         delta = str(abs(d_kep - d_eko))
         scores[delta] += 30
         scores[TY.get(delta, '0')] += 20 # Tyseen dari selisih
+
+    elif market_name == 'WASHINGMID':
+        # --- [V16.10 WASHINGMID MID-PULSE LOGIC] ---
+        # 1. Cluster History (Data 2 Periode Lalu)
+        if len(all_res_data) > 2:
+            d2 = all_res_data[2][0] 
+            for digit in d2: scores[digit] += 18
+            
+        # 2. Mid-Vibration (P1: 0483)
+        # Indeks Kop (4 -> 9) dan Tyseen Kepala (8 -> 3)
+        scores[ID.get(d0_p1[1], '0')] += 35 
+        scores[TY.get(d0_p1[2], '0')] += 30 
+        
+        # 3. Tail-Echo (Merespon Ekor 9 di P2 & P3)
+        scores[ML.get('9')] += 25 
+        scores[MB.get('9')] += 20 
+        
+        # 4. Washing AI Anchor (AI 38)
+        scores['3'] += 20
+        scores['8'] += 20
     
     elif market_name == 'MACAU':
         scores[str((int(d0_p1[3]) + 1) % 10)] += 15
