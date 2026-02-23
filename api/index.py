@@ -290,6 +290,26 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         # Menambahkan bobot untuk angka yang membentuk harmoni biji 9
         for n in "0479":
             scores[n] += 15
+
+    elif market_name == 'PENANG':
+        # --- PENANG DIAGONAL-MIRROR LOGIC V15.8 ---
+        
+        # 1. P2 & P3 Mirroring (P2: 2509, P3: 4374)
+        # Penang sangat sering mengambil Indeks dari angka tengah P2
+        if len(all_res_data[0]) >= 3:
+            p2_mid = all_res_data[0][1][1:3] # Angka 50
+            for d in p2_mid:
+                scores[ID.get(d)] += 28 # Indeks 5->0, 0->5 (Double 0/5 protection)
+                scores[ML.get(d)] += 18
+        
+        # 2. Resonansi Angka 4 (Ekor P3: 4374)
+        # Ekor P3 yang sama dengan Kop P1 (9465) sering memicu angka Mistik Baru
+        scores[MB.get('4')] += 25 # Angka 5
+        
+        # 3. Penang "High-Frequency" (Berdasarkan AM 1458)
+        # Mengunci angka 1, 5, dan 8 sebagai poros BBFS
+        for n in "158":
+            scores[n] += 15
     
     # --- 3. GLOBAL SEED VERIFICATION ---
     seeds = [ML.get(d0_p1[0]), ID.get(d0_p1[2]), TY.get(d0_p1[3]), MB.get(d0_p1[1])]
@@ -414,6 +434,22 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
                 
             # 4. Injeksi Angka 0 (Anchor)
             if '0' in line: score += 30
+
+        # --- [PENANG MAXIMAL PRECISION V15.8] ---
+        elif market_name == 'PENANG':
+            # 1. Biji Favorit Penang (2, 4, 7, 8)
+            if biji_f in [2, 4, 7, 8]: score += 70
+            
+            # 2. Diagonal Check
+            # Jika angka depan 2D adalah Indeks dari ekor P1 (9465 -> 5)
+            # Indeks 5 adalah 0. Jika ada angka 0 di depan, skor naik.
+            if h == ID.get(last_p1[3]): score += 40
+            
+            # 3. Bonus AI (0 atau 1)
+            if '0' in line or '1' in line: score += 30
+            
+            # 4. Anti-Twin di 2D Belakang (Penang jarang twin belakang)
+            if h == t: score -= 25
                 
         # --- [GENERAL MARKETS] ---
         else:
