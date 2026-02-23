@@ -365,6 +365,27 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         # Menjaga angka 0 dan 8 agar tetap di posisi BBFS teratas
         scores['0'] += 15
         scores['8'] += 15
+
+    elif market_name == 'MANHATTAN':
+        # --- [V16.3 MANHATTAN BIG APPLE LOGIC] ---
+        
+        # 1. Twin-Impact P2 (P2: 6331)
+        # Manhattan sering menarik Indeks atau Mistik dari twin P2
+        # Indeks 3 -> 8, Mistik Lama 3 -> 8, Mistik Baru 3 -> 9
+        scores['8'] += 30 
+        scores['9'] += 25
+        
+        # 2. Zero-Absen Protection
+        # Jika P1 ekornya 2, Manhattan sering lari ke Tyseen 2 -> 9
+        # Atau Mistik Baru 2 -> 6
+        eko_p1 = d0_p1[3]
+        scores[TY.get(eko_p1)] += 28 # Angka 9
+        scores[MB.get(eko_p1)] += 20 # Angka 6
+        
+        # 3. Manhattan AI Booster (AI 57)
+        # Memaksa angka 7 untuk naik ke BBFS 6D
+        scores['7'] += 35
+        scores['5'] += 20
         
     # --- 3. GLOBAL SEED VERIFICATION ---
     seeds = [ML.get(d0_p1[0]), ID.get(d0_p1[2]), TY.get(d0_p1[3]), MB.get(d0_p1[1])]
@@ -541,6 +562,23 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             # 3. GREECE PATTERN: CROSS-P3
             # Jika Ekor 2D sama dengan angka depan P3 (4828 -> 4)
             if t == all_res_data[0][2][0]: score += 35
+            
+            # 4. ANTI-TWIN BELAKANG
+            if h == t: score -= 30
+
+        # --- [V16.3 MANHATTAN MAXIMAL PRECISION] ---
+        elif market_name == 'MANHATTAN':
+            # 1. BIJI FAVORIT MANHATTAN (Biji 1, 3, 5, 8)
+            if biji_f in [1, 3, 5, 8]: 
+                score += 85 # Skor Filter Tinggi
+            
+            # 2. HEAD-TO-HEAD POSITION
+            # Jika Ekor 2D adalah Mistik Lama dari Kepala P1 (5 -> 2)
+            if t == ML.get(last_p1[0]): score += 40
+            
+            # 3. THE 7-VIBRATION
+            # Karena AI Mamang 57, kita beri bonus untuk line yang punya angka 7
+            if '7' in line: score += 35
             
             # 4. ANTI-TWIN BELAKANG
             if h == t: score -= 30
