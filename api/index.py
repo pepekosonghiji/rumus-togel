@@ -357,9 +357,9 @@ def get_comprehensive_logic(all_res_data, m_name):
     }
 
 def fetch_results(market_code):
-    headers = {'User-Agent': 'Mozilla/5.0'}
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
     try:
-        with httpx.Client(timeout=10.0, verify=False) as client:
+        with httpx.Client(timeout=15.0, verify=False, follow_redirects=True) as client:
             if market_code == "HK_SPECIAL":
                 url = "https://tabelsemalam.com/"
                 r = client.get(url, headers=headers)
@@ -369,12 +369,16 @@ def fetch_results(market_code):
                 res = []
                 for row in table.find('tbody').find_all('tr'):
                     tds = row.find_all('td')
-                    if len(tds) >= 2:
-                        val = re.sub(r'\D', '', tds[1].text.strip())
-                        if len(val) == 4: res.append([val])
+                    if len(tds) >= 4: # Pastikan kolom cukup untuk P1, P2, P3
+                        p1 = re.sub(r'\D', '', tds[1].text.strip())
+                        p2 = re.sub(r'\D', '', tds[2].text.strip())
+                        p3 = re.sub(r'\D', '', tds[3].text.strip())
+                        if len(p1) == 4:
+                            # Masukkan ketiga prize ke dalam list
+                            res.append([p1, p2, p3])
                 return res[:40]
             
-            # Jalur Umum
+            # Jalur Umum (Tetap sama, tapi tambahkan proteksi list)
             url = f"https://4upk6k0qz6.salamrupiah.com/history/result-mobile/{market_code}-pool-1"
             r = client.get(url, headers=headers)
             soup = BeautifulSoup(r.text, 'html.parser')
@@ -392,10 +396,10 @@ def fetch_results(market_code):
 
                     p1 = get_num(tds[3])
                     if len(p1) == 4:
-                        if len(tds) >= 6:
-                            results.append([p1, get_num(tds[4]), get_num(tds[5])])
-                        else:
-                            results.append([p1])
+                        # Proteksi: Jika P2 atau P3 kosong di web, isi '0000' biar gak error
+                        p2 = get_num(tds[4]) if len(tds) >= 5 else "0000"
+                        p3 = get_num(tds[5]) if len(tds) >= 6 else "0000"
+                        results.append([p1, p2, p3])
             return results[:40]
     except Exception as e:
         print(f"Fetch Error: {e}")
