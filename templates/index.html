@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AI ENGINE V12.4 - DANANG SPECIALIST</title>
+    <title>AI ENGINE V14.1 - TITANIUM EDITION</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
@@ -18,7 +18,6 @@
         .font-orbitron { font-family: 'Orbitron', sans-serif; }
         .main-container { max-width: 500px; margin: 0 auto; }
 
-        /* Area Screenshot HD */
         #capture-area { 
             background: #0d1117; 
             border-radius: 24px; 
@@ -26,6 +25,8 @@
             width: 100%;
             box-sizing: border-box;
             border: 1px solid rgba(0, 242, 255, 0.1);
+            position: relative;
+            overflow: hidden;
         }
 
         .num-card {
@@ -44,6 +45,17 @@
             text-shadow: 0 0 8px rgba(255,255,255,0.3);
         }
         .btn-glow:active { transform: scale(0.96); }
+
+        .shadow-badge {
+            background: linear-gradient(90deg, #1e293b, #0f172a);
+            border: 1px solid #1e40af;
+            color: #60a5fa;
+            font-size: 8px;
+            padding: 2px 8px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            font-weight: 800;
+        }
     </style>
 </head>
 <body>
@@ -57,23 +69,30 @@
                 <option value="{{ m }}" {% if selected == m %}selected{% endif %}>{{ m }}</option>
                 {% endfor %}
             </select>
-            <button type="submit" class="w-full bg-gradient-to-r from-cyan-600 to-blue-700 text-white p-4 rounded-xl font-bold uppercase text-xs tracking-[2px] shadow-lg">Mulai Sinkronisasi V12.4</button>
+            <button type="submit" class="w-full bg-gradient-to-r from-cyan-600 to-blue-700 text-white p-4 rounded-xl font-bold uppercase text-xs tracking-[2px] shadow-lg">Sinkronisasi TITANIUM V14.1</button>
         </form>
     </div>
 
     {% if analysis == "error" %}
-    <div class="p-4 bg-red-900/20 border border-red-500/50 rounded-xl text-center text-red-500 font-bold uppercase text-xs">Koneksi Gagal / Data History Tidak Cukup</div>
+    <div class="p-4 bg-red-900/20 border border-red-500/50 rounded-xl text-center text-red-500 font-bold uppercase text-xs">Koneksi Gagal / Data Prize 1-3 Tidak Ditemukan</div>
     {% elif analysis %}
 
     <div id="capture-area">
-        <div class="flex justify-between items-start border-b border-gray-800 pb-5 mb-5">
+        <div class="absolute top-0 right-0 p-4 opacity-10">
+            <div class="text-4xl font-bold font-orbitron text-white">V14</div>
+        </div>
+
+        <div class="flex justify-between items-start border-b border-gray-800 pb-5 mb-5 relative">
             <div>
-                <div class="text-[9px] text-cyan-500 font-bold tracking-[4px] uppercase mb-1">Danang Specialist System</div>
+                <div class="flex items-center gap-2 mb-1">
+                    <div class="shadow-badge">P1-P2-P3 Scanning</div>
+                    <div class="text-[9px] text-cyan-500 font-bold tracking-[2px] uppercase">TITANIUM EDITION</div>
+                </div>
                 <h2 class="text-3xl font-orbitron font-extrabold text-white uppercase tracking-tighter">{{ selected }}</h2>
                 <div id="date-now" class="text-[10px] text-gray-500 mt-1 font-bold uppercase tracking-widest"></div>
             </div>
             <div class="text-right">
-                <div class="text-[10px] text-gray-400 uppercase font-bold mb-1">Result</div>
+                <div class="text-[10px] text-gray-400 uppercase font-bold mb-1">Last Prize 1</div>
                 <div class="text-3xl font-bold text-white font-mono tracking-tighter">{{ analysis.last_res }}</div>
             </div>
         </div>
@@ -106,8 +125,11 @@
         </div>
 
         <div class="bg-gradient-to-r from-cyan-950/40 to-transparent border-l-4 border-cyan-500 p-5 rounded-r-2xl mb-6 shadow-inner">
-            <div class="text-[10px] text-gray-400 uppercase font-bold tracking-[5px] mb-3">Target BBFS Precision</div>
-            <div class="flex justify-start gap-4 text-4xl font-bold text-cyan-400 tracking-[8px] font-mono">
+            <div class="flex justify-between items-center mb-3">
+                <div class="text-[10px] text-gray-400 uppercase font-bold tracking-[5px]">BBFS 6-DIGIT PRECISION</div>
+                <div class="text-[8px] bg-cyan-900/50 px-2 py-0.5 rounded text-cyan-400 font-bold">V14.1</div>
+            </div>
+            <div class="flex justify-start gap-4 text-5xl font-bold text-cyan-400 tracking-[10px] font-mono">
                 {{ analysis.bbfs }}
             </div>
         </div>
@@ -130,7 +152,7 @@
         <div class="space-y-6">
             <div>
                 <div class="text-[10px] text-cyan-700 font-bold uppercase mb-3 tracking-widest flex items-center gap-2">
-                    <span class="w-2 h-2 bg-cyan-700 rounded-full"></span> Top 10 Line 2D
+                    <span class="w-2 h-2 bg-cyan-700 rounded-full animate-pulse"></span> Top 10 Line 2D (Spesifik)
                 </div>
                 <div class="grid-numbers">
                     {% for n in analysis.top2d %}
@@ -149,7 +171,7 @@
                     </div>
                 </div>
                 <div>
-                    <div class="text-[10px] text-purple-700 font-bold uppercase mb-3 tracking-widest">Top 4D Invest</div>
+                    <div class="text-[10px] text-purple-700 font-bold uppercase mb-3 tracking-widest">Top 4D Penembak Jitu</div>
                     <div class="space-y-2">
                         {% for n in analysis.top4d %}
                         <div class="bg-gray-900/80 p-2 rounded-lg text-center font-mono text-xs text-purple-200 border border-purple-900/20">{{ n }}</div>
@@ -160,7 +182,7 @@
         </div>
 
         <div class="mt-8 pt-4 border-t border-gray-800/50 text-center">
-            <div class="text-[9px] text-gray-600 uppercase tracking-[6px] font-bold">V12.4 Neural System Secured</div>
+            <div class="text-[9px] text-gray-600 uppercase tracking-[6px] font-bold">V14.1 Titanium Penembak Jitu Secured</div>
         </div>
     </div>
 
@@ -170,19 +192,20 @@
     </div>
 
     <textarea id="copyTarget" class="hidden">
-📊 ANALISA AI V12.4 [{{ selected }}]
+📊 ANALISA TITANIUM V14.1 [{{ selected }}]
 Result: {{ analysis.last_res }}
 AM: {{ analysis.am }} | AI: {{ analysis.ai }}
-BBFS: {{ analysis.bbfs }}
+BBFS: {{ analysis.bbfs }} (FIX 6D)
 SHIO: {{ analysis.shio }}
 2D: {{ analysis.top2d | join(', ') }}
+3D: {{ analysis.top3d | join(', ') }}
+4D: {{ analysis.top4d | join(', ') }}
     </textarea>
     {% endif %}
 
 </div>
 
 <script>
-    // Update Waktu Realtime
     function updateClock() {
         const d = new Date();
         const options = { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' };
@@ -201,23 +224,21 @@ SHIO: {{ analysis.shio }}
     async function takeScreenshot() {
         const area = document.getElementById('capture-area');
         const btn = document.getElementById('ss-btn');
-        
-        // Prevent scroll issue
         window.scrollTo(0,0);
-        btn.innerText = "PROSES ENCODING HD...";
+        btn.innerText = "TITANIUM ENCODING HD...";
         btn.disabled = true;
 
         try {
             const canvas = await html2canvas(area, {
                 backgroundColor: '#050608',
-                scale: 3, // Skala 3 untuk hasil tajam (HD)
+                scale: 3,
                 logging: false,
                 useCORS: true,
                 allowTaint: true
             });
 
             const link = document.createElement('a');
-            link.download = `mamang_V124_${Date.now()}.png`;
+            link.download = `V14_Titanium_${Date.now()}.png`;
             link.href = canvas.toDataURL("image/png", 1.0);
             link.click();
         } catch (err) {
