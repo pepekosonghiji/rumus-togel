@@ -33,15 +33,18 @@ TARGET_POOLS = {
 
 def get_weighted_bbfs_v13(all_res, market_name):
     scores = {str(n): 0 for n in range(10)}
+    d0 = all_res[0]
     
-    # --- 1. METODE RPM (Recursive Pattern Mapping) ---
-    # Analisa pola lompatan angka dari 40 result terakhir
-    for i in range(len(all_res)-1):
-        curr = all_res[i]
-        # Jika ada Twin belakang (seperti 22), tarik angka mistik/index-nya untuk putaran depan
-        if curr[2] == curr[3]: 
-            scores[ML.get(curr[2], '0')] += 20 
-            scores[ID.get(curr[2], '0')] += 15 
+    # --- 1. FREKUENSI DINAMIS (Optimasi 6 Digit) ---
+    freq = Counter("".join(all_res[:30]))
+    for n in "0123456789":
+        f_val = freq.get(n, 0)
+        # Berikan proteksi pada angka yang baru keluar (Repeat Number)
+        if n in d0: 
+            scores[n] += 15 
+        # Angka dingin tetap diberi panggung
+        if f_val < 3: scores[n] += 20
+        else: scores[n] += f_val * 1.2
 
     # --- 2. DYNAMIC FREQUENCY ANALYSIS ---
     # Memberikan bobot pada angka 'Dingin' (jarang keluar) agar tidak luput
@@ -57,7 +60,17 @@ def get_weighted_bbfs_v13(all_res, market_name):
     
     # --- 3. CLUSTER SUB-LOGIC (LOCKED & ISOLATED) ---
     # Gunakan elif agar satu pasaran hanya diproses oleh satu sub-logic spesifik
-    if market_name == 'MACAU':
+    if market_name == 'WASHING-MID':
+        # Metode Mirror-Gap: Cek result 2 periode ke belakang
+        if len(all_res) > 2:
+            d2 = all_res[2]
+            # Washingmid suka menarik kembali angka dari 2 hari lalu
+            for digit in d2: scores[digit] += 18
+        # Verifikasi angka tengah
+        scores[ID.get(d0[1], '0')] += 22
+        scores[TY.get(d0[2], '0')] += 20
+        
+    elif market_name == 'MACAU':
         next_val = str((int(d0[3]) + 1) % 10)
         prev_val = str((int(d0[3]) - 1) % 10)
         scores[next_val] += 15
