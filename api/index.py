@@ -90,25 +90,31 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         scores[ID.get(d0_p1[1], '0')] += 10 
 
     elif market_name == 'SYDNEY LOTTO':
-        # --- SYDNEY SEQUENTIAL SUB-LOGIC V14.6 ---
-        # 1. Pola Angka Tetangga (Neighboring Digits)
-        # Sydney sering mengeluarkan angka yang bergeser +/- 1 dari P1 terakhir
+        # --- SYDNEY ELITE HYBRID LOGIC V14.7 (COMBINED) ---
+        
+        # 1. Pola Angka Tetangga & Lompat (Neighboring & Skip-Two)
+        # Menangkap pergerakan angka +/- 1 dan +/- 2 dari P1 terakhir
         for digit in d0_p1:
             val = int(digit)
-            scores[str((val + 1) % 10)] += 22
+            scores[str((val + 1) % 10)] += 22 # Tetangga
             scores[str((val - 1) % 10)] += 22
+            scores[str((val + 2) % 10)] += 20 # Lompat 2 (V14.7 Update)
+            scores[str((val - 2) % 10)] += 20
             
-        # 2. Resonansi Mistik Baru (MB)
-        # Sydney memiliki keterikatan kuat dengan pola Mistik Baru
+        # 2. Resonansi Mistik & Mirror (MB & ID)
+        # Sydney sangat sensitif terhadap bayangan angka (seperti 72 yang muncul tadi)
         for digit in d0_p1:
-            scores[MB.get(digit, '0')] += 25
+            scores[MB.get(digit, '0')] += 25 # Mistik Baru (Sub-Logic Lama)
+            scores[ID.get(digit, '0')] += 30 # Mirror/Indeks (V14.7 Update - Menangkap 7 & 2)
             
-        # 3. Analisa Angka "Dingin" (Cold Numbers)
-        # Mengambil angka yang tidak muncul di 5 periode terakhir P1
+        # 3. Analisa Angka "Dingin" & Middle-Range
+        # Mengincar angka yang jarang keluar + angka tengah (2-7)
         p1_short = "".join([res[0] for res in all_res_data[:5]])
         for n in "0123456789":
             if n not in p1_short:
-                scores[n] += 30 # Angka yang lama tidak muncul di Sydney sering meledak
+                scores[n] += 30 # Cold Number Power
+            if n in "234567":
+                scores[n] += 15 # Sydney Middle-Range Priority
     
     elif market_name == 'COLORADO':
         scores[MB.get(d0_p1[1], '0')] += 20
@@ -151,13 +157,14 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, count=10):
         biji_f = (biji if biji < 10 else biji % 9 or 9)
         
         # --- [SYDNEY SPECIFIC RACIKAN] ---
+        # Di dalam loop combo generate_titanium_lines_v14:
         if market_name == 'SYDNEY LOTTO':
-            # Sydney sangat identik dengan Biji 2, 5, 8 (Pola Diagonal)
-            if biji_f in [2, 5, 8]: score += 65
-            # Bonus jika angka 2D adalah urutan naik/turun (Sequential)
+            # Sydney sangat identik dengan Biji 2, 5, 8
+            if biji_final in [2, 5, 8]: score += 65
+            # Sequential Bonus (+/- 1)
             if abs(int(h) - int(t)) == 1: score += 40
-            # Verifikasi terhadap Mistik Baru Ekor terakhir
-            if t == MB.get(last_p1[3]): score += 35
+            # NEW: Mirror Balance (Jika H dan T adalah pasangan Indeks, skor naik)
+            if ID.get(h) == t: score += 35
             
         # --- [CAMBODIA SPECIFIC RACIKAN] ---
         elif market_name == 'CAMBODIA':
