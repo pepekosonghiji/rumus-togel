@@ -83,52 +83,54 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
     return [x[0] for x in sorted_res[:6]]
 
 def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, count=10):
-    all_pairs = list(itertools.permutations(bbfs_list, 2))
-    verified_2d = []
+    # bbfs_list: hasil weighted bbfs (6 digit)
+    # last_p1: prize 1 terakhir (contoh: '4569')
     
-    for p in all_pairs:
-        line = f"{p[0]}{p[1]}"
-        h, t = int(p[0]), int(p[1])
-        score = 0
-        
-        # Layer 1: Positional Resonance
-        if p[0] in [ML.get(last_p1[3]), ID.get(last_p1[2]), TY.get(last_p1[3])]:
-            score += 20
-            
-        # Layer 2: Cluster Sum-Biji
-        sum_val = (h + t) % 10
-        if market_name in ['ORLANDO', 'COLORADO', 'WASHINGMID'] or 'OREGON' in market_name:
-            if sum_val in [1, 5, 8, 9]: score += 30
-        elif market_name in ['HONGKONG POOLS', 'MACAU', 'CAMBODIA']:
-            if sum_val in [0, 3, 4, 7]: score += 25
-            
-        verified_2d.append((line, score))
+    # 1. PECAH BBFS MENJADI KEKUATAN POSISI (Positional Resonance)
+    # Kita ambil angka dari BBFS yang punya vibrasi dengan result terakhir
+    as_pool = [n for n in bbfs_list if n in [ML.get(last_p1[0]), TY.get(last_p1[0]), ID.get(last_p1[0])]] or bbfs_list[:3]
+    kop_pool = [n for n in bbfs_list if n in [ML.get(last_p1[1]), TY.get(last_p1[1]), ID.get(last_p1[1])]] or bbfs_list[1:4]
+    kep_pool = [n for n in bbfs_list if n in [ML.get(last_p1[2]), TY.get(last_p1[2]), ID.get(last_p1[2])]] or bbfs_list[2:5]
+    ekor_pool = [n for n in bbfs_list if n in [ML.get(last_p1[3]), TY.get(last_p1[3]), ID.get(last_p1[3])]] or bbfs_list[3:]
 
-    verified_2d.sort(key=lambda x: x[1], reverse=True)
-    top2 = [x[0] for x in verified_2d[:count]]
-
-    # Layer 3: Penembak Jitu 3D/4D
-    top3, top4 = [], []
-    is_odd = int(last_p1[3]) % 2 != 0
-    
-    for i in range(count):
-        if market_name == 'WASHINGMID':
-            as_final = MB.get(last_p1[0]) if i < 5 else TY.get(last_p1[1])
-            kop_final = ID.get(last_p1[0]) if i % 2 == 0 else bbfs_list[2]
-        elif market_name in ['HONGKONG POOLS', 'MACAU']:
-            as_final = ID.get(last_p1[3]) if i < 5 else TY.get(last_p1[0])
-            kop_final = MB.get(last_p1[1]) if i % 2 == 0 else ML.get(last_p1[2])
-        else:
-            if is_odd:
-                as_final = TY.get(last_p1[0]) if i < 5 else bbfs_list[0]
-                kop_final = ML.get(last_p1[1]) if i % 2 == 0 else ID.get(last_p1[2])
+    # 2. GENERATE TOP 2D (Fokus Kepala & Ekor)
+    # Kita pakai kombinasi kepala-ekor yang paling masuk akal secara sum-biji
+    all_2d = []
+    for h in kep_pool:
+        for t in ekor_pool:
+            if h == t: continue # Skip twin di top 2d jitu
+            line = f"{h}{t}"
+            
+            # Filter Biji (Sum 2D)
+            biji = (int(h) + int(t))
+            biji = (biji if biji < 10 else biji % 9 or 9) # Rumus Biji Sembilan
+            
+            score = 0
+            # Cluster Biji Sakti berdasarkan Market
+            if market_name in ['HONGKONG POOLS', 'MACAU', 'CAMBODIA']:
+                if biji in [1, 4, 7, 9]: score += 50
             else:
-                as_final = MB.get(last_p1[0]) if i < 5 else ID.get(last_p1[1])
-                kop_final = TY.get(last_p1[3]) if i % 2 == 0 else bbfs_list[1]
+                if biji in [2, 5, 8, 3]: score += 50
+                
+            all_2d.append((line, score))
+    
+    # Urutkan dan ambil 10 line terbaik
+    all_2d.sort(key=lambda x: x[1], reverse=True)
+    top2 = [x[0] for x in all_2d[:count]]
+
+    # 3. GENERATE 3D & 4D (Precision Insertion)
+    top3, top4 = [], []
+    for i in range(len(top2)):
+        # Rotasi As dan Kop agar tidak monoton
+        idx_as = i % len(as_pool)
+        idx_kop = i % len(kop_pool)
         
-        top3.append(f"{kop_final}{top2[i]}")
-        top4.append(f"{as_final}{kop_final}{top2[i]}")
+        a = as_pool[idx_as]
+        k = kop_pool[idx_kop]
         
+        top3.append(f"{k}{top2[i]}")
+        top4.append(f"{a}{k}{top2[i]}")
+
     return top2, top3, top4
 
 def get_comprehensive_logic(all_res_data, m_name):
