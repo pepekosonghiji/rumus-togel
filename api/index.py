@@ -189,6 +189,29 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         scores['2'] += 15
         scores['6'] += 15
         
+    elif market_name == 'OSAKA':
+        # --- OSAKA DELTA-VIBRATION LOGIC V14.9 ---
+        
+        # 1. Delta Head-to-Head (P2 vs P3)
+        # Menghitung selisih angka depan P2 (6) dan P3 (8)
+        if len(all_res_data[0]) >= 3:
+            p2_head = int(all_res_data[0][1][0])
+            p3_head = int(all_res_data[0][2][0])
+            delta_head = str(abs(p2_head - p3_head))
+            scores[delta_head] += 30  # Skor tinggi untuk angka selisih
+            scores[ID.get(delta_head)] += 20 # Indeks dari selisih
+            
+        # 2. Ekor P1 Resonance (8975 -> 5)
+        # Osaka sering memutar balik angka ekor via Mistik Baru/Lama
+        ekor_p1 = d0_p1[3]
+        scores[MB.get(ekor_p1, '0')] += 25
+        scores[ML.get(ekor_p1, '0')] += 20
+        
+        # 3. Middle-High Tracking (Fokus angka 1, 2, 3, 5 sesuai AM Mamang)
+        # Kita sinkronkan agar AM yang muncul lebih kuat di BBFS
+        for n in "1235":
+            scores[n] += 15
+    
     # --- 3. GLOBAL SEED VERIFICATION ---
     seeds = [ML.get(d0_p1[0]), ID.get(d0_p1[2]), TY.get(d0_p1[3]), MB.get(d0_p1[1])]
     for s in seeds: scores[s] += 12
@@ -267,6 +290,15 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, count=1
             
             # Anti-Twin di posisi 2D Belakang
             if h == t: score -= 30
+
+        # --- [OSAKA SPECIFIC RACIKAN] ---
+        elif market_name == 'OSAKA':
+            # Osaka dominan di Biji 4, 6, 8
+            if biji_f in [4, 6, 8]: score += 65
+            # Jika angka belakang sama dengan Mistik Lama dari ekor P1 (5 -> 2)
+            if t == ML.get(last_p1[3]): score += 40
+            # Bonus untuk angka yang mengandung unsur AI (0 atau 2)
+            if '0' in line or '2' in line: score += 25
                 
         # --- [GENERAL MARKETS] ---
         else:
