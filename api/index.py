@@ -172,28 +172,32 @@ def fetch_results(market_code):
                 rows = table.find('tbody').find_all('tr')
                 for row in rows:
                     tds = row.find_all('td')
-                    if len(tds) >= 3:
-                        # --- PENENTUAN INDEKS PRESISI ---
-                        # Jika kolom banyak (Cambodia/Washingmid), Prize 1 ada di index 3
-                        # Jika kolom sedikit (Macau), Prize 1 ada di index 2
-                        
-                        if len(tds) >= 6: # Struktur Cambodia (6 kolom: Tgl, Hari, Periode, P1, P2, P3)
-                            p1_raw = tds[3]
-                            p2_raw = tds[4]
-                            p3_raw = tds[5]
-                            
+                    if len(tds) < 3: continue
+
+                    # --- LOGIKA PENENTUAN KOLOM BERDASARKAN PASARAN ---
+                    
+                    # 1. KHUSUS OREGON (Hanya P1 di kolom ke-5 / indeks 4)
+                    if "oregon" in market_code.lower():
+                        if len(tds) >= 5:
+                            p1_raw = tds[4]
                             p1 = re.sub(r'\D', '', p1_raw.find('a').text if p1_raw.find('a') else p1_raw.text)
-                            p2 = re.sub(r'\D', '', p2_raw.find('a').text if p2_raw.find('a') else p2_raw.text)
-                            p3 = re.sub(r'\D', '', p3_raw.find('a').text if p3_raw.find('a') else p3_raw.text)
-                            
-                            if len(p1) == 4: results.append([p1, p2, p3])
-                        
-                        else: # Struktur Macau / Standar (3-4 kolom)
-                            target_idx = 2
-                            p1_raw = tds[target_idx]
-                            p1 = re.sub(r'\D', '', p1_raw.find('a').text if p1_raw.find('a') else p1_raw.text)
-                            
                             if len(p1) == 4: results.append([p1])
+
+                    # 2. KHUSUS CAMBODIA & SEJENISNYA (P1, P2, P3 mulai indeks 3)
+                    elif len(tds) >= 6: 
+                        p1_raw, p2_raw, p3_raw = tds[3], tds[4], tds[5]
+                        
+                        p1 = re.sub(r'\D', '', p1_raw.find('a').text if p1_raw.find('a') else p1_raw.text)
+                        p2 = re.sub(r'\D', '', p2_raw.find('a').text if p2_raw.find('a') else p2_raw.text)
+                        p3 = re.sub(r'\D', '', p3_raw.find('a').text if p3_raw.find('a') else p3_raw.text)
+                        
+                        if len(p1) == 4: results.append([p1, p2, p3])
+                    
+                    # 3. MACAU & PASARAN STANDAR (P1 di indeks 2)
+                    else: 
+                        p1_raw = tds[2]
+                        p1 = re.sub(r'\D', '', p1_raw.find('a').text if p1_raw.find('a') else p1_raw.text)
+                        if len(p1) == 4: results.append([p1])
                             
                 return results[:40]
     except Exception as e:
