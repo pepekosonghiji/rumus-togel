@@ -432,6 +432,31 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         # Jika periode sebelumnya tidak ada angka 0, maka 0 wajib diwaspadai
         if '0' not in d0_p1:
             scores['0'] += 25
+
+    elif market_name == 'WASHINGMID':
+        # --- [V16.10 WASHINGMID MID-PULSE LOGIC] ---
+        # 1. Cluster History (Mengambil vibrasi 2 periode lalu)
+        if len(all_res_data) > 2:
+            d2 = all_res_data[2][0] 
+            for digit in d2: 
+                scores[digit] += 18
+            
+        # 2. Mid-Vibration P1 (Result 0483)
+        # Indeks Kop (4 -> 9) dan Tyseen Kepala (8 -> 3)
+        kop_p1 = d0_p1[1]
+        kep_p1 = d0_p1[2]
+        scores[ID.get(kop_p1, '0')] += 35 # Mengunci angka 9
+        scores[TY.get(kep_p1, '0')] += 30 # Mengunci angka 3 (Sesuai AI 38)
+        
+        # 3. Tail-Echo (Merespon Ekor 9 di P2: 0069 & P3: 6319)
+        # Jika Prize bawah punya ekor kembar, ambil Mistiknya
+        scores[ML.get('9')] += 25 # Mistik Lama 9 adalah 6
+        scores[MB.get('9')] += 20 # Mistik Baru 9 adalah 3
+        
+        # 4. Washing AI Anchor (AI 38)
+        # Memastikan angka 3 dan 8 mendapatkan prioritas di BBFS
+        scores['3'] += 22
+        scores['8'] += 22
         
     # --- 3. GLOBAL SEED VERIFICATION ---
     seeds = [ML.get(d0_p1[0]), ID.get(d0_p1[2]), TY.get(d0_p1[3]), MB.get(d0_p1[1])]
@@ -682,6 +707,28 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             # 4. ANTI-TWIN (Oregon jarang twin murni di belakang)
             if h == t: 
                 score -= 40
+            else:
+                score += 15
+
+        elif market_name == 'WASHINGMID':
+            # --- [V16.10 WASHINGMID MAXIMAL PRECISION] ---
+            # 1. BIJI HARMONY (Favorit Washingmid: 1, 3, 4, 8)
+            if biji_f in [1, 3, 4, 8]: 
+                score += 85 
+            
+            # 2. THE 3-ANCHOR POSITION (Berdasarkan AI 38)
+            # Beri bonus jika angka 3 duduk di posisi Kepala atau Ekor
+            if h == '3' or t == '3':
+                score += 45
+            
+            # 3. KOP-PULSE VERIFICATION
+            # Bonus besar jika Kop 4D adalah Indeks dari Kop P1 lama (4 -> 9)
+            if line[1] == ID.get(last_p1[1]):
+                score += 40
+                
+            # 4. ANTI-TWIN BACK (Washingmid jarang twin di belakang)
+            if h == t: 
+                score -= 35
             else:
                 score += 15
                 
