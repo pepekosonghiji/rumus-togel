@@ -340,7 +340,32 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         # HK Lotto sangat kuat di Biji 1, 4, 6, 9
         for n in "0123456789":
             if n in "1469": scores[n] += 15
-    
+                
+    elif market_name == 'GREECE':
+        # --- [V16.2 GREECE EURO-MIRROR LOGIC] ---
+        
+        # 1. P2 Indeks Transfer (P2: 7492)
+        # Greece sangat hobi mengambil Indeks dari angka P2
+        if len(all_res_data[0]) >= 2:
+            p2_digits = all_res_data[0][1]
+            for d in p2_digits:
+                scores[ID.get(d)] += 28 # Indeks (7->2, 4->9, 9->4, 2->7)
+                scores[TY.get(d)] += 15 # Tyseen sebagai cadangan
+        
+        # 2. Twin-Resonance (1535 -> Ekor 5 dan Kop 5)
+        # Jika ada angka yang muncul 2x di P1 (Angka 5), 
+        # Greece sering membuang Mistik-nya di periode depan.
+        kop_p1 = d0_p1[1]
+        eko_p1 = d0_p1[3]
+        if kop_p1 == eko_p1:
+            scores[ML.get(kop_p1)] += 25 # Mistik Lama 5 adalah 2
+            scores[MB.get(kop_p1)] += 20 # Mistik Baru 5 adalah 4
+            
+        # 3. Greece "Solid" AI (Berdasarkan AI 08)
+        # Menjaga angka 0 dan 8 agar tetap di posisi BBFS teratas
+        scores['0'] += 15
+        scores['8'] += 15
+        
     # --- 3. GLOBAL SEED VERIFICATION ---
     seeds = [ML.get(d0_p1[0]), ID.get(d0_p1[2]), TY.get(d0_p1[3]), MB.get(d0_p1[1])]
     for s in seeds: scores[s] += 12
@@ -502,6 +527,23 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             
             # 4. INJEKSI VIBRASI (Angka 7 dan 3)
             if '7' in line or '3' in line: score += 30
+
+        # --- [V16.2 GREECE MAXIMAL PRECISION] ---
+        elif market_name == 'GREECE':
+            # 1. BIJI HARMONY GREECE (Biji 2, 5, 7, 8)
+            if biji_f in [2, 5, 7, 8]: 
+                score += 80 
+            
+            # 2. POSITIONAL HEAD-TO-HEAD
+            # Jika Kepala 2D adalah Indeks dari Kepala P1 (1 -> 6)
+            if h == ID.get(last_p1[0]): score += 40
+            
+            # 3. GREECE PATTERN: CROSS-P3
+            # Jika Ekor 2D sama dengan angka depan P3 (4828 -> 4)
+            if t == all_res_data[0][2][0]: score += 35
+            
+            # 4. ANTI-TWIN BELAKANG
+            if h == t: score -= 30
                 
         # --- [GENERAL MARKETS] ---
         else:
