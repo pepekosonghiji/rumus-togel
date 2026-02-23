@@ -230,6 +230,42 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         # 3. Phuket "Hot" Number (Berdasarkan AM 1256)
         for n in "1256":
             scores[n] += 12
+
+    elif market_name == 'SEOUL':
+        # --- SEOUL DOUBLE-MIRROR LOGIC V15.4 ---
+        # 1. Lindungi Angka Indeks & Mistik dari P2 dan P3 (Seoul sangat Mirror-Oriented)
+        for res_p in all_res_data[0][1:]: # P2 & P3
+            for d in res_p:
+                scores[ID.get(d)] += 25
+                scores[MB.get(d)] += 15
+
+        # 2. Pola Ekor Lompat 2
+        # Jika ekor P1 sekarang ganjil, Seoul sering lompat ke angka ganjil lainnya
+        ekor_lalu = int(d0_p1[3])
+        if ekor_lalu % 2 != 0:
+            for n in "13579": scores[n] += 18
+        else:
+            for n in "02468": scores[n] += 18
+
+        # 3. Prediksi Twin Tengah (Kop & Kepala)
+        scores[ID.get(d0_p1[1])] += 20 
+
+    elif market_name == 'WUHAN':
+        # --- WUHAN TRI-VIBRATION LOGIC V15.5 ---
+        # 1. Dominansi Angka "Kepala" P1, P2, P3
+        # Wuhan sering mengulang angka depan (As/Kop) dari periode sebelumnya
+        for res_p in all_res_data[0]:
+            scores[res_p[0]] += 30 # Fokus As
+            scores[res_p[1]] += 22 # Fokus Kop
+
+        # 2. Wuhan "Hot" Delta
+        # Selisih antara Kepala P1 dan Ekor P2 sering jadi AI kuat
+        delta_wuhan = abs(int(d0_p1[2]) - int(all_res_data[0][1][3]))
+        scores[str(delta_wuhan)] += 35
+        scores[TY.get(str(delta_wuhan), '0')] += 20
+
+        # 3. Anti-Angka Mati (Wuhan jarang mengeluarkan angka yang sudah 3 hari berturut-turut muncul)
+        # (Sudah terhandle secara otomatis oleh weighting frequency)
     
     # --- 3. GLOBAL SEED VERIFICATION ---
     seeds = [ML.get(d0_p1[0]), ID.get(d0_p1[2]), TY.get(d0_p1[3]), MB.get(d0_p1[1])]
@@ -327,6 +363,16 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             if h in all_res_data[0][2]: score += 35
             # Bonus jika mengandung unsur AI (1 atau 8)
             if '1' in line or '8' in line: score += 25
+
+        elif market_name == 'SEOUL':
+            # Seoul identik dengan Biji 1, 4, 7 (Siklus 3)
+            if biji_f in [1, 4, 7]: score += 65
+            if h == ID.get(last_p1[2]): score += 35 # Indeks Kepala
+
+        elif market_name == 'WUHAN':
+            # Wuhan identik dengan Biji 2, 6, 9
+            if biji_f in [2, 6, 9]: score += 65
+            if t == MB.get(last_p1[3]): score += 40 # Mistik Baru Ekor
                 
         # --- [GENERAL MARKETS] ---
         else:
