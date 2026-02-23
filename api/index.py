@@ -156,50 +156,53 @@ def fetch_results(market_code):
     headers = {'User-Agent': 'Mozilla/5.0'}
     try:
         with httpx.Client(timeout=10.0, verify=False) as client:
-            url = "https://tabelsemalam.com/" if market_code == "HK_SPECIAL" else f"https://4upk6k0qz6.salamrupiah.com/history/result-mobile/{market_code}-pool-1"
-            r = client.get(url, headers=headers)
-            soup = BeautifulSoup(r.text, 'html.parser')
-            
+            # Jalur khusus untuk HK_SPECIAL jika masih menggunakan tabelsemalam
             if market_code == "HK_SPECIAL":
+                url = "https://tabelsemalam.com/"
+                r = client.get(url, headers=headers)
+                soup = BeautifulSoup(r.text, 'html.parser')
                 table = soup.find('table')
                 return [[tds[1].text.strip()] for row in table.find('tbody').find_all('tr') if (tds := row.find_all('td')) and len(tds) >= 2 and tds[1].text.strip().isdigit()][:40]
             
-            else:
-                table = soup.find('table', class_='table-history')
-                if not table: return []
-                results = []
-                
-                rows = table.find('tbody').find_all('tr')
-                for row in rows:
-                    tds = row.find_all('td')
-                    if len(tds) < 3: continue
+            # Jalur umum untuk history result
+            url = f"https://4upk6k0qz6.salamrupiah.com/history/result-mobile/{market_code}-pool-1"
+            r = client.get(url, headers=headers)
+            soup = BeautifulSoup(r.text, 'html.parser')
+            
+            table = soup.find('table', class_='table-history')
+            if not table: return []
+            
+            results = []
+            rows = table.find('tbody').find_all('tr')
+            
+            for row in rows:
+                tds = row.find_all('td')
+                # Minimal harus ada 4 kolom (Tgl, Hari, Periode, Angka)
+                if len(tds) >= 4:
+                    try:
+                        # Ambil teks dari dalam tag <a> jika ada, jika tidak ambil teks langsung dari <td>
+                        def get_num(td_elem):
+                            link = td_elem.find('a')
+                            text = link.text if link else td_elem.text
+                            return re.sub(r'\D', '', text.strip())
 
-                    # --- LOGIKA PENENTUAN KOLOM BERDASARKAN PASARAN ---
-                    
-                    # 1. KHUSUS OREGON (Hanya P1 di kolom ke-5 / indeks 4)
-                    if "oregon" in market_code.lower():
-                        if len(tds) >= 5:
-                            p1_raw = tds[4]
-                            p1 = re.sub(r'\D', '', p1_raw.find('a').text if p1_raw.find('a') else p1_raw.text)
-                            if len(p1) == 4: results.append([p1])
-
-                    # 2. KHUSUS CAMBODIA & SEJENISNYA (P1, P2, P3 mulai indeks 3)
-                    elif len(tds) >= 6: 
-                        p1_raw, p2_raw, p3_raw = tds[3], tds[4], tds[5]
+                        # Berdasarkan HTML baru, Prize 1 SELALU ada di indeks 3 (kolom ke-4)
+                        p1 = get_num(tds[3])
                         
-                        p1 = re.sub(r'\D', '', p1_raw.find('a').text if p1_raw.find('a') else p1_raw.text)
-                        p2 = re.sub(r'\D', '', p2_raw.find('a').text if p2_raw.find('a') else p2_raw.text)
-                        p3 = re.sub(r'\D', '', p3_raw.find('a').text if p3_raw.find('a') else p3_raw.text)
-                        
-                        if len(p1) == 4: results.append([p1, p2, p3])
-                    
-                    # 3. MACAU & PASARAN STANDAR (P1 di indeks 2)
-                    else: 
-                        p1_raw = tds[2]
-                        p1 = re.sub(r'\D', '', p1_raw.find('a').text if p1_raw.find('a') else p1_raw.text)
-                        if len(p1) == 4: results.append([p1])
+                        # Cek apakah ini pasaran dengan 3 Prize (biasanya len(tds) == 6)
+                        if len(tds) >= 6:
+                            p2 = get_num(tds[4])
+                            p3 = get_num(tds[5])
+                            if len(p1) == 4:
+                                results.append([p1, p2, p3])
+                        else:
+                            # Pasaran 1 Prize (Oregon/Macau/Standar)
+                            if len(p1) == 4:
+                                results.append([p1])
+                    except:
+                        continue
                             
-                return results[:40]
+            return results[:40]
     except Exception as e:
         print(f"Fetch Error: {e}")
         return []
