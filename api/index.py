@@ -434,29 +434,26 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
             scores['0'] += 25
 
     elif market_name == 'WASHINGMID':
-        # --- [V16.10 WASHINGMID MID-PULSE LOGIC] ---
-        # 1. Cluster History (Mengambil vibrasi 2 periode lalu)
-        if len(all_res_data) > 2:
-            d2 = all_res_data[2][0] 
-            for digit in d2: 
-                scores[digit] += 18
+        # --- [V16.11 WASHINGMID REBORN - SLIDE & MIRROR CAPTURE] ---
+        
+        # 1. Slide Position Protection (P1: 4560 -> As 4)
+        # Menangkap angka Kop atau Kepala periode sebelumnya untuk naik jadi As
+        scores[d0_p1[0]] += 20 # As lama
+        scores[d0_p1[1]] += 35 # Kop lama (Sangat rawan jadi As/Kepala)
+        
+        # 2. Mirror-Echo (Merespon Result 4560)
+        # Ambil Indeks dari angka result terbaru untuk periode depan
+        for d in d0_p1:
+            scores[ID.get(d)] += 28 # Mirroring 4-5-6-0
             
-        # 2. Mid-Vibration P1 (Result 0483)
-        # Indeks Kop (4 -> 9) dan Tyseen Kepala (8 -> 3)
-        kop_p1 = d0_p1[1]
-        kep_p1 = d0_p1[2]
-        scores[ID.get(kop_p1, '0')] += 35 # Mengunci angka 9
-        scores[TY.get(kep_p1, '0')] += 30 # Mengunci angka 3 (Sesuai AI 38)
+        # 3. Mistik Series AI (38)
+        # Mengunci angka 3 dan 8 melalui jalur Mistik Baru/Lama dari ekor 0
+        scores[ML.get('0')] += 30 # Mistik Lama 0 adalah 1
+        scores[MB.get('0')] += 30 # Mistik Baru 0 adalah 8 (Sesuai AI)
         
-        # 3. Tail-Echo (Merespon Ekor 9 di P2: 0069 & P3: 6319)
-        # Jika Prize bawah punya ekor kembar, ambil Mistiknya
-        scores[ML.get('9')] += 25 # Mistik Lama 9 adalah 6
-        scores[MB.get('9')] += 20 # Mistik Baru 9 adalah 3
-        
-        # 4. Washing AI Anchor (AI 38)
-        # Memastikan angka 3 dan 8 mendapatkan prioritas di BBFS
-        scores['3'] += 22
-        scores['8'] += 22
+        # 4. Washing Anchor Stability
+        scores['3'] += 25
+        scores['5'] += 20 # Angka 5 sering repeat di Washingmid
         
     # --- 3. GLOBAL SEED VERIFICATION ---
     seeds = [ML.get(d0_p1[0]), ID.get(d0_p1[2]), TY.get(d0_p1[3]), MB.get(d0_p1[1])]
@@ -711,26 +708,29 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
                 score += 15
 
         elif market_name == 'WASHINGMID':
-            # --- [V16.10 WASHINGMID MAXIMAL PRECISION] ---
-            # 1. BIJI HARMONY (Favorit Washingmid: 1, 3, 4, 8)
-            if biji_f in [1, 3, 4, 8]: 
-                score += 85 
+            # --- [V16.11 WASHINGMID PRECISION FILTER] ---
+            # 1. BIJI UPGRADE (Menambahkan Biji 6 sesuai trend result 4560)
+            # Fokus Biji: 1, 3, 4, 6, 8
+            if biji_f in [1, 3, 4, 6, 8]: 
+                score += 90 
             
-            # 2. THE 3-ANCHOR POSITION (Berdasarkan AI 38)
-            # Beri bonus jika angka 3 duduk di posisi Kepala atau Ekor
-            if h == '3' or t == '3':
-                score += 45
+            # 2. POSITION SLIDE VERIFICATION
+            # Bonus jika As 4D adalah Kop/Kepala dari result sebelumnya (4 atau 5)
+            if line[0] in [last_p1[1], last_p1[2]]:
+                score += 50
             
-            # 3. KOP-PULSE VERIFICATION
-            # Bonus besar jika Kop 4D adalah Indeks dari Kop P1 lama (4 -> 9)
-            if line[1] == ID.get(last_p1[1]):
+            # 3. THE 3-8 SYNERGY (Berdasarkan AI 38)
+            # Jika 2D belakang (Kepala-Ekor) mengandung salah satu AI 38
+            if h in ['3', '8'] or t in ['3', '8']:
                 score += 40
-                
-            # 4. ANTI-TWIN BACK (Washingmid jarang twin di belakang)
-            if h == t: 
-                score -= 35
-            else:
-                score += 15
+            
+            # 4. HEAD-VIBRATION (Indeks dari Kepala sebelumnya: 6 -> 1)
+            # Jika Kepala 2D adalah Indeks dari Kepala periode lalu
+            if h == ID.get(last_p1[2]):
+                score += 35
+
+            # 5. ANTI-TWIN & ODD-EVEN BALANCING
+            if h == t: score -= 40
                 
         # --- [GENERAL MARKETS] ---
         else:
