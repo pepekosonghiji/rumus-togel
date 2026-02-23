@@ -168,6 +168,27 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         # Seringkali selisih ini muncul di posisi Kop atau Kepala
         delta_as = abs(int(d0_p1[0]) - int(all_res_data[0][1][0]))
         scores[str(delta_as)] += 25
+
+    elif market_name == 'SAPPORO':
+        # --- SAPPORO CROSS-INDEX LOGIC V14.9 ---
+        
+        # 1. Twin-Front Impact (P3: 4461)
+        # Angka 44 di depan P3 biasanya akan memicu angka 9 atau 7 di P1 besoknya
+        scores['9'] += 35 # Indeks 4
+        scores['7'] += 25 # Mistik 4
+            
+        # 2. P2 to P1 Transfer (Kop & Kepala)
+        # Sapporo sering memindahkan Kop/Kepala P2 (3, 1) ke posisi Ekor P1
+        p2_digits = all_res_data[0][1]
+        scores[p2_digits[1]] += 22 # Angka 3
+        scores[p2_digits[2]] += 22 # Angka 1
+        
+        # 3. Mistik Shio Ayam
+        # Karena result terakhir Shio Ayam, Sapporo sering lompat ke Shio sejalur (Ular/Kerbau)
+        # Kita perkuat angka 2 dan 6 sebagai angka jalur
+        scores['2'] += 15
+        scores['6'] += 15
+        
     # --- 3. GLOBAL SEED VERIFICATION ---
     seeds = [ML.get(d0_p1[0]), ID.get(d0_p1[2]), TY.get(d0_p1[3]), MB.get(d0_p1[1])]
     for s in seeds: scores[s] += 12
@@ -236,6 +257,16 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, count=10):
             
             # Anti-Clutter: Jeju jarang mengeluarkan angka berurutan (12, 23, dll)
             if abs(int(h) - int(t)) == 1: score -= 15
+
+        elif market_name == 'SAPPORO':
+            # Sapporo sangat kuat di Biji 3, 4, 9
+            if biji_f in [3, 4, 9]: score += 65
+            
+            # Khusus Sapporo: Cek jika angka adalah Mistik dari Ekor P1 (5 -> 2)
+            if t == ML.get(last_p1[3]): score += 45
+            
+            # Anti-Twin di posisi 2D Belakang
+            if h == t: score -= 30
                 
         # --- [GENERAL MARKETS] ---
         else:
