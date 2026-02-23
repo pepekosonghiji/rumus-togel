@@ -29,190 +29,125 @@ TARGET_POOLS = {
     'MANHATTAN':'p23590','TORONTOEVE':'p13975','ORLANDO':'p21384','COLORADO':'p23589'
 }
 
-# --- [V12.4 ENGINE WITH GLOBAL VERIFICATION UPGRADE] ---
+# --- [V14.1 ENGINE - SHADOW DATA & PRECISION TARGETING] ---
 
-def get_weighted_bbfs_v13(all_res, market_name):
+def get_weighted_bbfs_v14_1(all_res_data, market_name):
+    """
+    all_res_data: list of lists [[p1, p2, p3], ...]
+    """
     scores = {str(n): 0 for n in range(10)}
-    d0 = all_res[0]
+    p1_history = [res[0] for res in all_res_data]
+    d0_p1 = p1_history[0]
     
-    # --- 1. FREKUENSI DINAMIS (Optimasi 6 Digit) ---
-    freq = Counter("".join(all_res[:30]))
+    # --- 1. FREKUENSI & SHADOW WEIGHTING ---
+    freq_p1 = Counter("".join(p1_history[:30]))
     for n in "0123456789":
-        f_val = freq.get(n, 0)
-        # Berikan proteksi pada angka yang baru keluar (Repeat Number)
-        if n in d0: 
-            scores[n] += 15 
-        # Angka dingin tetap diberi panggung
-        if f_val < 3: scores[n] += 20
-        else: scores[n] += f_val * 1.2
-
-    # --- 2. DYNAMIC FREQUENCY ANALYSIS ---
-    # Memberikan bobot pada angka 'Dingin' (jarang keluar) agar tidak luput
-    freq = Counter("".join(all_res[:40]))
-    for n in "0123456789":
-        f_val = freq.get(n, 0)
-        if f_val < 4: 
-            scores[n] += 25  # Prioritas angka yang sudah lama tidak muncul
-        else: 
-            scores[n] += f_val * 1.5 # Tetap hitung angka panas secara proporsional
-
-    d0 = all_res[0] # Result terakhir sebagai acuan pola
+        # Skor Prize 1 (Utama)
+        scores[n] += freq_p1.get(n, 0) * 1.5
+        # Repeat Number Protection
+        if n in d0_p1: scores[n] += 15
     
-    # --- 3. CLUSTER SUB-LOGIC (LOCKED & ISOLATED) ---
-    # Gunakan elif agar satu pasaran hanya diproses oleh satu sub-logic spesifik
-    if market_name == 'WASHING-MID':
-        # Metode Mirror-Gap: Cek result 2 periode ke belakang
-        if len(all_res) > 2:
-            d2 = all_res[2]
-            # Washingmid suka menarik kembali angka dari 2 hari lalu
+    # Bonus dari Prize 2 & 3 (Shadow Data)
+    for res in all_res_data[:10]:
+        if len(res) > 1:
+            shadow = "".join(res[1:])
+            for n in set(shadow): scores[n] += 5
+
+    # --- 2. CLUSTER SUB-LOGIC ---
+    if market_name == 'WASHINGMID':
+        if len(all_res_data) > 2:
+            d2 = all_res_data[2][0] # Prize 1 dari 2 periode lalu
             for digit in d2: scores[digit] += 18
-        # Verifikasi angka tengah
-        scores[ID.get(d0[1], '0')] += 22
-        scores[TY.get(d0[2], '0')] += 20
+        # Verifikasi vibrasi angka tengah terakhir
+        scores[ID.get(d0_p1[1], '0')] += 22
+        scores[TY.get(d0_p1[2], '0')] += 20
         
     elif market_name == 'MACAU':
-        next_val = str((int(d0[3]) + 1) % 10)
-        prev_val = str((int(d0[3]) - 1) % 10)
-        scores[next_val] += 15
-        scores[prev_val] += 15
-        scores[ID.get(d0[1], '0')] += 10 
-
-    elif market_name == 'ORLANDO':
-        # Analisa Mirroring AS-EKOR
-        scores[ML.get(d0[0], '0')] += 18
-        scores[ID.get(d0[1], '0')] += 15
-        # Respon khusus jika result sebelumnya TWIN (seperti 4522)
-        if d0[2] == d0[3]:
-            for n in [TY.get(d0[2]), ML.get(d0[2]), '5', '9']: 
-                scores[n] += 25
+        scores[str((int(d0_p1[3]) + 1) % 10)] += 15
+        scores[str((int(d0_p1[3]) - 1) % 10)] += 15
+        scores[ID.get(d0_p1[1], '0')] += 10 
 
     elif market_name == 'COLORADO':
-        # Colorado Precision Upgrade: Sensitif terhadap MB & ID dari KOP/KEP
-        scores[MB.get(d0[1], '0')] += 20
-        scores[ID.get(d0[2], '0')] += 20
-        # Tambahkan penguat pada angka Cold dalam 5 result terakhir
-        cold_check = "".join(all_res[:5])
+        scores[MB.get(d0_p1[1], '0')] += 20
+        scores[ID.get(d0_p1[2], '0')] += 20
+        cold_check = "".join(p1_history[:5])
         for n in "0123456789":
             if n not in cold_check: scores[n] += 25
-        if int(d0[0]) > 4: scores['0'] += 10; scores['1'] += 10
 
-    elif market_name in ['OREGON 3', 'OREGON 6', 'OREGON 9', 'OREGON 12']:
-        for digit in d0:
-            scores[ML.get(digit)] += 12
-            scores[TY.get(digit)] += 10
-        # Anti-Jump: Cari angka yang benar-benar hilang dalam 3 result terakhir
-        present_digits = set("".join(all_res[:3]))
-        missing = set("0123456789") - present_digits
-        for m in missing: scores[m] += 22
+    # --- 3. GLOBAL SEED VERIFICATION ---
+    seeds = [ML.get(d0_p1[0]), ID.get(d0_p1[2]), TY.get(d0_p1[3]), MB.get(d0_p1[1])]
+    for s in seeds: scores[s] += 12
 
-    elif market_name == 'HONGKONG POOLS':
-        scores[ID.get(d0[2], '0')] += 15
-        scores[ID.get(d0[3], '0')] += 15
-        if int(d0[0]) > 5:
-            for n in ['0','1','2']: scores[n] += 12
-
-    # --- 4. GLOBAL SEED VERIFICATION (SAFETY NET) ---
-    # Ini berlaku untuk semua market (termasuk yang tidak punya sub-logic)
-    m_seeds = [ML.get(d0[0]), ID.get(d0[2]), TY.get(d0[3]), MB.get(d0[1])]
-    for s in m_seeds: 
-        scores[s] += 10 # Bobot pengaman agar angka tidak melompat terlalu jauh
-
-    # Urutkan berdasarkan skor tertinggi dan ambil 7 digit terbaik
+    # URUTKAN & PAKSA 6 DIGIT
     sorted_res = sorted(scores.items(), key=lambda x: x[1], reverse=True)
-    return [x[0] for x in sorted_res[:7]]
-    
-def generate_titanium_lines(bbfs_list, all_res, market_name, count=10):
-    """
-    METODE: DYNAMIC POSITIONAL RESONANCE (DPR)
-    V13.5 Premium Edition - Fokus pada akurasi tembakan spesifik 2D/3D/4D
-    """
-    d0 = all_res[0]
-    # Pool diperluas dengan perlindungan angka cadangan
-    ext_pool = list(set(bbfs_list[:6] + [ML.get(bbfs_list[0]), TY.get(bbfs_list[0])]))
-    all_pairs = list(itertools.permutations(ext_pool, 2))
-    
+    return [x[0] for x in sorted_res[:6]]
+
+def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, count=10):
+    all_pairs = list(itertools.permutations(bbfs_list, 2))
     verified_2d = []
+    
     for p in all_pairs:
         line = f"{p[0]}{p[1]}"
         h, t = int(p[0]), int(p[1])
         score = 0
         
-        # --- LAYER 1: POSITIONAL RESONANCE ---
-        # Verifikasi Kepala: Harus punya resonansi kuat dengan Ekor/Kepala sebelumnya
-        if p[0] in [ML.get(d0[3]), ID.get(d0[2]), TY.get(d0[3])]: 
+        # Layer 1: Positional Resonance
+        if p[0] in [ML.get(last_p1[3]), ID.get(last_p1[2]), TY.get(last_p1[3])]:
             score += 20
-        
-        # --- LAYER 2: SUM-BIJI & RATIO FILTER ---
+            
+        # Layer 2: Cluster Sum-Biji
         sum_val = (h + t) % 10
-        # Filter khusus Cluster Amerika & Oregon
-        if market_name in ['ORLANDO', 'COLORADO', 'MANHATTAN','WASHINGMID'] or 'OREGON' in market_name:
-            if sum_val in [1, 5, 8, 9]: score += 30 
-        # Filter khusus Cluster Asia (HK, Macau, Cambodia)
-        elif market_name in ['HONGKONG POOLS', 'MACAU', 'CAMBODIA', 'SINGAPORE POOLS']:
+        if market_name in ['ORLANDO', 'COLORADO', 'WASHINGMID'] or 'OREGON' in market_name:
+            if sum_val in [1, 5, 8, 9]: score += 30
+        elif market_name in ['HONGKONG POOLS', 'MACAU', 'CAMBODIA']:
             if sum_val in [0, 3, 4, 7]: score += 25
-        else:
-            if sum_val in [2, 6, 8]: score += 15
-        
-        # Respon terhadap pola Twin
-        if h == t:
-            score += 35 if d0[2] == d0[3] else -25
             
         verified_2d.append((line, score))
 
     verified_2d.sort(key=lambda x: x[1], reverse=True)
     top2 = [x[0] for x in verified_2d[:count]]
 
-    # --- LAYER 3: 4D PRECISION TARGETING (PENEMBAK JITU) ---
+    # Layer 3: Penembak Jitu 3D/4D
     top3, top4 = [], []
-    for i in range(count):
-        # Penentuan AS & KOP tidak lagi statis, tapi berdasarkan 'Vibrasi' result terakhir
-        # Jika result genap, gunakan Mistik Baru. Jika ganjil, gunakan Taysen.
-        is_odd = int(d0[3]) % 2 != 0
-        
-        if market_name == 'COLORADO':
-            as_final = ML.get(d0[0]) if i < 5 else ID.get(d0[3])
-            kop_final = TY.get(d0[2]) if i % 2 == 0 else bbfs_list[1]
-        
-        elif market_name in ['HONGKONG POOLS', 'MACAU']:
-            # Karakter Asia: AS sering kali Mirror (Index) dari Ekor terakhir
-            as_final = ID.get(d0[3]) if i < 5 else TY.get(d0[0])
-            kop_final = MB.get(d0[1]) if i % 2 == 0 else ML.get(d0[2])
-            
-        else:
-            # Karakter Global: Mengikuti vibrasi ganjil/genap
-            if is_odd:
-                as_final = TY.get(d0[0]) if i < 5 else bbfs_list[0]
-                kop_final = ML.get(d0[1]) if i % 2 == 0 else ID.get(d0[2])
-            else:
-                as_final = MB.get(d0[0]) if i < 5 else ID.get(d0[1])
-                kop_final = TY.get(d0[3]) if i % 2 == 0 else bbfs_list[2]
-        
-        # Final Assembly
-        line_2d = top2[i]
-        line_3d = f"{kop_final}{line_2d}"
-        line_4d = f"{as_final}{line_3d}"
-        
-        top3.append(line_3d)
-        top4.append(line_4d)
-
-    return top2, top3, top4
+    is_odd = int(last_p1[3]) % 2 != 0
     
-def get_comprehensive_logic(all_res, m_name):
-    d0 = all_res[0]
-    bbfs_raw = get_weighted_bbfs_v13(all_res, m_name) 
+    for i in range(count):
+        if market_name == 'WASHINGMID':
+            as_final = MB.get(last_p1[0]) if i < 5 else TY.get(last_p1[1])
+            kop_final = ID.get(last_p1[0]) if i % 2 == 0 else bbfs_list[2]
+        elif market_name in ['HONGKONG POOLS', 'MACAU']:
+            as_final = ID.get(last_p1[3]) if i < 5 else TY.get(last_p1[0])
+            kop_final = MB.get(last_p1[1]) if i % 2 == 0 else ML.get(last_p1[2])
+        else:
+            if is_odd:
+                as_final = TY.get(last_p1[0]) if i < 5 else bbfs_list[0]
+                kop_final = ML.get(last_p1[1]) if i % 2 == 0 else ID.get(last_p1[2])
+            else:
+                as_final = MB.get(last_p1[0]) if i < 5 else ID.get(last_p1[1])
+                kop_final = TY.get(last_p1[3]) if i % 2 == 0 else bbfs_list[1]
+        
+        top3.append(f"{kop_final}{top2[i]}")
+        top4.append(f"{as_final}{kop_final}{top2[i]}")
+        
+    return top2, top3, top4
+
+def get_comprehensive_logic(all_res_data, m_name):
+    d0_p1 = all_res_data[0][0]
+    bbfs_raw = get_weighted_bbfs_v14_1(all_res_data, m_name) 
     
     bbfs_final = sorted(bbfs_raw)
+    # AM sekarang diambil dari 4 skor tertinggi bbfs
     am = sorted(bbfs_raw[:4])
-    al = sorted(list(set([ML.get(d0[3], '0'), MB.get(d0[3], '0'), TY.get(d0[3], '0')])))[:3]
-    ai = sorted(list(set([ID.get(d0[2], '0'), ID.get(d0[3], '0'), TY.get(d0[2], '0')])))[:3]
+    al = sorted(list(set([ML.get(d0_p1[3], '0'), MB.get(d0_p1[3], '0'), TY.get(d0_p1[3], '0')])))[:3]
+    ai = sorted(list(set([ID.get(d0_p1[2], '0'), ID.get(d0_p1[3], '0'), TY.get(d0_p1[2], '0')])))[:3]
 
-    top2, top3, top4 = generate_titanium_lines(bbfs_raw, all_res, m_name)
+    top2, top3, top4 = generate_titanium_lines_v14(bbfs_raw, d0_p1, m_name)
     
     return {
         "bbfs": "".join(bbfs_final),
         "am": "".join(am), "al": "".join(al), "ai": "".join(ai),
         "top2d": top2, "top3d": top3, "top4d": top4,
-        "shio": SHIO_MAP.get(int(d0[2:]) % 12 or 12),
+        "shio": SHIO_MAP.get(int(d0_p1[2:]) % 12 or 12),
         "macau": f"{bbfs_raw[0]}{bbfs_raw[1]} - {bbfs_raw[2]}{bbfs_raw[3]}",
         "twin": f"{bbfs_raw[0]}{bbfs_raw[0]}, {bbfs_raw[1]}{bbfs_raw[1]}"
     }
@@ -221,48 +156,32 @@ def fetch_results(market_code):
     headers = {'User-Agent': 'Mozilla/5.0'}
     try:
         with httpx.Client(timeout=10.0, verify=False) as client:
-            if market_code == "HK_SPECIAL":
-                url = "https://tabelsemalam.com/"
-            else:
-                url = f"https://4upk6k0qz6.salamrupiah.com/history/result-mobile/{market_code}-pool-1"
-            
+            url = "https://tabelsemalam.com/" if market_code == "HK_SPECIAL" else f"https://4upk6k0qz6.salamrupiah.com/history/result-mobile/{market_code}-pool-1"
             r = client.get(url, headers=headers)
             soup = BeautifulSoup(r.text, 'html.parser')
             
             if market_code == "HK_SPECIAL":
                 table = soup.find('table')
-                if not table: return []
-                return [tds[1].text.strip() for row in table.find('tbody').find_all('tr') 
-                        if (tds := row.find_all('td')) and len(tds) >= 2 and tds[1].text.strip().isdigit()][:40]
-            
+                return [[tds[1].text.strip()] for row in table.find('tbody').find_all('tr') if (tds := row.find_all('td')) and len(tds) >= 2 and tds[1].text.strip().isdigit()][:40]
             else:
                 table = soup.find('table', class_='table-history')
                 if not table: return []
-                
-                rows = table.find('tbody').find_all('tr')
                 results = []
-                
-                for row in rows:
+                for row in table.find('tbody').find_all('tr'):
                     tds = row.find_all('td')
                     if len(tds) >= 3:
-                        # LOGIC DETEKSI KOLOM:
-                        # Jika pasaran Cambodia/Lainnya, result biasanya ada di kolom indeks 3 (kolom ke-4)
-                        # karena ada kolom Periode di indeks 2.
-                        # Khusus Macau biasanya result langsung di indeks 2.
-                        
-                        target_idx = 3 if len(tds) >= 4 and market_code != 'm17' else 2
-                        
-                        val_cell = tds[target_idx]
-                        anchor = val_cell.find('a')
-                        val = anchor.text.strip() if anchor else val_cell.text.strip()
-                        
-                        clean_val = re.sub(r'\D', '', val)
-                        if len(clean_val) == 4:
-                            results.append(clean_val)
-                            
+                        # Logic Deteksi Kolom Prize 1, 2, 3
+                        if market_code == 'm17' or len(tds) < 5:
+                            p1 = re.sub(r'\D', '', tds[2].text.strip())
+                            if len(p1) == 4: results.append([p1])
+                        else:
+                            p1 = re.sub(r'\D', '', tds[3].text.strip())
+                            p2 = re.sub(r'\D', '', tds[4].text.strip())
+                            p3 = re.sub(r'\D', '', tds[5].text.strip())
+                            if len(p1) == 4: results.append([p1, p2, p3])
                 return results[:40]
     except Exception as e:
-        print(f"Error fetching: {e}")
+        print(f"Fetch Error: {e}")
         return []
 
 @app.route('/', methods=['GET', 'POST'])
@@ -272,10 +191,10 @@ def index():
     if request.method == 'POST':
         selected = request.form.get('market')
         if selected in TARGET_POOLS:
-            res = fetch_results(TARGET_POOLS[selected])
-            if res and len(res) >= 8:
-                analysis = get_comprehensive_logic(res, selected)
-                analysis['last_res'] = res[0]
+            res_data = fetch_results(TARGET_POOLS[selected])
+            if res_data and len(res_data) >= 8:
+                analysis = get_comprehensive_logic(res_data, selected)
+                analysis['last_res'] = res_data[0][0]
             else: analysis = "error"
     return render_template('index.html', markets=markets, analysis=analysis, selected=selected)
 
