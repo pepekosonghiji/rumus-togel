@@ -209,6 +209,27 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
             p3_head = int(all_res_data[0][2][0])
             delta = str(abs(p2_head - p3_head))
             scores[delta] += 25
+
+    elif market_name == 'PHUKET':
+        # --- PHUKET CROSS-PRIZE FLOW V15.3 ---
+        
+        # 1. P2 to P1 Transfer (Analisa Angka 1425)
+        # Phuket sering menarik angka tengah dari P2 ke posisi krusial
+        if len(all_res_data[0]) >= 2:
+            p2_mid = all_res_data[0][1][1:3] # Mengambil angka 42
+            for d in p2_mid:
+                scores[d] += 25
+                scores[TY.get(d)] += 15 # Proteksi Tyseen angka tengah P2
+        
+        # 2. Ekor P1 Resonance (5963 -> 3)
+        # Mistik Baru 3 adalah 9, Mistik Lama 3 adalah 8
+        ekor_p1 = d0_p1[3]
+        scores[MB.get(ekor_p1)] += 22 
+        scores[ML.get(ekor_p1)] += 20
+        
+        # 3. Phuket "Hot" Number (Berdasarkan AM 1256)
+        for n in "1256":
+            scores[n] += 12
     
     # --- 3. GLOBAL SEED VERIFICATION ---
     seeds = [ML.get(d0_p1[0]), ID.get(d0_p1[2]), TY.get(d0_p1[3]), MB.get(d0_p1[1])]
@@ -297,6 +318,15 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, count=1
             if t == ML.get(last_p1[3]): score += 40
             # Bonus untuk angka yang mengandung unsur AI (0 atau 2)
             if '0' in line or '2' in line: score += 25
+
+        # --- [PHUKET SPECIFIC RACIKAN] ---
+        elif market_name == 'PHUKET':
+            # Phuket dominan di Biji 1, 2, 5, 7
+            if biji_f in [1, 2, 5, 7]: score += 65
+            # Head-to-Head: Jika angka depan 2D adalah angka dari P3 (3018 -> 1)
+            if h in all_res_data[0][2]: score += 35
+            # Bonus jika mengandung unsur AI (1 atau 8)
+            if '1' in line or '8' in line: score += 25
                 
         # --- [GENERAL MARKETS] ---
         else:
