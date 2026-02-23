@@ -86,53 +86,77 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
     return [x[0] for x in sorted_res[:6]]
 
 def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, count=10):
-    # bbfs_list: hasil weighted bbfs (6 digit)
-    # last_p1: prize 1 terakhir (contoh: '4569')
-    
-    # 1. PECAH BBFS MENJADI KEKUATAN POSISI (Positional Resonance)
-    # Kita ambil angka dari BBFS yang punya vibrasi dengan result terakhir
-    as_pool = [n for n in bbfs_list if n in [ML.get(last_p1[0]), TY.get(last_p1[0]), ID.get(last_p1[0])]] or bbfs_list[:3]
-    kop_pool = [n for n in bbfs_list if n in [ML.get(last_p1[1]), TY.get(last_p1[1]), ID.get(last_p1[1])]] or bbfs_list[1:4]
-    kep_pool = [n for n in bbfs_list if n in [ML.get(last_p1[2]), TY.get(last_p1[2]), ID.get(last_p1[2])]] or bbfs_list[2:5]
-    ekor_pool = [n for n in bbfs_list if n in [ML.get(last_p1[3]), TY.get(last_p1[3]), ID.get(last_p1[3])]] or bbfs_list[3:]
+    """
+    ULTIMATE MULTI-LAYER VERIFICATION ENGINE V14.5
+    Metode: Pathfinding Statistik + Cross-Validation Matrix
+    """
+    # 1. POSITIONAL MAPPING & RESONANCE (LAYER 1)
+    # Mencari resonansi angka berdasarkan pola abadi dunia
+    res_map = {
+        'as': [n for n in bbfs_list if n in [ML.get(last_p1[0]), TY.get(last_p1[0]), ID.get(last_p1[0])]],
+        'kop': [n for n in bbfs_list if n in [ML.get(last_p1[1]), TY.get(last_p1[1]), ID.get(last_p1[1])]],
+        'kep': [n for n in bbfs_list if n in [ML.get(last_p1[2]), TY.get(last_p1[2]), ID.get(last_p1[2])]],
+        'eko': [n for n in bbfs_list if n in [ML.get(last_p1[3]), TY.get(last_p1[3]), ID.get(last_p1[3])]]
+    }
 
-    # 2. GENERATE TOP 2D (Fokus Kepala & Ekor)
-    # Kita pakai kombinasi kepala-ekor yang paling masuk akal secara sum-biji
-    all_2d = []
-    for h in kep_pool:
-        for t in ekor_pool:
-            if h == t: continue # Skip twin di top 2d jitu
-            line = f"{h}{t}"
-            
-            # Filter Biji (Sum 2D)
-            biji = (int(h) + int(t))
-            biji = (biji if biji < 10 else biji % 9 or 9) # Rumus Biji Sembilan
-            
-            score = 0
-            # Cluster Biji Sakti berdasarkan Market
-            if market_name in ['HONGKONG POOLS', 'MACAU', 'CAMBODIA']:
-                if biji in [1, 4, 7, 9]: score += 50
-            else:
-                if biji in [2, 5, 8, 3]: score += 50
-                
-            all_2d.append((line, score))
-    
-    # Urutkan dan ambil 10 line terbaik
-    all_2d.sort(key=lambda x: x[1], reverse=True)
-    top2 = [x[0] for x in all_2d[:count]]
+    # Fail-safe jika resonansi kosong (menggunakan global bbfs)
+    for pos in res_map:
+        if not res_map[pos]: res_map[pos] = bbfs_list
 
-    # 3. GENERATE 3D & 4D (Precision Insertion)
+    # 2. BRUTE-FORCE PROBABILITY SCORING (LAYER 2)
+    # Kita tidak hanya pakai BBFS, tapi mengkalkulasi ulang semua kemungkinan 2D dari BBFS
+    scored_2d = []
+    # Mengambil semua kombinasi unik dari BBFS (bolak-balik)
+    raw_combinations = list(itertools.permutations(bbfs_list, 2))
+    
+    for combo in raw_combinations:
+        h, t = combo
+        line = f"{h}{t}"
+        score = 0
+        
+        # Verifikasi Pola Mistik/Indeks (Berlapis)
+        # Jika angka kepala/ekor adalah bayangan dari result terakhir, skor naik
+        if h in [ML.get(last_p1[2]), ID.get(last_p1[2])]: score += 15
+        if t in [ML.get(last_p1[3]), ID.get(last_p1[3])]: score += 15
+        
+        # Verifikasi Sum-Biji (Metode 9-Root)
+        biji = (int(h) + int(t))
+        biji_final = (biji if biji < 10 else biji % 9 or 9)
+        
+        # Filter Biji Sakti berdasarkan Cluster Market
+        if market_name in ['HONGKONG POOLS', 'MACAU', 'CAMBODIA', 'SINGAPORE POOLS']:
+            if biji_final in [1, 4, 7, 9]: score += 30
+        else:
+            if biji_final in [2, 5, 8, 3]: score += 30
+            
+        # Anti-Twin Jitu Filter
+        if h == t: score -= 20
+        
+        scored_2d.append((line, score))
+
+    # Sortir 2D terbaik berdasarkan skor probabilitas dunia
+    scored_2d.sort(key=lambda x: x[1], reverse=True)
+    top2 = [x[0] for x in scored_2d[:count]]
+
+    # 3. 3D & 4D PRECISION INJECTION (LAYER 3 & 4)
+    # Melakukan cross-check posisi As dan Kop untuk membentuk 3D/4D
     top3, top4 = [], []
-    for i in range(len(top2)):
-        # Rotasi As dan Kop agar tidak monoton
-        idx_as = i % len(as_pool)
-        idx_kop = i % len(kop_pool)
+    
+    for i, line_2d in enumerate(top2):
+        # Seleksi Kop Berdasarkan Resonansi Statistik
+        # Menggunakan rotasi indeks agar distribusi angka merata namun tetap terverifikasi
+        k_idx = i % len(res_map['kop'])
+        a_idx = i % len(res_map['as'])
         
-        a = as_pool[idx_as]
-        k = kop_pool[idx_kop]
+        kop = res_map['kop'][k_idx]
+        as_node = res_map['as'][a_idx]
         
-        top3.append(f"{k}{top2[i]}")
-        top4.append(f"{a}{k}{top2[i]}")
+        # Validasi Akhir: Jika angka Kop sama dengan angka Kepala, geser ke indeks berikutnya
+        if kop == line_2d[0]:
+            kop = res_map['kop'][(k_idx + 1) % len(res_map['kop'])]
+            
+        top3.append(f"{kop}{line_2d}")
+        top4.append(f"{as_node}{kop}{line_2d}")
 
     return top2, top3, top4
 
