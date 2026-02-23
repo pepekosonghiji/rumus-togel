@@ -310,6 +310,27 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         # Mengunci angka 1, 5, dan 8 sebagai poros BBFS
         for n in "158":
             scores[n] += 15
+
+    elif market_name == 'HONGKONG LOTTO':
+        # --- HK LOTTO REVERSAL LOGIC V15.9 ---
+        
+        # 1. Twin P1 Impact (6440 -> Twin 44)
+        # Jika ada twin di tengah P1, kuatkan angka Indeks-nya
+        if d0_p1[1] == d0_p1[2]:
+            scores[ID.get(d0_p1[1])] += 30 # Angka 9 jadi sangat kuat
+            scores[ML.get(d0_p1[1])] += 20 # Angka 7
+            
+        # 2. P2 vs P3 Cross (P2: 6577, P3: 9945)
+        # Ambil selisih ekor P2 dan P3 (7 - 5 = 2)
+        if len(all_res_data[0]) >= 3:
+            delta_ekor = str(abs(int(all_res_data[0][1][3]) - int(all_res_data[0][2][3])))
+            scores[delta_ekor] += 25
+            scores[ID.get(delta_ekor)] += 15 # Indeks 2 adalah 7
+            
+        # 3. HK "Cold-to-Hot" (Cek angka 1 dan 8 yang absen di P1-P3)
+        for n in "18":
+            if n not in "".join(all_res_data[0]):
+                scores[n] += 18
     
     # --- 3. GLOBAL SEED VERIFICATION ---
     seeds = [ML.get(d0_p1[0]), ID.get(d0_p1[2]), TY.get(d0_p1[3]), MB.get(d0_p1[1])]
@@ -450,6 +471,18 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             
             # 4. Anti-Twin di 2D Belakang (Penang jarang twin belakang)
             if h == t: score -= 25
+
+        # --- [HK LOTTO MAXIMAL PRECISION V15.9] ---
+        elif market_name == 'HONGKONG LOTTO':
+            # 1. Biji Harmony HK (Biji 1, 4, 6, 9)
+            if biji_f in [1, 4, 6, 9]: score += 75
+            
+            # 2. Positional Head-to-Head
+            # Jika As 2D adalah Mistik Lama dari Kop P1 (4 -> 7)
+            if h == ML.get(last_p1[1]): score += 40
+            
+            # 3. Injeksi Angka 9 (Karena efek twin 44)
+            if '9' in line: score += 30
                 
         # --- [GENERAL MARKETS] ---
         else:
