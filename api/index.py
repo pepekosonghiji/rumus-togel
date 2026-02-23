@@ -207,31 +207,6 @@ def fetch_results(market_code):
         print(f"Fetch Error: {e}")
         return []
 
-def check_accuracy(analysis_data, actual_results):
-    """
-    actual_results adalah list: [p1, p2, p3] atau [p1]
-    """
-    report = {"status": "Miss", "prize": None, "type": []}
-    
-    for idx, res in enumerate(actual_results):
-        prize_label = f"Prize {idx+1}"
-        
-        # 1. Cek 2D Belakang
-        two_d = res[-2:]
-        if two_d in analysis_data['top2d']:
-            report["status"] = "HIT"
-            report["prize"] = prize_label
-            report["type"].append("2D")
-            
-        # 2. Cek BBFS (4D)
-        bbfs_list = list(analysis_data['bbfs'])
-        match_count = sum(1 for char in res if char in bbfs_list)
-        if match_count >= 4:
-            report["status"] = "HIT"
-            report["prize"] = prize_label
-            report["type"].append("4D-BBFS")
-            
-    return report
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
