@@ -16,7 +16,10 @@ ML = {'1':'0', '2':'5', '3':'8', '4':'7', '6':'9', '0':'1', '5':'2', '8':'3', '7
 TY = {'0':'7', '1':'4', '2':'9', '3':'6', '4':'1', '5':'8', '6':'3', '7':'0', '8':'5', '9':'2'}
 ID = {'0':'5', '1':'6', '2':'7', '3':'8', '4':'9', '5':'0', '6':'1', '7':'2', '8':'3', '9':'4'}
 MB = {'0':'8', '1':'7', '2':'6', '3':'9', '4':'5', '5':'4', '6':'2', '7':'1', '8':'0', '9':'3'}
-SHIO_MAP = {10:"KUDA", 11:"KAMBING", 0:"MONYET", 1:"AYAM", 2:"ANJING", 3:"BABI", 4:"TIKUS", 5:"KERBAU", 6:"MACAN", 7:"KELINCI", 8:"NAGA", 9:"ULAR"}
+SHIO_MAP = {
+    1:"AYAM", 2:"ANJING", 3:"BABI", 4:"TIKUS", 5:"KERBAU", 6:"MACAN", 
+    7:"KELINCI", 8:"NAGA", 9:"ULAR", 10:"KUDA", 11:"KAMBING", 0:"MONYET"
+}
 
 TARGET_POOLS = {
     'BEIJING': 'p24492', 'BUSAN POOLS':'p16063', 'CAMBODIA': 'p3501', 
@@ -134,22 +137,22 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, count=10):
     return top2, top3, top4
 
 def get_comprehensive_logic(all_res_data, m_name):
-    d0_p1 = all_res_data[0][0]
+    d0_p1 = all_res_data[0][0] # Ambil P1 terakhir (4 digit)
     bbfs_raw = get_weighted_bbfs_v14_1(all_res_data, m_name) 
     
-    bbfs_final = sorted(bbfs_raw)
-    # AM sekarang diambil dari 4 skor tertinggi bbfs
-    am = sorted(bbfs_raw[:4])
-    al = sorted(list(set([ML.get(d0_p1[3], '0'), MB.get(d0_p1[3], '0'), TY.get(d0_p1[3], '0')])))[:3]
-    ai = sorted(list(set([ID.get(d0_p1[2], '0'), ID.get(d0_p1[3], '0'), TY.get(d0_p1[2], '0')])))[:3]
-
+    # 2D Belakang untuk Shio
+    dua_d_belakang = int(d0_p1[2:])
+    shio_idx = dua_d_belakang % 12
+    
     top2, top3, top4 = generate_titanium_lines_v14(bbfs_raw, d0_p1, m_name)
     
     return {
-        "bbfs": "".join(bbfs_final),
-        "am": "".join(am), "al": "".join(al), "ai": "".join(ai),
+        "bbfs": "".join(sorted(bbfs_raw)),
+        "am": "".join(sorted(bbfs_raw[:4])), # 4 digit terkuat
+        "al": "".join(sorted(list(set([ML.get(d0_p1[3], '0'), TY.get(d0_p1[3], '0')])))),
+        "ai": "".join(sorted(list(set([ID.get(d0_p1[2], '0'), ID.get(d0_p1[3], '0')])))),
         "top2d": top2, "top3d": top3, "top4d": top4,
-        "shio": SHIO_MAP.get(int(d0_p1[2:]) % 12 or 12),
+        "shio": SHIO_MAP.get(shio_idx, "N/A"),
         "macau": f"{bbfs_raw[0]}{bbfs_raw[1]} - {bbfs_raw[2]}{bbfs_raw[3]}",
         "twin": f"{bbfs_raw[0]}{bbfs_raw[0]}, {bbfs_raw[1]}{bbfs_raw[1]}"
     }
@@ -158,52 +161,42 @@ def fetch_results(market_code):
     headers = {'User-Agent': 'Mozilla/5.0'}
     try:
         with httpx.Client(timeout=10.0, verify=False) as client:
-            # Jalur khusus untuk HK_SPECIAL jika masih menggunakan tabelsemalam
             if market_code == "HK_SPECIAL":
                 url = "https://tabelsemalam.com/"
                 r = client.get(url, headers=headers)
                 soup = BeautifulSoup(r.text, 'html.parser')
                 table = soup.find('table')
-                return [[tds[1].text.strip()] for row in table.find('tbody').find_all('tr') if (tds := row.find_all('td')) and len(tds) >= 2 and tds[1].text.strip().isdigit()][:40]
+                if not table: return []
+                res = []
+                for row in table.find('tbody').find_all('tr'):
+                    tds = row.find_all('td')
+                    if len(tds) >= 2:
+                        val = re.sub(r'\D', '', tds[1].text.strip())
+                        if len(val) == 4: res.append([val])
+                return res[:40]
             
-            # Jalur umum untuk history result
+            # Jalur Umum
             url = f"https://4upk6k0qz6.salamrupiah.com/history/result-mobile/{market_code}-pool-1"
             r = client.get(url, headers=headers)
             soup = BeautifulSoup(r.text, 'html.parser')
-            
             table = soup.find('table', class_='table-history')
             if not table: return []
             
             results = []
             rows = table.find('tbody').find_all('tr')
-            
             for row in rows:
                 tds = row.find_all('td')
-                # Minimal harus ada 4 kolom (Tgl, Hari, Periode, Angka)
                 if len(tds) >= 4:
-                    try:
-                        # Ambil teks dari dalam tag <a> jika ada, jika tidak ambil teks langsung dari <td>
-                        def get_num(td_elem):
-                            link = td_elem.find('a')
-                            text = link.text if link else td_elem.text
-                            return re.sub(r'\D', '', text.strip())
+                    def get_num(td_elem):
+                        link = td_elem.find('a')
+                        return re.sub(r'\D', '', link.text if link else td_elem.text)
 
-                        # Berdasarkan HTML baru, Prize 1 SELALU ada di indeks 3 (kolom ke-4)
-                        p1 = get_num(tds[3])
-                        
-                        # Cek apakah ini pasaran dengan 3 Prize (biasanya len(tds) == 6)
+                    p1 = get_num(tds[3])
+                    if len(p1) == 4:
                         if len(tds) >= 6:
-                            p2 = get_num(tds[4])
-                            p3 = get_num(tds[5])
-                            if len(p1) == 4:
-                                results.append([p1, p2, p3])
+                            results.append([p1, get_num(tds[4]), get_num(tds[5])])
                         else:
-                            # Pasaran 1 Prize (Oregon/Macau/Standar)
-                            if len(p1) == 4:
-                                results.append([p1])
-                    except:
-                        continue
-                            
+                            results.append([p1])
             return results[:40]
     except Exception as e:
         print(f"Fetch Error: {e}")
@@ -214,15 +207,20 @@ def fetch_results(market_code):
 def index():
     analysis, selected = None, None
     markets = sorted(TARGET_POOLS.keys())
+    
     if request.method == 'POST':
         selected = request.form.get('market')
         if selected in TARGET_POOLS:
             res_data = fetch_results(TARGET_POOLS[selected])
+            
             if res_data and len(res_data) >= 8:
                 analysis = get_comprehensive_logic(res_data, selected)
+                # --- TARUH DI SINI (Di dalam kondisi data sukses ada) ---
                 analysis['last_res'] = res_data[0][0]
-            else: analysis = "error"
+                analysis['p2_last'] = res_data[0][1] if len(res_data[0]) > 1 else "-"
+                analysis['p3_last'] = res_data[0][2] if len(res_data[0]) > 2 else "-"
+            else: 
+                analysis = "error"
+                
     return render_template('index.html', markets=markets, analysis=analysis, selected=selected)
-
-if __name__ == "__main__":
     app.run(debug=True)
