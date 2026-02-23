@@ -264,8 +264,30 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         scores[str(delta_wuhan)] += 35
         scores[TY.get(str(delta_wuhan), '0')] += 20
 
-        # 3. Anti-Angka Mati (Wuhan jarang mengeluarkan angka yang sudah 3 hari berturut-turut muncul)
-        # (Sudah terhandle secara otomatis oleh weighting frequency)
+    elif market_name == 'DANANG':
+        # --- DANANG CHAIN-TAIL LOGIC V15.6 ---
+        
+        # 1. Ekor Chain Transfer (P2: 2601, P3: 5372)
+        # Danang sering menarik ekor P2/P3 untuk jadi AI Utama
+        if len(all_res_data[0]) >= 3:
+            eko_p2 = all_res_data[0][1][3] # Angka 1
+            eko_p3 = all_res_data[0][2][3] # Angka 2
+            scores[eko_p2] += 28
+            scores[eko_p3] += 28
+            # Shadow dari ekor tersebut
+            scores[ID.get(eko_p2)] += 15
+            scores[ID.get(eko_p3)] += 15
+
+        # 2. Resonansi Mistik Kop P1 (7093 -> 0)
+        # Angka 0 sering berubah jadi 1 (ML) atau 8 (MB)
+        kop_p1 = d0_p1[1]
+        scores[ML.get(kop_p1)] += 20
+        scores[MB.get(kop_p1)] += 20
+        
+        # 3. Danang "Middle-Low" (Berdasarkan AM 0347)
+        # Menjaga angka 3, 4, 7 agar tetap stabil di BBFS
+        for n in "347":
+            scores[n] += 12
     
     # --- 3. GLOBAL SEED VERIFICATION ---
     seeds = [ML.get(d0_p1[0]), ID.get(d0_p1[2]), TY.get(d0_p1[3]), MB.get(d0_p1[1])]
@@ -373,6 +395,18 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             # Wuhan identik dengan Biji 2, 6, 9
             if biji_f in [2, 6, 9]: score += 65
             if t == MB.get(last_p1[3]): score += 40 # Mistik Baru Ekor
+
+        # --- [DANANG SPECIFIC RACIKAN] ---
+        elif market_name == 'DANANG':
+            # Danang identik dengan Biji 3, 6, 9 (Kelipatan 3)
+            if biji_f in [3, 6, 9]: score += 65
+            
+            # Head-to-Head: Jika angka belakang (Ekor) adalah Mistik/Indeks dari As P1 (7)
+            # As P1 adalah 7, maka ekor jitu 4 (ML) atau 2 (ID)
+            if t in [ML.get(last_p1[0]), ID.get(last_p1[0])]: score += 45
+            
+            # Bonus AI (4 atau 8)
+            if '4' in line or '8' in line: score += 25
                 
         # --- [GENERAL MARKETS] ---
         else:
