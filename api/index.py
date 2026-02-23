@@ -123,6 +123,31 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         for n in "0123456789":
             if n not in cold_check: scores[n] += 25
 
+    elif market_name == 'BUSAN POOLS':
+        # --- BUSAN POOLS ELITE LOGIC V14.8 ---
+        
+        # 1. Twin-Detection & Mirroring
+        # Jika ada angka kembar (seperti 44), beri bobot besar pada Indeks & Mistiknya
+        for i in range(len(d0_p1)-1):
+            if d0_p1[i] == d0_p1[i+1]:
+                twin_digit = d0_p1[i]
+                scores[ID.get(twin_digit)] += 35 # Indeks (4->9)
+                scores[ML.get(twin_digit)] += 25 # Mistik Lama (4->7)
+        
+        # 2. Cross-Prize Validation (P2 & P3)
+        # Busan sering memindahkan angka dari P2 ke P1 di periode berikutnya
+        if len(all_res_data[0]) >= 2:
+            p2_digits = all_res_data[0][1]
+            for d in p2_digits:
+                scores[d] += 20
+                scores[TY.get(d, '0')] += 15 # Tyseen dari P2
+
+        # 3. Pola Biji Genap-Ganjil Busan
+        # Secara statistik Busan sering mendarat di Biji 3, 6, 9
+        for n in "0123456789":
+            if int(n) % 3 == 0 and n != '0':
+                scores[n] += 18
+
     # --- 3. GLOBAL SEED VERIFICATION ---
     seeds = [ML.get(d0_p1[0]), ID.get(d0_p1[2]), TY.get(d0_p1[3]), MB.get(d0_p1[1])]
     for s in seeds: scores[s] += 12
@@ -133,8 +158,8 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
 
 def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, count=10):
     """
-    ULTIMATE MULTI-LAYER VERIFICATION ENGINE V14.6
-    Special Sub-Logic: Sydney & Cambodia Optimization
+    ULTIMATE MULTI-LAYER VERIFICATION ENGINE V14.8
+    Special Sub-Logic: Sydney, Cambodia, & Busan Pools Optimization
     """
     # 1. POSITIONAL MAPPING
     res_map = {
@@ -157,10 +182,9 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, count=10):
         biji_f = (biji if biji < 10 else biji % 9 or 9)
         
         # --- [SYDNEY SPECIFIC RACIKAN] ---
-        # Di dalam loop combo generate_titanium_lines_v14:
         if market_name == 'SYDNEY LOTTO':
             # Sydney sangat identik dengan Biji 2, 5, 8
-            if biji_final in [2, 5, 8]: score += 65
+            if biji_f in [2, 5, 8]: score += 65
             # Sequential Bonus (+/- 1)
             if abs(int(h) - int(t)) == 1: score += 40
             # NEW: Mirror Balance (Jika H dan T adalah pasangan Indeks, skor naik)
@@ -172,6 +196,15 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, count=10):
             if t == TY.get(last_p1[3]): score += 45
             delta = abs(int(last_p1[2]) - int(last_p1[3]))
             if str(delta) in line: score += 25
+
+        # --- [BUSAN POOLS SPECIFIC RACIKAN] ---
+        elif market_name == 'BUSAN POOLS':
+            # Busan sangat akurat pada Biji 3, 6, 9 (Kelipatan 3)
+            if biji_f in [3, 6, 9]: score += 65
+            # Twin-Mirror Detection: Resonansi angka kembar P1 terakhir (44 -> 9)
+            if h == ID.get(last_p1[1]) or t == ID.get(last_p1[2]): score += 40
+            # Verifikasi Mistik Baru dari Ekor P1 terakhir
+            if t == MB.get(last_p1[3]): score += 30
 
         # --- [GENERAL MARKETS] ---
         else:
@@ -195,8 +228,11 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, count=10):
         kop = res_map['kop'][k_idx]
         asn = res_map['as'][a_idx]
         
-        # Sydney Anti-Crash: Jika angka Kop ganjil, pastikan As genap (atau sebaliknya)
-        # Pola keseimbangan ini sering terjadi di Sydney Lotto
+        # Busan Logic: Injeksi Kop dari vibrasi primer
+        if market_name == 'BUSAN POOLS' and i < 5:
+            kop = res_map['kop'][0]
+
+        # Sydney Anti-Crash: Keseimbangan Ganjil-Genap
         if market_name == 'SYDNEY LOTTO':
             if int(kop) % 2 == int(l2[0]) % 2:
                 kop = bbfs_list[(bbfs_list.index(kop) + 1) % len(bbfs_list)]
