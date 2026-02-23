@@ -367,25 +367,30 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         scores['8'] += 25 # Perkuat angka 8 karena sering jadi As
 
     elif market_name == 'MANHATTAN':
-        # --- [V16.3 MANHATTAN BIG APPLE LOGIC] ---
+        # --- [V16.5 MANHATTAN REBORN - AS 7 SECURED] ---
         
-        # 1. Twin-Impact P2 (P2: 6331)
-        # Manhattan sering menarik Indeks atau Mistik dari twin P2
-        # Indeks 3 -> 8, Mistik Lama 3 -> 8, Mistik Baru 3 -> 9
-        scores['8'] += 30 
-        scores['9'] += 25
-        
-        # 2. Zero-Absen Protection
-        # Jika P1 ekornya 2, Manhattan sering lari ke Tyseen 2 -> 9
-        # Atau Mistik Baru 2 -> 6
-        eko_p1 = d0_p1[3]
-        scores[TY.get(eko_p1)] += 28 # Angka 9
-        scores[MB.get(eko_p1)] += 20 # Angka 6
-        
-        # 3. Manhattan AI Booster (AI 57)
-        # Memaksa angka 7 untuk naik ke BBFS 6D
-        scores['7'] += 35
-        scores['5'] += 20
+        # 1. AI Booster (AI 57) -> Pertahankan karena JP AS 7
+        scores['7'] += 45 # Naikkan sedikit untuk mengunci As/Kepala
+        scores['5'] += 25
+
+        # 2. P2-Tail Transfer Logic (Merespon Result 7101)
+        # Manhattan menarik Ekor P2 (6331 -> 1) ke posisi Kop dan Ekor P1
+        if len(all_res_data[0]) >= 2:
+            eko_p2 = all_res_data[0][1][3]
+            scores[eko_p2] += 35 # Angka 1 masuk radar utama
+            scores[ID.get(eko_p2)] += 15 # Indeks 1 -> 6 sebagai cadangan
+
+        # 3. As-Mirroring Resonance (Result 7101 -> 7)
+        # Jika P1 sebelumnya 5402, Manhattan sering memanggil Mistik Baru As (5 -> 4)
+        # atau Indeks As (5 -> 0).
+        as_p1 = d0_p1[0]
+        scores[MB.get(as_p1)] += 20
+        scores[ID.get(as_p1)] += 20
+
+        # 4. Zero & Tyseen Protection (2 -> 9)
+        eko_p1_last = d0_p1[3]
+        scores[TY.get(eko_p1_last)] += 25 # Angka 9 tetap kuat
+        scores['0'] += 15 # Angka 0 tetap dijaga karena muncul di 7101
         
     # --- 3. GLOBAL SEED VERIFICATION ---
     seeds = [ML.get(d0_p1[0]), ID.get(d0_p1[2]), TY.get(d0_p1[3]), MB.get(d0_p1[1])]
@@ -574,21 +579,28 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
                 score += 30
 
         # --- [V16.3 MANHATTAN MAXIMAL PRECISION] ---
+        # --- [V16.5 MANHATTAN MAXIMAL PRECISION] ---
         elif market_name == 'MANHATTAN':
-            # 1. BIJI FAVORIT MANHATTAN (Biji 1, 3, 5, 8)
-            if biji_f in [1, 3, 5, 8]: 
-                score += 85 # Skor Filter Tinggi
+            # 1. BIJI HARMONY MANHATTAN (Biji 1, 3, 5, 8) -> Result 7101 biji 9/0
+            # Kita tambahkan Biji 9 untuk mengakomodasi pola result terbaru
+            if biji_f in [1, 3, 5, 8, 9]: 
+                score += 85 
             
-            # 2. HEAD-TO-HEAD POSITION
-            # Jika Ekor 2D adalah Mistik Lama dari Kepala P1 (5 -> 2)
-            if t == ML.get(last_p1[0]): score += 40
+            # 2. POSITION VERIFICATION: THE 7-ANCHOR
+            # Karena 7 baru saja keluar di AS, potensi 7 pindah ke Kepala atau Ekor sangat besar
+            if '7' in line:
+                if line.index('7') >= 2: score += 45 # Fokus 7 di 2D belakang
             
-            # 3. THE 7-VIBRATION
-            # Karena AI Mamang 57, kita beri bonus untuk line yang punya angka 7
-            if '7' in line: score += 35
+            # 3. TAIL CONNECTION (Ekor P2 -> Ekor Sekarang)
+            # Verifikasi jika ekor 2D sama dengan ekor P2 (Angka 1)
+            if t == all_res_data[0][1][3]: score += 40
             
-            # 4. ANTI-TWIN BELAKANG
-            if h == t: score -= 30
+            # 4. ANTI-TWIN & SLIP DETECTION
+            # Manhattan hobi Twin Selip (7101), tapi jarang Twin murni di belakang (xx11)
+            if h == t: 
+                score -= 35 
+            else:
+                score += 20 # Beri bonus untuk angka non-twin di belakang
                 
         # --- [GENERAL MARKETS] ---
         else:
