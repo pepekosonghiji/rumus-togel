@@ -133,6 +133,8 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
                 twin_digit = d0_p1[i]
                 scores[ID.get(twin_digit)] += 35 # Indeks (4->9)
                 scores[ML.get(twin_digit)] += 25 # Mistik Lama (4->7)
+            if '0' in all_res_data[0][2]:
+                scores['0'] += 35
         
         # 2. Cross-Prize Validation (P2 & P3)
         # Busan sering memindahkan angka dari P2 ke P1 di periode berikutnya
