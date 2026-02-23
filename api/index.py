@@ -393,25 +393,28 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         scores['0'] += 15 # Angka 0 tetap dijaga karena muncul di 7101
 
     elif market_name == 'TORONTOEVE':
-        # --- [V16.7 TORONTOEVE MIRROR-CHAIN LOGIC] ---
+        # --- [V16.8 TORONTOEVE REBORN - AS 8 & HEAD 0 SECURED] ---
         
-        # 1. P2 Mirror Impact (P2: 7916)
-        # Toronto sering menarik Indeks dari As/Kop P2 (79 -> 24)
-        as_p2 = all_res_data[0][1][0]
-        kop_p2 = all_res_data[0][1][1]
-        scores[ID.get(as_p2)] += 28 # Indeks 7 adalah 2
-        scores[ID.get(kop_p2)] += 28 # Indeks 9 adalah 4
-
-        # 2. Ekor Jump (P1: 0265 -> 5)
-        # Ekor 5 sering berubah jadi Tyseen (8) atau Mistik Lama (2)
+        # 1. Tyseen-As Protection (P1 Ekor 5 -> Result AS 8)
+        # Terbukti JP, kita naikkan bobot untuk mengunci As periode depan
         eko_p1 = d0_p1[3]
-        scores[TY.get(eko_p1)] += 25 # Angka 8
-        scores[ML.get(eko_p1)] += 20 # Angka 2
+        scores[TY.get(eko_p1)] += 40 
+        
+        # 2. Self-Mirroring (As lari ke Ekor via Mistik Lama)
+        # Menangkap pola 8 -> 3 (Mistik Lama)
+        as_p1 = d0_p1[0]
+        scores[ML.get(as_p1)] += 30 
+        
+        # 3. Direct Prize-Transfer (Merespon Result 8703 yang bawa angka 7)
+        # Toronto hobi membawa angka mentah dari P2 (7916) ke P1
+        if len(all_res_data[0]) >= 2:
+            scores[all_res_data[0][1][0]] += 25 # Angka 7
+            scores[all_res_data[0][1][1]] += 25 # Angka 9
 
-        # 3. Toronto AI Strength (AI 01)
-        # Menjaga angka 0 dan 1 tetap stabil di posisi atas
-        scores['0'] += 15
-        scores['1'] += 15
+        # 4. Toronto AI Strength (AI 01)
+        # Angka 0 terbukti JP di Kepala, pertahankan!
+        scores['0'] += 20
+        scores['1'] += 20
 
     elif 'OREGON' in market_name:
         # --- [V16.6 OREGON SINGLE-PRIZE LOGIC] ---
@@ -647,23 +650,27 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             else:
                 score += 20 # Beri bonus untuk angka non-twin di belakang
 
-        # --- [V16.7 TORONTOEVE MAXIMAL PRECISION] ---
+        # --- [V16.8 TORONTOEVE MAXIMAL PRECISION] ---
         elif market_name == 'TORONTOEVE':
-            # 1. BIJI FAVORIT TORONTO (Biji 1, 2, 4, 7)
-            if biji_f in [1, 2, 4, 7]: 
+            # 1. BIJI FAVORIT TORONTO (Ditambah Biji 9 untuk mengakomodasi 8703)
+            if biji_f in [1, 2, 4, 7, 9]: 
                 score += 85 
             
-            # 2. POSITION VERIFICATION
-            # Jika Kepala 2D adalah Mistik Baru dari Ekor P1 (5 -> 4)
-            if h == MB.get(last_p1[3]): score += 45
+            # 2. AS-TO-TAIL VERIFICATION
+            # Jika Ekor 2D adalah Mistik Lama dari As Result (8 -> 3)
+            if t == ML.get(last_p1[0]): score += 50
             
-            # 3. CHAIN-INDEX CHECK
-            # Jika Ekor 2D adalah Indeks dari As P1 (0 -> 5)
-            if t == ID.get(last_p1[0]): score += 40
+            # 3. POSITION VERIFICATION (Kepala 0 Terbukti)
+            # Jika Kepala 2D adalah AI Utama (0 atau 1)
+            if h in ['0', '1']: score += 40
             
-            # 4. ANTI-TWIN POSITIVE
-            # Toronto jarang twin, tapi kalau ada twin biasanya di tengah (Kop-Kepala)
-            if h == t: score -= 30
+            # 4. CROSS-PRIZE VERIF
+            # Jika angka 2D muncul di Prize 2 sebelumnya (7916)
+            if h in all_res_data[0][1] or t in all_res_data[0][1]:
+                score += 35
+                
+            # 5. ANTI-TWIN (Toronto tetap jarang twin belakang)
+            if h == t: score -= 35
 
         # --- [V16.6 OREGON MAXIMAL PRECISION] ---
         elif 'OREGON' in market_name:
