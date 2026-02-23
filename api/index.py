@@ -283,6 +283,13 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, count=10):
 
     # 3. 3D & 4D CONSTRUCTION (LAYER 3 & 4)
     top3, top4 = [], []
+    
+    # --- [ V15.1 PRE-CALCULATION ] ---
+    # Mengambil 3 angka terkuat dari masing-masing posisi berdasarkan bobot scores global
+    # Ini memastikan As dan Kop bukan sekadar rotasi, tapi benar-benar angka jitu
+    best_as = sorted(res_map['as'], key=lambda x: scores.get(x, 0), reverse=True)[:3]
+    best_kop = sorted(res_map['kop'], key=lambda x: scores.get(x, 0), reverse=True)[:3]
+
     for i, l2 in enumerate(top2):
         k_idx = i % len(res_map['kop'])
         a_idx = i % len(res_map['as'])
@@ -301,10 +308,31 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, count=10):
 
         if kop == l2[0]: 
             kop = bbfs_list[(bbfs_list.index(kop) + 1) % len(bbfs_list)]
+
+        # --- [ V15.1 FINAL VERIFICATION LAYER ] ---
+        # 1. Validasi Kop & As menggunakan Best Position
+        # Jika rotasi menghasilkan angka lemah, ganti dengan salah satu dari 3 angka terkuat
+        if i < 5: # Fokus pengetatan pada Top 5 Line
+            if scores.get(kop, 0) < scores.get(best_kop[0], 0):
+                kop = best_kop[i % len(best_kop)]
+            if scores.get(asn, 0) < scores.get(best_as[0], 0):
+                asn = best_as[i % len(best_as)]
+
+        # 2. Sum-Biji Harmony Check (Total 4D harus di rentang 10 - 32)
+        # Jika total angka terlalu ekstrem, lakukan Shift-Indeks pada As
+        line_check = f"{asn}{kop}{l2}"
+        total_4d = sum(int(d) for d in line_check)
+        
+        if total_4d < 10 or total_4d > 32:
+            asn = ID.get(asn) # Tukar ke angka bayangan untuk menyeimbangkan vibrasi
             
         top3.append(f"{kop}{l2}")
         top4.append(f"{asn}{kop}{l2}")
 
+    # 3. Final Harmony Sorting
+    # Baris yang memiliki jumlah total 15, 18, 24, 27 (Angka Harmoni Bandot) dinaikkan
+    top4.sort(key=lambda x: 1 if sum(int(d) for d in x) in [15, 18, 24, 27] else 0, reverse=True)
+    
     return top2, top3, top4
 
 def get_comprehensive_logic(all_res_data, m_name):
