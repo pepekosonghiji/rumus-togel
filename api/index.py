@@ -312,25 +312,34 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
             scores[n] += 15
 
     elif market_name == 'HONGKONG LOTTO':
-        # --- HK LOTTO REVERSAL LOGIC V15.9 ---
+        # --- [V16.1 HK-LOTTO ELITE WEIGHTING] ---
         
-        # 1. Twin P1 Impact (6440 -> Twin 44)
-        # Jika ada twin di tengah P1, kuatkan angka Indeks-nya
+        # A. JUMP DETECTION (As P1 -> Ekor Depan)
+        # Menangkap pola 6440 -> 7736 (6 Jadi 3 via Tyseen)
+        as_p1 = d0_p1[0]
+        scores[as_p1] += 25
+        scores[TY.get(as_p1)] += 30 # Proteksi Tyseen (Sangat Kuat di HK)
+        scores[ID.get(as_p1)] += 20 # Proteksi Indeks
+        
+        # B. TWIN-SHADOW RESONANCE
+        # Jika P1 sebelumnya Twin Tengah (44), maka HK Lotto cenderung lari ke 
+        # Mistik Lama dari angka tersebut (4 -> 7) secara Twin.
         if d0_p1[1] == d0_p1[2]:
-            scores[ID.get(d0_p1[1])] += 30 # Angka 9 jadi sangat kuat
-            scores[ML.get(d0_p1[1])] += 20 # Angka 7
-            
-        # 2. P2 vs P3 Cross (P2: 6577, P3: 9945)
-        # Ambil selisih ekor P2 dan P3 (7 - 5 = 2)
+            twin_digit = d0_p1[1]
+            scores[ML.get(twin_digit)] += 35 # Mengunci angka 7
+            scores[MB.get(twin_digit)] += 25 
+
+        # C. CROSS-PRIZE DELTA (P1-P2-P3)
         if len(all_res_data[0]) >= 3:
-            delta_ekor = str(abs(int(all_res_data[0][1][3]) - int(all_res_data[0][2][3])))
-            scores[delta_ekor] += 25
-            scores[ID.get(delta_ekor)] += 15 # Indeks 2 adalah 7
+            # Selisih Ekor P2 (7) dan Ekor P3 (5) = 2. Mistik 2 = 5.
+            delta_eko = str(abs(int(all_res_data[0][1][3]) - int(all_res_data[0][2][3])))
+            scores[delta_eko] += 22
+            scores[ID.get(delta_eko)] += 18
             
-        # 3. HK "Cold-to-Hot" (Cek angka 1 dan 8 yang absen di P1-P3)
-        for n in "18":
-            if n not in "".join(all_res_data[0]):
-                scores[n] += 18
+        # D. AKURASI BIJI DOMINAN
+        # HK Lotto sangat kuat di Biji 1, 4, 6, 9
+        for n in "0123456789":
+            if n in "1469": scores[n] += 15
     
     # --- 3. GLOBAL SEED VERIFICATION ---
     seeds = [ML.get(d0_p1[0]), ID.get(d0_p1[2]), TY.get(d0_p1[3]), MB.get(d0_p1[1])]
@@ -473,16 +482,26 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             if h == t: score -= 25
 
         # --- [HK LOTTO MAXIMAL PRECISION V15.9] ---
+        # --- [V16.1 HK-LOTTO PRECISE GENERATOR] ---
         elif market_name == 'HONGKONG LOTTO':
-            # 1. Biji Harmony HK (Biji 1, 4, 6, 9)
-            if biji_f in [1, 4, 6, 9]: score += 75
+            # 1. BIJI HARMONY (Filter Utama)
+            if biji_f in [1, 4, 6, 9]: 
+                score += 85 # Skor Filter Tertinggi
             
-            # 2. Positional Head-to-Head
-            # Jika As 2D adalah Mistik Lama dari Kop P1 (4 -> 7)
-            if h == ML.get(last_p1[1]): score += 40
+            # 2. POSITIONAL VERIFICATION (Head-to-Head)
+            # Pola: Jika Kepala 2D adalah Tyseen dari Ekor P1 (0 -> 7)
+            if h == TY.get(last_p1[3]): score += 45
             
-            # 3. Injeksi Angka 9 (Karena efek twin 44)
-            if '9' in line: score += 30
+            # Pola: Jika Ekor 2D adalah Mistik/Indeks dari Kepala P1 (9 -> 6/4)
+            if t in [ML.get(last_p1[2]), ID.get(last_p1[2])]: score += 40
+
+            # 3. TWIN PROTECTION (Merespon 77)
+            # Jika angka depan (As/Kop) adalah angka yang sama, beri bonus besar
+            # Ini untuk menangkap pola Twin Depan/Belakang yang sering muncul di HK
+            if h == t: score += 35
+            
+            # 4. INJEKSI VIBRASI (Angka 7 dan 3)
+            if '7' in line or '3' in line: score += 30
                 
         # --- [GENERAL MARKETS] ---
         else:
