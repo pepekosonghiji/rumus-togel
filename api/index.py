@@ -538,7 +538,7 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             
             # 3. GHOST POSITION (Angka P2/P3 di posisi As)
             # Jika As adalah angka yang muncul di P2/P3 kemarin
-            p2_res = last_p1_all[1] if len(last_p1_all) > 1 else ""
+            p2_res = all_res_data[0][1] if len(all_res_data[0]) > 1 else ""
             if line[0] in p2_res or line[3] in p2_res:
                 score += 45
                 
@@ -573,7 +573,7 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
                 score += 40
                 
             # 4. ANTI-SANDWICH (Jangan pasang As=Ekor lagi, jarang terjadi 2x beruntun)
-            if line[0] == line[3]:
+            if line[0] == line[1]:
                 score -= 70
                 
             # 5. POSITION LOCK (Ekor Ganjil)
@@ -632,7 +632,10 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             
             # 3. GREECE PATTERN: CROSS-P3
             # Ekor 2D sinkron dengan angka depan P3 (4828 -> 4)
-            if t == all_res_data[0][2][0]: score += 40
+            # BENAR
+            if len(all_res_data[0]) > 2 and len(all_res_data[0][2]) > 0:
+                if t == all_res_data[0][2][0]: 
+                    score += 40
             
             # 4. TWIN DETECTION (Belajar dari 66)
             # Jika ada potensi twin di belakang, beri bonus jika biji cocok
@@ -697,7 +700,7 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             
             # 2. DOUBLE-WRAP VERIFICATION
             # Bonus jika As dan Ekor menggunakan angka yang sama (Pola 9...9)
-            if line[0] == line[3]: 
+            if line[0] == line[1]: 
                 score += 45
             
             # 3. MISTIK-JUMP POSITION
@@ -777,8 +780,10 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             if int(kop) % 2 == int(l2[0]) % 2:
                 kop = bbfs_list[(bbfs_list.index(kop) + 1) % len(bbfs_list)]
 
-        if kop == l2[0]: 
+        safety_counter = 0
+        while (kop in l2 or kop == asn) and safety_counter < len(bbfs_list):
             kop = bbfs_list[(bbfs_list.index(kop) + 1) % len(bbfs_list)]
+            safety_counter += 1
 
         # --- [ V15.1 FINAL VERIFICATION LAYER ] ---
         # 1. Validasi Kop & As menggunakan Best Position
@@ -850,7 +855,7 @@ def fetch_results(market_code):
                 return res[:40]
             
             # Jalur Umum (Tetap sama, tapi tambahkan proteksi list)
-            url = f"https://nfx1avfcy8.salamrupiah.com/history/result-mobile/{market_code}-pool-1"
+            url = f"https://nfx1avfcy8.salamtarget.com/history/result-mobile/{market_code}-pool-1"
             r = client.get(url, headers=headers)
             soup = BeautifulSoup(r.text, 'html.parser')
             table = soup.find('table', class_='table-history')
