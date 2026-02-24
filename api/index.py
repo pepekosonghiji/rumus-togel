@@ -191,25 +191,31 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         scores['6'] += 15
         
     elif market_name == 'OSAKA':
-        # --- OSAKA SHADOW-DETECTION V15.2 ---
+        # --- [V16.17 OSAKA GHOST-TWIN LOGIC] ---
+        # 1. Twin-Breakdown (Result 1196 -> Twin 11)
+        # Jika ada twin di depan, angka tersebut harus di-Mistik/Indeks
+        twin_digit = d0_p1[0] if d0_p1[0] == d0_p1[1] else ""
+        if twin_digit:
+            scores[ID.get(twin_digit, '0')] += 35 # 1 jadi 6 (Muncul di AM!)
+            scores[ML.get(twin_digit, '0')] += 25 # 1 jadi 0 (Muncul di BBFS!)
+            
+        # 2. Shadow-Extraction (P2: 3995, P3: 8179)
+        # Mengambil angka yang dominan di Prize bawah tapi belum keluar di P1 belakang
+        p2_res = all_res_data[0][1] if len(all_res_data[0]) > 1 else ""
+        p3_res = all_res_data[0][2] if len(all_res_data[0]) > 2 else ""
         
-        # 1. Lindungi Angka Indeks & Tyseen (Anti-Meleset 96)
-        # Ambil angka dari AM dan cari bayangannya
-        for n in "12345": 
-            scores[ID.get(n)] += 15 # Indeks (4 jadi 9)
-            scores[TY.get(n)] += 15 # Tyseen (3 jadi 6)
+        for d in set(p2_res + p3_res):
+            scores[ID.get(d, '0')] += 20
+            if d == '9': scores['4'] += 25 # Indeks 9 adalah 4 (AI Mamang!)
+
+        # 3. Delta Head P2-P3 (Sesuai Logic Mamang)
+        if p2_res and p3_res:
+            delta = str(abs(int(p2_res[0]) - int(p3_res[0]))) # |3 - 8| = 5
+            scores[delta] += 30 # Angka 5 kuat!
             
-        # 2. Twin Front Protection
-        # Jika P1 terakhir tidak ada twin, maka potensi twin di periode depan naik
-        if len(set(d0_p1)) == 4:
-            scores[d0_p1[0]] += 20 # Kuatkan angka depan untuk potensi Twin
-            
-        # 3. Delta P2-P3 (Tetap digunakan)
-        if len(all_res_data[0]) >= 3:
-            p2_head = int(all_res_data[0][1][0])
-            p3_head = int(all_res_data[0][2][0])
-            delta = str(abs(p2_head - p3_head))
-            scores[delta] += 25
+        # 4. Osaka AI Anchor (AI 14)
+        scores['1'] += 25
+        scores['4'] += 25
 
     elif market_name == 'PHUKET':
         # --- PHUKET CROSS-PRIZE FLOW V15.3 ---
@@ -567,14 +573,27 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             # Anti-Twin di posisi 2D Belakang
             if h == t: score -= 30
 
-        # --- [OSAKA SPECIFIC RACIKAN] ---
         elif market_name == 'OSAKA':
-            # Osaka dominan di Biji 4, 6, 8
-            if biji_f in [4, 6, 8]: score += 65
-            # Jika angka belakang sama dengan Mistik Lama dari ekor P1 (5 -> 2)
-            if t == ML.get(last_p1[3]): score += 40
-            # Bonus untuk angka yang mengandung unsur AI (0 atau 2)
-            if '0' in line or '2' in line: score += 25
+            # --- [V16.17 OSAKA MAXIMAL PRECISION] ---
+            # 1. BIJI SPECTRUM (Osaka: 4, 6, 8 + Biji 2 dari Result 1196)
+            if biji_f in [2, 4, 6, 8]: 
+                score += 90 
+            
+            # 2. VERTICAL SHIFT (Ekor P1 lama 6 -> Jadi Kepala atau Kop)
+            if h == last_p1[3] or line[1] == last_p1[3]:
+                score += 45
+            
+            # 3. MISTIK-TAIL VERIFICATION (Ekor 6 -> Mistik Lama 9)
+            if t == ML.get(last_p1[3], 'x'): 
+                score += 50 # Menghasilkan angka x9
+                
+            # 4. AI 1-4 SYNERGY
+            if '1' in line or '4' in line:
+                score += 35
+                
+            # 5. ANTI-REPEAT P1
+            if "".join(line[2:]) == last_p1[2:]: 
+                score -= 100 # Buang angka 96 di belakang
 
         # --- [PHUKET SPECIFIC RACIKAN] ---
         elif market_name == 'PHUKET':
