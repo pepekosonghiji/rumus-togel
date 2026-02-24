@@ -850,7 +850,7 @@ def fetch_results(market_code):
                 return res[:40]
             
             # Jalur Umum (Tetap sama, tapi tambahkan proteksi list)
-            url = f"https://nfx1avfcy8.salamtarget.com/history/result-mobile/{market_code}-pool-1"
+            url = f"https://nfx1avfcy8.salamrupiah.com/history/result-mobile/{market_code}-pool-1"
             r = client.get(url, headers=headers)
             soup = BeautifulSoup(r.text, 'html.parser')
             table = soup.find('table', class_='table-history')
