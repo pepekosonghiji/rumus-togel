@@ -70,7 +70,25 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
             scores['5'] += 20
             scores['1'] += 15
 
-    
+    elif market_name == 'HONGKONG LOTTO':
+        # --- [V16.25 HK-NIGHT VORTEX LOGIC] ---
+        # 1. P2/P3 TRANSIT (HK sering narik angka P2/P3 ke P1 besoknya)
+        p2_res = all_res_data[0][1] if len(all_res_data[0]) > 1 else ""
+        p3_res = all_res_data[0][2] if len(all_res_data[0]) > 2 else ""
+        transit_digits = set(p2_res + p3_res)
+        for d in transit_digits:
+            scores[ID.get(d)] += 35  # Prioritas Indeks dari P2/P3 (Misal: 9 -> 4)
+            scores[d] += 20          # Angka mentah P2/P3
+            
+        # 2. EKOR-TO-AS RESONANCE (Ekor HK 6 -> As Potensi 1 atau 9)
+        e_lalu = d0_p1[3]
+        scores[ID.get(e_lalu)] += 30 # Ekor 6 -> Indeks 1 (Joss AI: 1)
+        scores[MB.get(e_lalu)] += 25 # Ekor 6 -> Mistik Baru 2
+        
+        # 3. HK ANCHOR (AI 4, 5, 6)
+        # HK sangat kuat di angka tengah saat ini
+        for n in "456": scores[n] += 25
+
     elif market_name == 'MACAU':
         scores[str((int(d0_p1[3]) + 1) % 10)] += 15
         scores[str((int(d0_p1[3]) - 1) % 10)] += 15
@@ -424,6 +442,24 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             if abs(int(h) - int(t)) == 1: score += 40
             # NEW: Mirror Balance (Jika H dan T adalah pasangan Indeks, skor naik)
             if ID.get(h) == t: score += 35
+
+        elif market_name == 'HONGKONG LOTTO':
+            # 1. BIJI SIKLUS HK (Biji 1, 4, 7, 9)
+            # Result 7736 (Biji 5). HK biasanya lompat ke Biji Ganjil lain atau Biji Indeks.
+            if biji_f in [1, 4, 7, 9]: 
+                score += 95 
+            
+            # 2. SHADOW POSITION (Kepala 3 -> Ekor Baru 8 atau 6)
+            # Karena HK sering menggunakan Tyseen/Indeks Kepala untuk jadi Ekor
+            if t == TY.get(last_p1[2]) or t == ID.get(last_p1[2]):
+                score += 55
+            
+            # 3. HK BRIDGE (Kop 7 -> Potensi As 2 atau 0)
+            if line[0] in [ID.get(last_p1[1]), ML.get(last_p1[1])]:
+                score += 45
+
+            # 4. ANTI-TWIN (HK sedang jarang twin belakang setelah 36)
+            if h == t: score -= 65
 
         elif market_name == 'CAMBODIA':
             # --- [V14.15 CAMBODIA MAXIMAL PRECISION] ---
