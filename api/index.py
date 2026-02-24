@@ -233,39 +233,33 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
             scores[n] += 12
 
     elif market_name == 'SEOUL':
-        # --- [V16.15 SEOUL ULTIMATE REBORN] ---
-        # 1. Lindungi Indeks/Mirror P1, P2, P3 (Gaya Cambodia)
-        # Mengambil semua digit dari P1, P2, dan P3
-        all_p_digits = d0_p1 # Isi P1
-        if len(all_res_data[0]) > 2:
-            # Mengambil P2 dan P3 dari indeks yang sama dengan logic Cambodia Mamang
-            all_p_digits += all_res_data[0][1] + all_res_data[0][2]
-            
-        for digit in set(all_p_digits):
-            if digit in ID: scores[ID.get(digit)] += 30 
-            if digit in TY: scores[TY.get(digit)] += 15 
-            
-        # 2. ODD-EVEN PULSE (Deteksi Arus Ekor)
-        # Result P1: 8503 -> Ekor 3 (Ganjil)
-        d_eko = int(d0_p1[3])
-        if d_eko % 2 != 0:
-            for n in "13579": scores[n] += 25
-        else:
-            for n in "02468": scores[n] += 25
-            
-        # 3. SPIRAL SHIFT (As & Kop P1 -> Indeks)
-        # 8503 -> As 8 jadi 3, Kop 5 jadi 0
-        scores[ID.get(d0_p1[0], '0')] += 30
-        scores[ID.get(d0_p1[1], '0')] += 30
+        # --- [V16.16 SEOUL GHOST-PRIZE LOGIC] ---
+        # 1. GHOST-PRIZE EXTRACTION (P2 & P3)
+        # Menangkap angka yang muncul di P2/P3 tapi tidak ada di P1 (Angka 7 di 9760)
+        p1_set = set(d0_p1)
+        p2_res = all_res_data[0][1] if len(all_res_data[0]) > 1 else ""
+        p3_res = all_res_data[0][2] if len(all_res_data[0]) > 2 else ""
         
-        # 4. Seoul AI Anchor (AI 58)
-        scores['5'] += 25
-        scores['8'] += 25
+        ghost_digits = set(p2_res + p3_res) - p1_set
+        for d in ghost_digits:
+            scores[d] += 40 # Kasih bobot tinggi untuk angka "asing" (Seperti 7 tadi)
+            if d in ID: scores[ID[d]] += 20
+            
+        # 2. THE MIDDLE-MAN (Kop P2 & P3)
+        # Seoul sering narik Kop P2/P3 (angka 7 dan 4) ke posisi krusial
+        if len(p2_res) > 1: scores[p2_res[1]] += 30
+        if len(p3_res) > 1: scores[p3_res[1]] += 30
 
-        # 5. Shadow Check (Jika P2/P3 ada angka 0, proteksi ke angka 5)
-        if len(all_res_data[0]) > 2:
-            if '0' in all_res_data[0][1] or '0' in all_res_data[0][2]:
-                scores['5'] += 20
+        # 3. BIJI EVOLUTION (Delta Biji)
+        # Menghitung Biji P1 (7) dan Biji P2 (22->4). Selisihnya (3) jadi AI
+        b_p1 = sum(int(x) for x in d0_p1) % 9 or 9
+        b_p2 = sum(int(x) for x in p2_res) % 9 or 9 if p2_res else 0
+        delta_biji = str(abs(b_p1 - b_p2))
+        scores[delta_biji] += 25
+
+        # 4. SEOUL ANCHOR 
+        # Tetap jaga 4, 7, 8 sebagai angka sirkulasi
+        for n in "478": scores[n] += 25
 
     elif market_name == 'WUHAN':
         # --- WUHAN TRI-VIBRATION LOGIC V15.5 ---
@@ -592,27 +586,29 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             if '1' in line or '8' in line: score += 25
 
         elif market_name == 'SEOUL':
-            # --- [V16.15 SEOUL MAXIMAL PRECISION] ---
-            # 1. BIJI KHUSUS SEOUL (Biji 1, 4, 7)
-            if biji_f in [1, 4, 7]: 
-                score += 95 
+            # --- [V16.16 SEOUL MAXIMAL PRECISION] ---
+            # 1. BIJI SPECTRUM (Diperluas: 1, 4, 7, 8) -> 8 masuk karena result 7847
+            if biji_f in [1, 4, 7, 8]: 
+                score += 90 
             
-            # 2. POSITION MIRRORING (Ekor P1 -> Kepala P1 baru)
-            # Indeks dari ekor kemarin (3 -> 8)
-            if h == ID.get(last_p1[3], 'x'): 
-                score += 50
+            # 2. DOUBLE-WRAP SENSOR (Pola As = Ekor)
+            # Karena 7847 adalah pola bungkus, kita beri bonus untuk angka kembar As-Ekor
+            if line[0] == line[3]:
+                score += 55
             
-            # 3. AI 5-8 SYNERGY
-            if '5' in line or '8' in line:
-                score += 35
+            # 3. GHOST POSITION (Angka P2/P3 di posisi As)
+            # Jika As adalah angka yang muncul di P2/P3 kemarin
+            p2_res = last_p1_all[1] if len(last_p1_all) > 1 else ""
+            if line[0] in p2_res or line[3] in p2_res:
+                score += 45
                 
-            # 4. ODD TAIL VERIFICATION
-            if int(t) % 2 != 0:
-                score += 25
-            
-            # 5. ANTI-TWIN BACK
+            # 4. KOP STABILITY (Kop 8 terbukti kuat)
+            if line[1] == '8':
+                score += 40
+                
+            # 5. ANTI-TWIN BELAKANG (2D Belakang tetap dijaga tidak kembar)
             if h == t: 
-                score -= 45
+                score -= 60
                 
         elif market_name == 'WUHAN':
             # Wuhan identik dengan Biji 2, 6, 9
