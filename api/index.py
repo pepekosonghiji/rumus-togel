@@ -286,29 +286,35 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         scores['0'] += 15
 
     elif market_name == 'GREECE':
-        # --- [V16.4 GREECE EURO-MIRROR & TWIN-REFLECTOR] ---
-        
-        # 1. P2 Indeks Transfer (P2: 7492) -> Terbukti JP As-Kop (89)
-        if len(all_res_data[0]) >= 2:
-            p2_digits = all_res_data[0][1]
-            for d in p2_digits:
-                scores[ID.get(d)] += 30 # Naikkan bobot Indeks (7->2, 4->9, 9->4, 2->7)
-                scores[TY.get(d)] += 15 
-        
-        # 2. Twin-Reflector (Pola Result 8966)
-        # Menangkap Indeks dari Kepala P1 (1 -> 6) agar masuk BBFS
-        scores[ID.get(d0_p1[0])] += 35 
-        
-        # 3. Twin-Resonance (Mistik dari Angka Kembar P1)
-        kop_p1 = d0_p1[1]
-        eko_p1 = d0_p1[3]
-        if kop_p1 == eko_p1: # Angka 5 kembar
-            scores[ML.get(kop_p1)] += 25 # Mistik Lama 5 = 2
-            scores[MB.get(kop_p1)] += 20 # Mistik Baru 5 = 4
+            # 1. BIJI HARMONY (Biji 2, 5, 7, 8)
+            # Result 8966 (Biji 3). Kita tambah Biji 1 & 4 karena siklus Greece pasca-Twin.
+            if biji_f in [1, 2, 4, 5, 7, 8]: 
+                score += 90 
             
-        # 4. Greece "Solid" Anchor
-        scores['0'] += 15
-        scores['8'] += 25 # Perkuat angka 8 karena sering jadi As
+            # 2. POSITIONAL VERIFICATION: SHADOW HEAD
+            # Karena P1 kemarin 8966, Kepala 6 -> Indeks 1. Kita cari AI 1 sebagai Kepala.
+            if h == ID.get(last_p1[2], 'x'): 
+                score += 55 
+            
+            # 3. GREECE PATTERN: CROSS-P3 (Update Logika)
+            # Greece sering mengambil angka tengah P3 (7167 -> 1, 6) untuk jadi Ekor P1
+            if len(all_res_data[0]) > 2:
+                p3_mid = all_res_data[0][2][1:3] # Mengambil angka 1 dan 6
+                if t in p3_mid:
+                    score += 50
+            
+            # 4. TWIN EXIT STRATEGY
+            # Setelah 66, Greece jarang Twin lagi. Kita beri penalti pada twin, 
+            # KECUALI twin 11 atau 33 (berdasarkan AI 0348).
+            if h == t:
+                if h in ['1', '3']: score += 30
+                else: score -= 60
+
+            # 5. AS-KOP MIRRORING (Vibrasi P2 2959)
+            # P2: 2959 -> Indeks: 7404. Jika 2D mengandung 7, 4, atau 0, skor naik.
+            p2_indices = [ID.get(x) for x in all_res_data[0][1]]
+            if any(d in line for d in p2_indices):
+                score += 40
 
     elif market_name == 'MANHATTAN':
         # --- [V16.5 MANHATTAN REBORN - AS 7 SECURED] ---
@@ -631,33 +637,19 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             if line[1] == '1' or line[1] == '7':
                 score += 25
 
-        
-        # --- [V16.4 GREECE MAXIMAL PRECISION] ---
-        elif market_name == 'GREECE':
-            # 1. BIJI HARMONY (Biji 2, 5, 7, 8) -> Result 8966 biji 2 (JP!)
-            if biji_f in [2, 5, 7, 8]: 
-                score += 85 # Skor dinaikkan agar lebih selektif
+        # --- [ GREECE SPECIFIC CONSTRUCTION ] ---
+        if market_name == 'GREECE':
+            # As Greece cenderung mengambil Indeks dari As P1 lama (8 -> 3)
+            # Kop Greece cenderung mengambil Mistik dari Kop P1 lama (9 -> 6)
+            asn = ID.get(last_p1[0], bbfs_list[0])
+            kop = ML.get(last_p1[1], bbfs_list[1])
             
-            # 2. POSITIONAL VERIFICATION
-            # Verifikasi Kepala 2D sebagai Indeks Kepala P1 (1 -> 6)
-            if h == ID.get(last_p1[0]): score += 50 
+            # Pastikan As dan Kop tetap dalam BBFS
+            if asn not in bbfs_list: asn = best_as[i % len(best_as)]
+            if kop not in bbfs_list: kop = best_kop[i % len(best_kop)]
             
-            # 3. GREECE PATTERN: CROSS-P3
-            # Ekor 2D sinkron dengan angka depan P3 (4828 -> 4)
-            # BENAR
-            if len(all_res_data[0]) > 2 and len(all_res_data[0][2]) > 0:
-                if t == all_res_data[0][2][0]: 
-                    score += 40
-            
-            # 4. TWIN DETECTION (Belajar dari 66)
-            # Jika ada potensi twin di belakang, beri bonus jika biji cocok
-            if h == t and biji_f in [2, 5, 7, 8]:
-                score += 45 
-
-            # 5. AS-KOP MIRRORING (Untuk nembak 4D)
-            # Bonus jika As-Kop menggunakan angka dari Indeks P2
-            if line[0] in [ID.get(x) for x in all_res_data[0][1]]:
-                score += 30
+            # Anti-Clash
+            if asn == kop: asn = bbfs_list[(bbfs_list.index(asn) + 1) % len(bbfs_list)]
 
         # --- [V16.5 MANHATTAN MAXIMAL PRECISION] ---
         elif market_name == 'MANHATTAN':
