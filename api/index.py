@@ -57,23 +57,32 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
             for n in set(shadow): scores[n] += 5
 
     if market_name == 'CAMBODIA':
-        # --- CAMBODIA ELITE SUB-LOGIC V14.6 ---
-        # 1. Lindungi Angka Indeks/Mirror dari P1, P2, P3 (Anti-Meleset)
+        # --- [V14.15 CAMBODIA ELITE REBORN] ---
+        # 1. Lindungi Indeks/Mirror P1, P2, P3
         all_p_digits = "".join([res[0] for res in all_res_data[:1]]) 
         if len(all_res_data[0]) > 2:
             all_p_digits += all_res_data[0][1] + all_res_data[0][2]
             
         for digit in set(all_p_digits):
-            scores[ID.get(digit)] += 28  # Indeks punya bobot tertinggi di Cambodia
-            scores[ML.get(digit)] += 18  # Mistik Lama sebagai cadangan
+            scores[ID.get(digit)] += 30  # Indeks (Contoh: 3 -> 8)
+            scores[ML.get(digit)] += 15  # Mistik Lama
             
-        # 2. Analisa Selisih (Delta) Kepala-Ekor
-        # Pola Cambodia sering muncul dari selisih P1 periode sebelumnya
+        # 2. Delta Kepala-Ekor P1 (6183 -> 8-3 = 5)
+        # Angka 5 masuk sebagai pemain kunci di AM Mamang
         d_kep = int(d0_p1[2])
         d_eko = int(d0_p1[3])
         delta = str(abs(d_kep - d_eko))
-        scores[delta] += 30
-        scores[TY.get(delta, '0')] += 20 # Tyseen dari selisih
+        scores[delta] += 35
+        scores[TY.get(delta, '0')] += 25 # Tyseen dari 5 adalah 8 (Double Lock!)
+
+        # 3. Cambodia AI Anchor (AI 38)
+        scores['3'] += 20
+        scores['8'] += 20
+        
+        # 4. Zero Protection (P3 ada 0, biasanya lari ke 5 atau 1)
+        if '0' in all_res_data[0][2]:
+            scores['5'] += 20
+            scores['1'] += 15
 
     
     elif market_name == 'MACAU':
@@ -494,12 +503,29 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             # NEW: Mirror Balance (Jika H dan T adalah pasangan Indeks, skor naik)
             if ID.get(h) == t: score += 35
 
-        # --- [CAMBODIA SPECIFIC RACIKAN] ---
         elif market_name == 'CAMBODIA':
-            if biji_f in [1, 4, 7]: score += 60
-            if t == TY.get(last_p1[3]): score += 45
+            # --- [V14.15 CAMBODIA MAXIMAL PRECISION] ---
+            # 1. BIJI KHUSUS (Ditambah Biji 2 & 5 karena trend Cambodia saat ini)
+            # Fokus Biji: 1, 4, 7 (Lama) + 2, 5 (Baru)
+            if biji_f in [1, 2, 4, 5, 7]: 
+                score += 80 
+            
+            # 2. TYSEEN TAIL VERIFICATION (Ekor 3 -> Tyseen 6)
+            # Jika Ekor 2D adalah Tyseen dari Ekor P1 lama (3 -> 6)
+            if t == TY.get(last_p1[3]): 
+                score += 55 # Kita naikkan bobotnya karena 6 dominan di analisa Mamang
+            
+            # 3. DELTA ANALYSIS
             delta = abs(int(last_p1[2]) - int(last_p1[3]))
-            if str(delta) in line: score += 25
+            if str(delta) in line: 
+                score += 35
+            
+            # 4. POSITION CHECK (AS 3/1 dari AI/AM)
+            if line[0] in ['3', '1']:
+                score += 30
+
+            # 5. ANTI-TWIN (Cambodia sering Twin Tengah, tapi jarang Twin Belakang)
+            if h == t: score -= 40
 
         # --- [BUSAN POOLS SPECIFIC RACIKAN] ---
         elif market_name == 'BUSAN POOLS':
