@@ -339,42 +339,6 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         for n in "158":
             scores[n] += 15
 
-    elif market_name == 'HONGKONG LOTTO':
-        # --- [V16.31 HK-LOTTO ELITE SHADOW - FIXED] ---
-        # 1. Lindungi Indeks/Mirror P1 (Data yang pasti ada)
-        # Kita ambil P1 terakhir (d0_p1)
-        for digit in set(d0_p1):
-            if digit in ID: scores[ID[digit]] += 30
-            if digit in ML: scores[ML[digit]] += 15
-            
-        # 2. Proteksi Shadow P2 & P3 (Hanya jika data tersedia & bukan "0000")
-        if len(all_res_data[0]) >= 3:
-            p2_data = all_res_data[0][1]
-            p3_data = all_res_data[0][2]
-            # Gabungkan jika bukan data kosong
-            shadow_data = ""
-            if p2_data and p2_data != "0000": shadow_data += p2_data
-            if p3_data and p3_data != "0000": shadow_data += p3_data
-            
-            for d in set(shadow_data):
-                if d in ID: scores[ID[d]] += 20
-                if d in ML: scores[ML[d]] += 10
-
-        # 3. Delta Kepala-Ekor P1 (7736 -> 3 & 6)
-        try:
-            d_kep = int(d0_p1[2])
-            d_eko = int(d0_p1[3])
-            delta = str(abs(d_kep - d_eko))
-            if delta in scores:
-                scores[delta] += 35
-                if delta in TY: scores[TY[delta]] += 25
-        except (ValueError, IndexError):
-            pass
-
-        # 4. HK-Lotto AI Anchor & Twin Shadow
-        for n in "1824": # 1-8 AI Mamang, 2-4 Shadow Twin 77
-            if n in scores: scores[n] += 20
-            
     elif market_name == 'GREECE':
         # --- [V16.4 GREECE EURO-MIRROR & TWIN-REFLECTOR] ---
         
@@ -710,13 +674,6 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             
             # 4. Anti-Twin di 2D Belakang (Penang jarang twin belakang)
             if h == t: score -= 25
-
-        elif market_name == 'HONGKONG LOTTO':
-            # --- [V16.31 HK-LOTTO PRECISION FILTER] ---
-            if biji_f in [2, 5, 8]: score += 95 
-            if line[0] in ['2', '4']: score += 55
-            if any(n in line for n in "18"): score += 35
-            if line[0] == '7' and line[1] == '7': score -= 100
                 
         # --- [V16.4 GREECE MAXIMAL PRECISION] ---
         elif market_name == 'GREECE':
