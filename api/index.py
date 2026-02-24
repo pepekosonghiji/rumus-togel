@@ -340,34 +340,40 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
             scores[n] += 15
 
     elif market_name == 'HONGKONG LOTTO':
-        # --- [V16.30 HK-LOTTO ELITE SHADOW] ---
-        # 1. Lindungi Indeks/Mirror P1, P2, P3 (Gaya Cambodia)
-        all_p_digits = "".join([res[0] for res in all_res_data[:1]]) 
-        if len(all_res_data[0]) > 2:
-            all_p_digits += all_res_data[0][1] + all_res_data[0][2]
+        # --- [V16.31 HK-LOTTO ELITE SHADOW - FIXED] ---
+        # 1. Lindungi Indeks/Mirror P1 (Data yang pasti ada)
+        # Kita ambil P1 terakhir (d0_p1)
+        for digit in set(d0_p1):
+            if digit in ID: scores[ID[digit]] += 30
+            if digit in ML: scores[ML[digit]] += 15
             
-        for digit in set(all_p_digits):
-            # Menggunakan .get() agar aman jika ada karakter non-angka
-            scores[ID.get(digit, '0')] += 30  
-            scores[ML.get(digit, '0')] += 15  
+        # 2. Proteksi Shadow P2 & P3 (Hanya jika data tersedia & bukan "0000")
+        if len(all_res_data[0]) >= 3:
+            p2_data = all_res_data[0][1]
+            p3_data = all_res_data[0][2]
+            # Gabungkan jika bukan data kosong
+            shadow_data = ""
+            if p2_data and p2_data != "0000": shadow_data += p2_data
+            if p3_data and p3_data != "0000": shadow_data += p3_data
             
-        # 2. Delta Kepala-Ekor P1 (Result 7736 -> 3-6 = 3)
-        # Delta 3 akan sangat kuat, Tyseen dari 3 adalah 6.
-        d_kep = int(d0_p1[2])
-        d_eko = int(d0_p1[3])
-        delta = str(abs(d_kep - d_eko))
-        scores[delta] += 35
-        scores[TY.get(delta, '6')] += 25 
+            for d in set(shadow_data):
+                if d in ID: scores[ID[d]] += 20
+                if d in ML: scores[ML[d]] += 10
 
-        # 3. HK-Lotto AI Anchor (Sesuai AM 1467 & AI 18)
-        scores['1'] += 20
-        scores['8'] += 20
-        
-        # 4. Twin Shadow Protection (As 77 -> Indeks 22)
-        # Jika P1 diawali Twin 77, maka angka 2 wajib diperkuat
-        if d0_p1[0] == '7':
-            scores['2'] += 30
-            scores['4'] += 20 # Mistik Lama 7
+        # 3. Delta Kepala-Ekor P1 (7736 -> 3 & 6)
+        try:
+            d_kep = int(d0_p1[2])
+            d_eko = int(d0_p1[3])
+            delta = str(abs(d_kep - d_eko))
+            if delta in scores:
+                scores[delta] += 35
+                if delta in TY: scores[TY[delta]] += 25
+        except (ValueError, IndexError):
+            pass
+
+        # 4. HK-Lotto AI Anchor & Twin Shadow
+        for n in "1824": # 1-8 AI Mamang, 2-4 Shadow Twin 77
+            if n in scores: scores[n] += 20
             
     elif market_name == 'GREECE':
         # --- [V16.4 GREECE EURO-MIRROR & TWIN-REFLECTOR] ---
@@ -706,22 +712,11 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             if h == t: score -= 25
 
         elif market_name == 'HONGKONG LOTTO':
-            # --- [V16.30 HK-LOTTO PRECISION] ---
-            # 1. BIJI TARGET (2, 5, 8)
-            if biji_f in [2, 5, 8]: 
-                score += 95 
-            
-            # 2. SHADOW POSITION (As 2 atau 4 hasil pecahan Twin 77)
-            if line[0] in ['2', '4']:
-                score += 55
-            
-            # 3. HK-Lotto AI Synergy (1 atau 8)
-            if '1' in line or '8' in line:
-                score += 35
-                
-            # 4. ANTI-TWIN DEPAN (Jangan pasang 77 lagi)
-            if line[0] == '7' and line[1] == '7':
-                score -= 100
+            # --- [V16.31 HK-LOTTO PRECISION FILTER] ---
+            if biji_f in [2, 5, 8]: score += 95 
+            if line[0] in ['2', '4']: score += 55
+            if any(n in line for n in "18"): score += 35
+            if line[0] == '7' and line[1] == '7': score -= 100
                 
         # --- [V16.4 GREECE MAXIMAL PRECISION] ---
         elif market_name == 'GREECE':
