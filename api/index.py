@@ -233,23 +233,32 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
             scores[n] += 12
 
     elif market_name == 'SEOUL':
-        # --- SEOUL DOUBLE-MIRROR LOGIC V15.4 ---
-        # 1. Lindungi Angka Indeks & Mistik dari P2 dan P3 (Seoul sangat Mirror-Oriented)
-        for res_p in all_res_data[0][1:]: # P2 & P3
-            for d in res_p:
-                scores[ID.get(d)] += 25
-                scores[MB.get(d)] += 15
-
-        # 2. Pola Ekor Lompat 2
-        # Jika ekor P1 sekarang ganjil, Seoul sering lompat ke angka ganjil lainnya
+        # --- [V16.15 SEOUL ULTIMATE - SPIRAL MIRROR LOGIC] ---
+        
+        # 1. SPIRAL VERIFICATION (P3 -> P2 -> P1)
+        # Seoul sering mengambil angka P3 mentah untuk jadi bayangan di P1
+        p2_digits = all_res_data[0][1]
+        p3_digits = all_res_data[0][2]
+        for d in set(p2_digits + p3_digits):
+            scores[ID.get(d)] += 35 # Indeks adalah prioritas utama (0->5, 1->6)
+            scores[TY.get(d)] += 20 # Tyseen sebagai jembatan spiral
+            
+        # 2. ODD-EVEN PULSE (Result 8503 -> Ganjil 3)
+        # Seoul jarang pindah arus drastis. Jika ekor ganjil, 80% tetap ganjil/lompat 2
         ekor_lalu = int(d0_p1[3])
         if ekor_lalu % 2 != 0:
-            for n in "13579": scores[n] += 18
+            for n in "13579": scores[n] += 25
         else:
-            for n in "02468": scores[n] += 18
-
-        # 3. Prediksi Twin Tengah (Kop & Kepala)
-        scores[ID.get(d0_p1[1])] += 20 
+            for n in "02468": scores[n] += 25
+            
+        # 3. AS-KOP STABILITY (Result 8503 -> As 8, Kop 5)
+        # Sering terjadi "As-Index-Shift" (As 8 jadi Indeks 3 di posisi lain)
+        scores[ID.get(d0_p1[0])] += 30 # Angka 3 terkunci kuat
+        scores[ID.get(d0_p1[1])] += 30 # Angka 0 terkunci kuat
+        
+        # 4. SEOUL HOT ANCHOR (AI 58)
+        scores['5'] += 25
+        scores['8'] += 25
 
     elif market_name == 'WUHAN':
         # --- WUHAN TRI-VIBRATION LOGIC V15.5 ---
@@ -576,9 +585,33 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             if '1' in line or '8' in line: score += 25
 
         elif market_name == 'SEOUL':
-            # Seoul identik dengan Biji 1, 4, 7 (Siklus 3)
-            if biji_f in [1, 4, 7]: score += 65
-            if h == ID.get(last_p1[2]): score += 35 # Indeks Kepala
+            # --- [V16.15 SEOUL MAXIMAL PRECISION FILTER] ---
+            
+            # LAYER 1: BIJI SIKLUS (Seoul sangat kuat di Biji 1, 4, 7)
+            if biji_f in [1, 4, 7]: 
+                score += 100 # Skor tertinggi untuk filter Biji
+            
+            # LAYER 2: SPIRAL POSITION CHECK
+            # Bonus jika As 4D adalah Indeks dari Ekor P3 periode lalu (1 -> 6)
+            # Atau Kop 4D adalah Indeks dari Kepala P2 periode lalu (7 -> 2)
+            if line[0] == ID.get(all_res_data[0][2][3]):
+                score += 55
+            if line[1] == ID.get(all_res_data[0][1][2]):
+                score += 45
+                
+            # LAYER 3: THE 5-8 SYNERGY (AI SEOUL)
+            # Seoul suka mengapit angka kuat. Jika AI 5 atau 8 ada di posisi Tengah (Kop/Kepala)
+            if line[1] in ['5', '8'] or line[2] in ['5', '8']:
+                score += 40
+                
+            # LAYER 4: TAIL BALANCE
+            # Jika Ekor 2D adalah angka Ganjil (mengikuti arus P1 lama 03)
+            if int(t) % 2 != 0:
+                score += 30
+            
+            # LAYER 5: ANTI-TWIN & REPEAT PROTECTION
+            if h == t: score -= 50 # Buang Twin Belakang
+            if "".join(line[2:]) == last_p1[2:]: score -= 100 # Buang angka yang sama persis 2D-nya dengan P1 lama
 
         elif market_name == 'WUHAN':
             # Wuhan identik dengan Biji 2, 6, 9
