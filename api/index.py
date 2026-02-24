@@ -286,35 +286,34 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         scores['0'] += 15
 
     elif market_name == 'GREECE':
-            # 1. BIJI HARMONY (Biji 2, 5, 7, 8)
-            # Result 8966 (Biji 3). Kita tambah Biji 1 & 4 karena siklus Greece pasca-Twin.
+            # 1. BIJI HARMONY (Safe Check)
             if biji_f in [1, 2, 4, 5, 7, 8]: 
                 score += 90 
             
-            # 2. POSITIONAL VERIFICATION: SHADOW HEAD
-            # Karena P1 kemarin 8966, Kepala 6 -> Indeks 1. Kita cari AI 1 sebagai Kepala.
-            if h == ID.get(last_p1[2], 'x'): 
+            # 2. POSITIONAL VERIFICATION (Safe Indeks)
+            # Ambil Kepala P1 (Indeks ke-2 dari 4 digit)
+            head_p1 = last_p1[2] if len(last_p1) >= 3 else 'x'
+            if h == ID.get(head_p1, 'x'): 
                 score += 55 
             
-            # 3. GREECE PATTERN: CROSS-P3 (Update Logika)
-            # Greece sering mengambil angka tengah P3 (7167 -> 1, 6) untuk jadi Ekor P1
-            if len(all_res_data[0]) > 2:
-                p3_mid = all_res_data[0][2][1:3] # Mengambil angka 1 dan 6
-                if t in p3_mid:
-                    score += 50
+            # 3. GREECE PATTERN: CROSS-P3 (Safe List Access)
+            if len(all_res_data) > 0 and len(all_res_data[0]) > 2:
+                p3_res = all_res_data[0][2]
+                if len(p3_res) >= 3:
+                    p3_mid = [p3_res[1], p3_res[2]] # Angka tengah
+                    if t in p3_mid: score += 50
             
             # 4. TWIN EXIT STRATEGY
-            # Setelah 66, Greece jarang Twin lagi. Kita beri penalti pada twin, 
-            # KECUALI twin 11 atau 33 (berdasarkan AI 0348).
             if h == t:
                 if h in ['1', '3']: score += 30
                 else: score -= 60
 
-            # 5. AS-KOP MIRRORING (Vibrasi P2 2959)
-            # P2: 2959 -> Indeks: 7404. Jika 2D mengandung 7, 4, atau 0, skor naik.
-            p2_indices = [ID.get(x) for x in all_res_data[0][1]]
-            if any(d in line for d in p2_indices):
-                score += 40
+            # 5. AS-KOP MIRRORING (Safe Loop)
+            if len(all_res_data) > 0 and len(all_res_data[0]) > 1:
+                p2_res = all_res_data[0][1]
+                p2_indices = [ID.get(x, 'x') for x in p2_res]
+                if any(d in line for d in p2_indices if d != 'x'):
+                    score += 40
 
     elif market_name == 'MANHATTAN':
         # --- [V16.5 MANHATTAN REBORN - AS 7 SECURED] ---
@@ -639,17 +638,23 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
 
         # --- [ GREECE SPECIFIC CONSTRUCTION ] ---
         if market_name == 'GREECE':
-            # As Greece cenderung mengambil Indeks dari As P1 lama (8 -> 3)
-            # Kop Greece cenderung mengambil Mistik dari Kop P1 lama (9 -> 6)
-            asn = ID.get(last_p1[0], bbfs_list[0])
-            kop = ML.get(last_p1[1], bbfs_list[1])
-            
-            # Pastikan As dan Kop tetap dalam BBFS
-            if asn not in bbfs_list: asn = best_as[i % len(best_as)]
-            if kop not in bbfs_list: kop = best_kop[i % len(best_kop)]
-            
-            # Anti-Clash
-            if asn == kop: asn = bbfs_list[(bbfs_list.index(asn) + 1) % len(bbfs_list)]
+            try:
+                # Ambil As dari Indeks As P1 (index 0)
+                asn = ID.get(last_p1[0], best_as[i % len(best_as)])
+                # Ambil Kop dari Mistik Lama Kop P1 (index 1)
+                kop = ML.get(last_p1[1], best_kop[i % len(best_kop)])
+                
+                # Pastikan angka ada di BBFS
+                if asn not in bbfs_list: asn = best_as[i % len(best_as)]
+                if kop not in bbfs_list: kop = best_kop[i % len(best_kop)]
+                
+                # Anti-Tabrakan As-Kop
+                if asn == kop:
+                    idx = (bbfs_list.index(asn) + 1) % len(bbfs_list)
+                    asn = bbfs_list[idx]
+            except (ValueError, IndexError):
+                asn = best_as[i % len(best_as)]
+                kop = best_kop[i % len(best_kop)]
 
         # --- [V16.5 MANHATTAN MAXIMAL PRECISION] ---
         elif market_name == 'MANHATTAN':
