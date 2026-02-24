@@ -35,14 +35,10 @@ TARGET_POOLS = {
 # --- [V14.1 ENGINE - SHADOW DATA & PRECISION TARGETING] ---
 
 def get_weighted_bbfs_v14_1(all_res_data, market_name):
-    """
-    all_res_data: list of lists [[p1, p2, p3], ...]
-    """
     scores = {str(n): 0 for n in range(10)}
     p1_history = [res[0] for res in all_res_data]
     d0_p1 = p1_history[0]
     
-    # --- 1. FREKUENSI & SHADOW WEIGHTING ---
     freq_p1 = Counter("".join(p1_history[:30]))
     for n in "0123456789":
         # Skor Prize 1 (Utama)
@@ -50,15 +46,12 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         # Repeat Number Protection
         if n in d0_p1: scores[n] += 15
     
-    # Bonus dari Prize 2 & 3 (Shadow Data)
     for res in all_res_data[:10]:
         if len(res) > 1:
             shadow = "".join(res[1:])
             for n in set(shadow): scores[n] += 5
 
     if market_name == 'CAMBODIA':
-        # --- [V14.15 CAMBODIA ELITE REBORN] ---
-        # 1. Lindungi Indeks/Mirror P1, P2, P3
         all_p_digits = "".join([res[0] for res in all_res_data[:1]]) 
         if len(all_res_data[0]) > 2:
             all_p_digits += all_res_data[0][1] + all_res_data[0][2]
@@ -66,20 +59,13 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         for digit in set(all_p_digits):
             scores[ID.get(digit)] += 30  # Indeks (Contoh: 3 -> 8)
             scores[ML.get(digit)] += 15  # Mistik Lama
-            
-        # 2. Delta Kepala-Ekor P1 (6183 -> 8-3 = 5)
-        # Angka 5 masuk sebagai pemain kunci di AM Mamang
         d_kep = int(d0_p1[2])
         d_eko = int(d0_p1[3])
         delta = str(abs(d_kep - d_eko))
         scores[delta] += 35
         scores[TY.get(delta, '0')] += 25 # Tyseen dari 5 adalah 8 (Double Lock!)
-
-        # 3. Cambodia AI Anchor (AI 38)
         scores['3'] += 20
         scores['8'] += 20
-        
-        # 4. Zero Protection (P3 ada 0, biasanya lari ke 5 atau 1)
         if '0' in all_res_data[0][2]:
             scores['5'] += 20
             scores['1'] += 15
@@ -91,25 +77,15 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         scores[ID.get(d0_p1[1], '0')] += 10 
 
     elif market_name == 'SYDNEY LOTTO':
-        # --- SYDNEY ELITE HYBRID LOGIC V14.7 (COMBINED) ---
-        
-        # 1. Pola Angka Tetangga & Lompat (Neighboring & Skip-Two)
-        # Menangkap pergerakan angka +/- 1 dan +/- 2 dari P1 terakhir
         for digit in d0_p1:
             val = int(digit)
             scores[str((val + 1) % 10)] += 22 # Tetangga
             scores[str((val - 1) % 10)] += 22
             scores[str((val + 2) % 10)] += 20 # Lompat 2 (V14.7 Update)
             scores[str((val - 2) % 10)] += 20
-            
-        # 2. Resonansi Mistik & Mirror (MB & ID)
-        # Sydney sangat sensitif terhadap bayangan angka (seperti 72 yang muncul tadi)
         for digit in d0_p1:
             scores[MB.get(digit, '0')] += 25 # Mistik Baru (Sub-Logic Lama)
             scores[ID.get(digit, '0')] += 30 # Mirror/Indeks (V14.7 Update - Menangkap 7 & 2)
-            
-        # 3. Analisa Angka "Dingin" & Middle-Range
-        # Mengincar angka yang jarang keluar + angka tengah (2-7)
         p1_short = "".join([res[0] for res in all_res_data[:5]])
         for n in "0123456789":
             if n not in p1_short:
@@ -125,10 +101,6 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
             if n not in cold_check: scores[n] += 25
 
     elif market_name == 'BUSAN POOLS':
-        # --- BUSAN POOLS ELITE LOGIC V14.8 ---
-        
-        # 1. Twin-Detection & Mirroring
-        # Jika ada angka kembar (seperti 44), beri bobot besar pada Indeks & Mistiknya
         for i in range(len(d0_p1)-1):
             if d0_p1[i] == d0_p1[i+1]:
                 twin_digit = d0_p1[i]
@@ -136,57 +108,30 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
                 scores[ML.get(twin_digit)] += 25 # Mistik Lama (4->7)
             if '0' in all_res_data[0][2]:
                 scores['0'] += 35
-        
-        # 2. Cross-Prize Validation (P2 & P3)
-        # Busan sering memindahkan angka dari P2 ke P1 di periode berikutnya
         if len(all_res_data[0]) >= 2:
             p2_digits = all_res_data[0][1]
             for d in p2_digits:
                 scores[d] += 20
                 scores[TY.get(d, '0')] += 15 # Tyseen dari P2
-
-        # 3. Pola Biji Genap-Ganjil Busan
-        # Secara statistik Busan sering mendarat di Biji 3, 6, 9
         for n in "0123456789":
             if int(n) % 3 == 0 and n != '0':
                 scores[n] += 18
     
     elif market_name == 'JEJU':
-        # --- JEJU MIRROR-BRIDGE LOGIC V14.9 ---
-        
-        # 1. P3 to P1 Bridge (The Jeju Special)
-        # Jeju sering mengambil angka dari Prize 3 (3905) dan mengubahnya via Mistik/Indeks
         p3_digits = all_res_data[0][2]
         for d in p3_digits:
             scores[ID.get(d)] += 28 # Indeks (3->8, 9->4, 0->5, 5->0)
             scores[ML.get(d)] += 18 # Mistik Lama
-            
-        # 2. Resonansi Angka 7 (Angka Keramat Jeju)
-        # Secara statistik, Jeju punya frekuensi angka 7 yang cukup tinggi
         scores['7'] += 20
-        
-        # 3. Delta P1-P2 (Selisih As P1 dan As P2)
-        # Seringkali selisih ini muncul di posisi Kop atau Kepala
         delta_as = abs(int(d0_p1[0]) - int(all_res_data[0][1][0]))
         scores[str(delta_as)] += 25
 
     elif market_name == 'SAPPORO':
-        # --- SAPPORO CROSS-INDEX LOGIC V14.9 ---
-        
-        # 1. Twin-Front Impact (P3: 4461)
-        # Angka 44 di depan P3 biasanya akan memicu angka 9 atau 7 di P1 besoknya
         scores['9'] += 35 # Indeks 4
         scores['7'] += 25 # Mistik 4
-            
-        # 2. P2 to P1 Transfer (Kop & Kepala)
-        # Sapporo sering memindahkan Kop/Kepala P2 (3, 1) ke posisi Ekor P1
         p2_digits = all_res_data[0][1]
         scores[p2_digits[1]] += 22 # Angka 3
         scores[p2_digits[2]] += 22 # Angka 1
-        
-        # 3. Mistik Shio Ayam
-        # Karena result terakhir Shio Ayam, Sapporo sering lompat ke Shio sejalur (Ular/Kerbau)
-        # Kita perkuat angka 2 dan 6 sebagai angka jalur
         scores['2'] += 15
         scores['6'] += 15
         
