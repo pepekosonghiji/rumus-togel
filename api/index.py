@@ -409,29 +409,26 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         scores['1'] += 20
 
     elif 'OREGON' in market_name:
-        # --- [V16.6 OREGON SINGLE-PRIZE LOGIC] ---
-        # Karena Oregon hanya P1, kita gunakan perbandingan antar periode (T-1, T-2)
+        # --- [V16.13 OREGON DOUBLE-WRAP & MISTIK JUMP] ---
         
-        # 1. Vertical Jump (Ekor T-1 ke Kepala T-0)
-        # Sering terjadi angka ekor periode lalu ditarik jadi kepala
-        eko_last = d0_p1[3] 
-        scores[eko_last] += 35
-        scores[ID.get(eko_last)] += 20 # Proteksi Indeks ekor
+        # 1. Mistik Baru Jump (As 8 -> Result 9)
+        # Menangkap perubahan As menjadi Mistik Baru yang sering jadi angka "Wrap" (As & Ekor)
+        as_last = d0_p1[0]
+        scores[MB.get(as_last, '0')] += 45 # Mengunci angka 9
         
-        # 2. As-Kop Compression
-        # Oregon sering melakukan penjumlahan As+Kop P1 untuk jadi AI
-        ai_oregon = str((int(d0_p1[0]) + int(d0_p1[1])) % 10)
-        scores[ai_oregon] += 30
-        scores[TY.get(ai_oregon)] += 20
+        # 2. Kop-to-Kop Mirror (Kop 8 & Kepala 5 -> Result 2)
+        # Oregon menarik Mistik Lama dari angka tengah P1
+        scores[ML.get(d0_p1[2], '0')] += 35 # Mistik Lama 5 adalah 2
         
-        # 3. Mistik-Series (Mengunci angka 3, 4, 7 yang sering muncul di Oregon)
-        for n in "347":
-            scores[n] += 15
-            
-        # 4. Shadow Check
-        # Jika periode sebelumnya tidak ada angka 0, maka 0 wajib diwaspadai
-        if '0' not in d0_p1:
-            scores['0'] += 25
+        # 3. Vertical Step-Up (Ekor 5 -> Result 6)
+        # Jika pola Vertical Shift gagal (5 jadi 5), biasanya lari ke Step-Up (+1)
+        eko_last = d0_p1[3]
+        scores[str((int(eko_last) + 1) % 10)] += 30 # Mengunci angka 6
+        
+        # 4. Oregon AI Stability (AI 16)
+        # Angka 6 sudah JP, kita jaga untuk periode berikutnya (Oregon 9)
+        scores['1'] += 25
+        scores['6'] += 25
 
     elif market_name == 'WASHINGMID':
         # --- [V16.11 WASHINGMID REBORN - SLIDE & MIRROR CAPTURE] ---
@@ -686,27 +683,31 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             # 5. ANTI-TWIN (Toronto tetap jarang twin belakang)
             if h == t: score -= 35
 
-        # --- [V16.6 OREGON MAXIMAL PRECISION] ---
         elif 'OREGON' in market_name:
-            # 1. BIJI KHUSUS OREGON (Biji 3, 4, 6, 8, 9)
+            # --- [V16.13 OREGON MAXIMAL PRECISION] ---
+            # 1. BIJI KHUSUS (Biji 3, 4, 6, 8, 9) -> Terbukti JP Biji 8 di 9269
             if biji_f in [3, 4, 6, 8, 9]: 
-                score += 85 
+                score += 90 
             
-            # 2. VERTICAL VERIFICATION
-            # Bonus jika Angka Depan 2D (Kepala) sama dengan Ekor P1 periode lalu
-            if h == last_p1[3]: score += 50
+            # 2. DOUBLE-WRAP VERIFICATION
+            # Bonus jika As dan Ekor menggunakan angka yang sama (Pola 9...9)
+            if line[0] == line[3]: 
+                score += 45
             
-            # 3. KOP VIBRATION
-            # Oregon sering bawa Kop periode lalu (last_p1[1]) jadi As/Kop lagi
-            if line[0] == last_p1[1] or line[1] == last_p1[1]:
+            # 3. MISTIK-JUMP POSITION
+            # Bonus jika Kop/Kepala menggunakan Mistik Lama/Baru dari result sebelumnya
+            if h == ML.get(last_p1[2]) or line[1] == MB.get(last_p1[0]):
+                score += 40
+                
+            # 4. STEP-UP DYNAMICS
+            # Memverifikasi angka yang naik 1 tingkat dari result lama
+            if t == str((int(last_p1[3]) + 1) % 10):
                 score += 35
                 
-            # 4. ANTI-TWIN (Oregon jarang twin murni di belakang)
+            # 5. ANTI-TWIN BACK (Hanya untuk 2D Belakang)
             if h == t: 
-                score -= 40
-            else:
-                score += 15
-
+                score -= 45
+                
         elif market_name == 'WASHINGMID':
             # --- [V16.11 WASHINGMID PRECISION FILTER] ---
             # 1. BIJI UPGRADE (Menambahkan Biji 6 sesuai trend result 4560)
