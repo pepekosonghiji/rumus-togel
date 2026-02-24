@@ -191,31 +191,33 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         scores['6'] += 15
         
     elif market_name == 'OSAKA':
-        # --- [V16.17 OSAKA GHOST-TWIN LOGIC] ---
-        # 1. Twin-Breakdown (Result 1196 -> Twin 11)
-        # Jika ada twin di depan, angka tersebut harus di-Mistik/Indeks
-        twin_digit = d0_p1[0] if d0_p1[0] == d0_p1[1] else ""
-        if twin_digit:
-            scores[ID.get(twin_digit, '0')] += 35 # 1 jadi 6 (Muncul di AM!)
-            scores[ML.get(twin_digit, '0')] += 25 # 1 jadi 0 (Muncul di BBFS!)
-            
-        # 2. Shadow-Extraction (P2: 3995, P3: 8179)
-        # Mengambil angka yang dominan di Prize bawah tapi belum keluar di P1 belakang
+        # --- [V16.19 OSAKA VORTEX - STEP-UP & TWIN JUMP] ---
+        # 1. TWIN MIRROR JUMP (Result 3357 -> Twin 33)
+        # Jika keluar twin, periode depan biasanya angka tersebut di-Indeks atau Mistik
+        t_digit = d0_p1[0] # Angka 3
+        scores[ID.get(t_digit, '8')] += 35 # 3 -> 8 (Kunci Utama)
+        scores[ML.get(t_digit, '8')] += 25 # 3 -> 8 (Double Lock!)
+        
+        # 2. STEP-UP CORRECTION (Ekor 7)
+        # Mengantisipasi bandot yang hobi naik/turun tangga (6->7->8 atau 6->7->6)
+        e_lalu = int(d0_p1[3])
+        step_up = str((e_lalu + 1) % 10)
+        step_down = str((e_lalu - 1) % 10)
+        scores[step_up] += 30 # Angka 8
+        scores[step_down] += 20 # Angka 6
+        
+        # 3. GHOST EXTRACTION (Ambil angka dingin dari P2/P3)
         p2_res = all_res_data[0][1] if len(all_res_data[0]) > 1 else ""
         p3_res = all_res_data[0][2] if len(all_res_data[0]) > 2 else ""
-        
-        for d in set(p2_res + p3_res):
-            scores[ID.get(d, '0')] += 20
-            if d == '9': scores['4'] += 25 # Indeks 9 adalah 4 (AI Mamang!)
+        ghost_digits = set(p2_res + p3_res)
+        for d in ghost_digits:
+            scores[d] += 15
+            scores[ID.get(d)] += 15
 
-        # 3. Delta Head P2-P3 (Sesuai Logic Mamang)
-        if p2_res and p3_res:
-            delta = str(abs(int(p2_res[0]) - int(p3_res[0]))) # |3 - 8| = 5
-            scores[delta] += 30 # Angka 5 kuat!
-            
-        # 4. Osaka AI Anchor (AI 14)
-        scores['1'] += 25
-        scores['4'] += 25
+        # 4. OSAKA ANCHOR (AI 82)
+        # 8 dari Indeks Twin 3, 2 dari Mistik 5
+        scores['8'] += 30
+        scores['2'] += 25
 
     elif market_name == 'PHUKET':
         # --- PHUKET CROSS-PRIZE FLOW V15.3 ---
@@ -574,27 +576,31 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             if h == t: score -= 30
 
         elif market_name == 'OSAKA':
-            # --- [V16.17 OSAKA MAXIMAL PRECISION] ---
-            # 1. BIJI SPECTRUM (Osaka: 4, 6, 8 + Biji 2 dari Result 1196)
-            if biji_f in [2, 4, 6, 8]: 
-                score += 90 
+            # --- [V16.19 OSAKA MAXIMAL PRECISION] ---
+            # 1. BIJI SPECTRUM (Osaka Siklus: 1, 3, 5, 9)
+            # Result 3357 (Biji 9), biasanya akan balik ke Biji Ganjil atau Biji 1
+            if biji_f in [1, 3, 5, 9]: 
+                score += 95 
             
-            # 2. VERTICAL SHIFT (Ekor P1 lama 6 -> Jadi Kepala atau Kop)
-            if h == last_p1[3] or line[1] == last_p1[3]:
+            # 2. SHADOW-POSITION (Indeks Kepala -> Ekor Baru)
+            # Kepala 5 -> Indeks 0. Kita cari angka yang ekornya 0
+            if t == ID.get(last_p1[2], 'x'):
+                score += 55
+            
+            # 3. VORTEX AS-KOP (As-Kop dari Mistik/Indeks Result)
+            # Mengincar pola 88xx atau 80xx (Indeks dari 33)
+            if line[0] == '8' or line[1] == '8':
                 score += 45
-            
-            # 3. MISTIK-TAIL VERIFICATION (Ekor 6 -> Mistik Lama 9)
-            if t == ML.get(last_p1[3], 'x'): 
-                score += 50 # Menghasilkan angka x9
                 
-            # 4. AI 1-4 SYNERGY
-            if '1' in line or '4' in line:
-                score += 35
+            # 4. STEP-VERIFICATION
+            # Bonus jika angka mengandung 8 (Step up dari ekor 7)
+            if '8' in line:
+                score += 30
                 
-            # 5. ANTI-REPEAT P1
-            if "".join(line[2:]) == last_p1[2:]: 
-                score -= 100 # Buang angka 96 di belakang
-
+            # 5. ANTI-TWIN DEPAN (Setelah Twin 11 dan 33, kemungkinan besar pecah)
+            if line[0] == line[1]: 
+                score -= 60
+                
         # --- [PHUKET SPECIFIC RACIKAN] ---
         elif market_name == 'PHUKET':
             # Phuket dominan di Biji 1, 2, 5, 7
