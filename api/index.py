@@ -340,28 +340,25 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
             scores[n] += 15
 
     elif market_name == 'HONGKONG LOTTO':
-        # --- [V16.26 HK-LOTTO SHADOW - TWIN BREAKDOWN] ---
-        # 1. TWIN-DECODER (Result 7736 -> Twin 77)
-        # 7 di-Indeks jadi 2, 7 di-Mistik Lama jadi 4.
-        scores['2'] += 40 # Angka 2 belum ada di AM Mamang, wajib masuk!
-        scores['4'] += 30 # Angka 4 (Kunci Macau Mamang!)
-        
-        # 2. PRIZE-SYNC (P2: 1935, P3: 9286)
-        # Angka 9 muncul di P2 dan P3 tapi absen di P1. Ini "Hutang" besar!
-        p2_res = all_res_data[0][1] if len(all_res_data[0]) > 1 else ""
-        p3_res = all_res_data[0][2] if len(all_res_data[0]) > 2 else ""
-        
-        if '9' in (p2_res + p3_res):
-            scores['9'] += 35
-            
-        # 3. KOP-SPIRAL (Kop P2: 9, Kop P3: 2)
-        # Kombinasi Kop bawah sering naik jadi Kepala/Ekor P1
-        scores['9'] += 15
-        scores['2'] += 15
+        # --- [V16.26 HK-LOTTO SHADOW - SAFE MODE] ---
+        # 1. PENGAMAN DATA (Anti Error 500)
+        p1 = d0_p1 # Result 7736
+        p2 = all_res_data[0][1] if len(all_res_data[0]) > 1 else ""
+        p3 = all_res_data[0][2] if len(all_res_data[0]) > 2 else ""
 
-        # 4. HK AI ANCHOR (AI 18)
-        scores['1'] += 25
-        scores['8'] += 25
+        # 2. TWIN-DECODER (Memecah 77)
+        # Kita pakai angka 2 (Indeks) dan 4 (Mistik)
+        for shadow in "24":
+            scores[shadow] += 35
+            
+        # 3. GHOST-HUNTING (Mencari angka 9 yang muncul di P2/P3 tapi gak ada di P1)
+        ghost_pool = p2 + p3
+        if '9' in ghost_pool and '9' not in p1:
+            scores['9'] += 40 
+            
+        # 4. SYNERGY AM (Menguatkan 1, 6, 7 dari Mamang)
+        for n in "167":
+            scores[n] += 20
                 
     elif market_name == 'GREECE':
         # --- [V16.4 GREECE EURO-MIRROR & TWIN-REFLECTOR] ---
@@ -700,30 +697,22 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             if h == t: score -= 25
 
         elif market_name == 'HONGKONG LOTTO':
-            # --- [V16.26 HK-LOTTO MAXIMAL PRECISION] ---
-            # 1. BIJI HK SIKLUS (Favorit: 2, 5, 8)
-            # Result 7736 (Biji 5). Biasanya HK Lotto stabil di Biji Genap/Kelipatan 3
-            if biji_f in [2, 5, 8]: 
-                score += 95 
+            # --- [V16.26 HK-LOTTO JITU - SAFE MODE] ---
+            # 1. BIJI TARGET (2, 5, 8)
+            if biji_f in [2, 5, 8]: score += 90 
             
-            # 2. SHADOW VALIDATION (As 2 atau 4)
-            # Karena 2 dan 4 adalah bayangan dari Twin 77
+            # 2. AS-SHADOW (Prediksi As lari ke 2 atau 4)
             if line[0] in ['2', '4']:
                 score += 55
             
-            # 3. THE "9" FACTOR (Angka Hutang)
-            # Bonus besar jika angka 9 ada di posisi Kepala atau Ekor
+            # 3. KEPALA-EKOR "9" (Angka Hutang HK)
             if line[2] == '9' or line[3] == '9':
                 score += 45
                 
-            # 4. ANTI-TWIN DEPAN (Setelah 77, jangan pasang kembar depan dulu)
+            # 4. ANTI-TWIN DEPAN (Mencegah 77 muncul lagi)
             if line[0] == line[1]: 
-                score -= 85
+                score -= 80
                 
-            # 5. MACAU SYNERGY (61 - 47)
-            if '6' in line or '1' in line:
-                score += 25
-
         # --- [V16.4 GREECE MAXIMAL PRECISION] ---
         elif market_name == 'GREECE':
             # 1. BIJI HARMONY (Biji 2, 5, 7, 8) -> Result 8966 biji 2 (JP!)
