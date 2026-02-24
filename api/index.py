@@ -340,45 +340,28 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
             scores[n] += 15
 
     elif market_name == 'HONGKONG LOTTO':
-        # --- [V16.27 HK-LOTTO SHADOW - ANTI-ERROR HYBRID] ---
+        # --- HK-LOTTO SHADOW-MIRROR LOGIC V16.29 ---
         
-        # 1. Pola Angka Tetangga & Lompat (Neighboring & Skip-Two)
-        # Tetap menggunakan d0_p1 (Sudah pasti ada datanya)
-        for digit in d0_p1:
-            val = int(digit)
-            scores[str((val + 1) % 10)] += 22 
-            scores[str((val - 1) % 10)] += 22
-            scores[str((val + 2) % 10)] += 20 
-            scores[str((val - 2) % 10)] += 20
+        # 1. P2 & P3 Shadowing (P2: 1935, P3: 9286)
+        # HK Lotto sering menarik angka "Hutang" dari tengah P2 & P3
+        if len(all_res_data[0]) >= 3:
+            p2_mid = all_res_data[0][1][1:3] # Angka 93
+            p3_mid = all_res_data[0][2][1:3] # Angka 28
+            target_mid = p2_mid + p3_mid
+            for d in target_mid:
+                scores[ID.get(d, '0')] += 28 # Indeks 9->4, 3->8, 2->7, 8->3
+                scores[ML.get(d, '0')] += 18 # Mistik Lama
+        
+        # 2. Resonansi Twin 77 (Result P1: 7736)
+        # Menghancurkan Twin Depan ke angka bayangan
+        scores[ID.get('7', '0')] += 30 # Angka 2
+        scores[ML.get('7', '0')] += 20 # Angka 4
+        
+        # 3. HK-Lotto "High-Frequency" (Berdasarkan AM 1467)
+        # Mengunci angka 1, 4, 6, dan 7 sebagai poros BBFS
+        for n in "1467":
+            scores[n] += 15
             
-        # 2. Resonansi Mistik & Mirror (MB & ID)
-        for digit in d0_p1:
-            # Menggunakan .get() dengan default value agar aman dari KeyError
-            scores[MB.get(digit, '0')] += 25 
-            scores[ID.get(digit, '0')] += 30 
-            
-        # 3. Analisa Angka "Dingin" (VERSI ANTI-ERROR 500)
-        # Kita cek ketersediaan data history secara dinamis
-        history_limit = min(len(all_res_data), 5) 
-        p1_short = ""
-        try:
-            for i in range(history_limit):
-                if len(all_res_data[i]) > 0:
-                    p1_short += all_res_data[i][0] # Ambil P1
-        except Exception:
-            p1_short = d0_p1 # Fallback jika history kosong
-            
-        for n in "0123456789":
-            if n not in p1_short:
-                scores[n] += 30 # Cold Number Power
-            if n in "234567":
-                scores[n] += 15 # HK Middle-Range Priority
-                
-        # 4. HK-LOTTO TWIN SPECIAL (Tambahan dari V16.26)
-        # Menghancurkan 77 dari result 7736
-        if d0_p1[0] == d0_p1[1]:
-            scores[ID.get(d0_p1[0], '2')] += 35 # 7 -> 2
-                
     elif market_name == 'GREECE':
         # --- [V16.4 GREECE EURO-MIRROR & TWIN-REFLECTOR] ---
         
@@ -716,22 +699,23 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             if h == t: score -= 25
 
         elif market_name == 'HONGKONG LOTTO':
-            # --- [V16.27 HK-LOTTO ULTIMATE FILTER] ---
-            # 1. BIJI TARGET (2, 5, 8)
-            if biji_f in [2, 5, 8]: score += 95 
+            # --- HK-LOTTO PRECISION FILTER V16.29 ---
+            # 1. BIJI SIKLUS (Favorit: 2, 5, 8)
+            if biji_f in [2, 5, 8]: 
+                score += 95 
             
-            # 2. MIDDLE RANGE VALIDATION (2, 3, 4, 5, 6, 7)
-            # Sesuai logika Sydney Elite Hybrid Mamang
-            if any(d in "234567" for d in line):
-                score += 35
+            # 2. SHADOW VALIDATION (As 2 atau 4 hasil pecahan Twin 77)
+            if line[0] in ['2', '4']:
+                score += 55
             
-            # 3. SHADOW OF TWIN (Mencari angka 2 hasil Indeks 7)
-            if line[0] == '2' or line[3] == '2':
-                score += 50
+            # 3. POSITION LOCK (Ekor Genap)
+            # Mengingat result 36 (Genap), HK sering lanjut di jalur Genap (0,2,4,8)
+            if int(line[3]) % 2 == 0:
+                score += 30
                 
-            # 4. ANTI-REPEAT AS (As 7 sudah keluar, jangan pasang 7 di depan)
-            if line[0] == '7':
-                score -= 60
+            # 4. ANTI-REPEAT 77
+            if line[0] == '7' and line[1] == '7':
+                score -= 100
                 
         # --- [V16.4 GREECE MAXIMAL PRECISION] ---
         elif market_name == 'GREECE':
