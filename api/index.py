@@ -291,26 +291,33 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         scores['8'] += 30
 
     elif market_name == 'DANANG':
-        # --- [V16.22 DANANG DIAGONAL SHIFT] ---
-        # 1. TWIN-ESCAPE (Result 0477 -> Twin 77)
-        # Angka 7 kemungkinan besar lari ke depan atau berubah jadi 2 (Indeks) atau 0 (Mistik)
-        t_digit = '7'
-        scores[ID.get(t_digit)] += 35 # 7 -> 2 (Kunci AM Mamang!)
-        scores[ML.get(t_digit)] += 25 # 7 -> 0 (Kunci AM Mamang!)
-        
-        # 2. PRIZE-CROSS (P2: 3127, P3: 4592)
-        # Angka 9 dan 3 di P2/P3 adalah "Angka Gantung". 
-        p2_res = all_res_data[0][1] if len(all_res_data[0]) > 1 else ""
-        p3_res = all_res_data[0][2] if len(all_res_data[0]) > 2 else ""
-        for d in "93":
-            if d in (p2_res + p3_res): scores[d] += 30
+        # --- [V16.22 DANANG DIAGONAL SHIFT FIXED] ---
+        # 1. Lindungi Indeks/Mirror P1, P2, P3 (Gaya Aman)
+        all_p_digits = d0_p1 # Isi P1 (0477)
+        if len(all_res_data[0]) > 2:
+            # Mengambil P2 dan P3 dari indeks yang sama dengan logic Cambodia/Seoul Mamang
+            all_p_digits += all_res_data[0][1] + all_res_data[0][2]
+            
+        for digit in set(all_p_digits):
+            if digit in ID: scores[ID.get(digit)] += 30 
+            if digit in TY: scores[TY.get(digit)] += 15 
+            
+        # 2. TWIN-ESCAPE (Result 0477 -> Ada Twin 77)
+        # Jika ada angka kembar, kita ledakkan Indeksnya (7 -> 2)
+        if d0_p1[2] == d0_p1[3]:
+            scores['2'] += 40 # Indeks dari 7
+            scores['5'] += 25 # Mistik dari 2
+            
+        # 3. PRIZE-CROSS SENSOR
+        # Mencari angka yang muncul di P2/P3 tapi tidak ada di P1 (Contoh: Angka 2)
+        if len(all_res_data[0]) > 2:
+            p23_digits = all_res_data[0][1] + all_res_data[0][2]
+            if '2' in p23_digits: scores['2'] += 20
+            if '9' in p23_digits: scores['9'] += 20
 
-        # 3. KEPALA-EKOR DELTA (Result 0477 -> 7-7 = 0)
-        # Delta 0 sering memicu kemunculan angka 5 (Indeks dari 0)
-        scores['5'] += 25
-        
-        # 4. DANANG AI ANCHOR (AI 2)
-        scores['2'] += 35 # Angka 2 sangat kuat karena muncul di P2 dan P3
+        # 4. DANANG AI ANCHOR
+        scores['2'] += 20
+        scores['0'] += 15
 
     elif market_name == 'PENANG':
         # --- PENANG DIAGONAL-MIRROR LOGIC V15.8 ---
@@ -660,29 +667,27 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
                 score += 35
 
         elif market_name == 'DANANG':
-            # --- [V16.22 DANANG MAXIMAL PRECISION] ---
-            # 1. BIJI DANANG (Siklus 1, 3, 6)
-            # Result 0477 (Biji 9), biasanya lari ke Biji 1 atau 6
+            # --- [V16.22 DANANG MAXIMAL PRECISION FIXED] ---
+            # 1. BIJI SIKLUS (1, 3, 6)
             if biji_f in [1, 3, 6]: 
-                score += 100 
+                score += 90 
             
             # 2. DIAGONAL POSITION (Ekor P1 lama jadi As P1 baru)
-            # Jika As adalah 7 (tarikan dari ekor 77)
+            # Tarikan angka 7 dari ekor 0477
             if line[0] == last_p1[3]:
-                score += 55
+                score += 50
             
-            # 3. THE 2-DOMINANCE (AI 2 Mamang)
-            # Bonus besar jika angka 2 ada di posisi Kepala atau Ekor
-            if line[2] == '2' or line[3] == '2':
-                score += 45
+            # 3. AI 2 SYNERGY (AI Utama Mamang)
+            if '2' in line:
+                score += 40
                 
-            # 4. ANTI-TWIN BACK (Setelah 77, sangat jarang twin belakang lagi)
+            # 4. ANTI-TWIN BACK (Setelah 77, jangan twin belakang lagi)
             if h == t: 
-                score -= 80
-                
-            # 5. MISTIK-SHADOW (Mistik dari 4 adalah 7, Mistik dari 0 adalah 1)
-            if '1' in line or '7' in line:
-                score += 20
+                score -= 75
+            
+            # 5. MISTIK-SHADOW (0 -> 1, 4 -> 7)
+            if line[1] == '1' or line[1] == '7':
+                score += 25
 
         # --- [PENANG MAXIMAL PRECISION V15.8] ---
         elif market_name == 'PENANG':
