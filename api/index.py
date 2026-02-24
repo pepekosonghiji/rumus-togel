@@ -340,25 +340,44 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
             scores[n] += 15
 
     elif market_name == 'HONGKONG LOTTO':
-        # --- [V16.26 HK-LOTTO SHADOW - SAFE MODE] ---
-        # 1. PENGAMAN DATA (Anti Error 500)
-        p1 = d0_p1 # Result 7736
-        p2 = all_res_data[0][1] if len(all_res_data[0]) > 1 else ""
-        p3 = all_res_data[0][2] if len(all_res_data[0]) > 2 else ""
-
-        # 2. TWIN-DECODER (Memecah 77)
-        # Kita pakai angka 2 (Indeks) dan 4 (Mistik)
-        for shadow in "24":
-            scores[shadow] += 35
+        # --- [V16.27 HK-LOTTO SHADOW - ANTI-ERROR HYBRID] ---
+        
+        # 1. Pola Angka Tetangga & Lompat (Neighboring & Skip-Two)
+        # Tetap menggunakan d0_p1 (Sudah pasti ada datanya)
+        for digit in d0_p1:
+            val = int(digit)
+            scores[str((val + 1) % 10)] += 22 
+            scores[str((val - 1) % 10)] += 22
+            scores[str((val + 2) % 10)] += 20 
+            scores[str((val - 2) % 10)] += 20
             
-        # 3. GHOST-HUNTING (Mencari angka 9 yang muncul di P2/P3 tapi gak ada di P1)
-        ghost_pool = p2 + p3
-        if '9' in ghost_pool and '9' not in p1:
-            scores['9'] += 40 
+        # 2. Resonansi Mistik & Mirror (MB & ID)
+        for digit in d0_p1:
+            # Menggunakan .get() dengan default value agar aman dari KeyError
+            scores[MB.get(digit, '0')] += 25 
+            scores[ID.get(digit, '0')] += 30 
             
-        # 4. SYNERGY AM (Menguatkan 1, 6, 7 dari Mamang)
-        for n in "167":
-            scores[n] += 20
+        # 3. Analisa Angka "Dingin" (VERSI ANTI-ERROR 500)
+        # Kita cek ketersediaan data history secara dinamis
+        history_limit = min(len(all_res_data), 5) 
+        p1_short = ""
+        try:
+            for i in range(history_limit):
+                if len(all_res_data[i]) > 0:
+                    p1_short += all_res_data[i][0] # Ambil P1
+        except Exception:
+            p1_short = d0_p1 # Fallback jika history kosong
+            
+        for n in "0123456789":
+            if n not in p1_short:
+                scores[n] += 30 # Cold Number Power
+            if n in "234567":
+                scores[n] += 15 # HK Middle-Range Priority
+                
+        # 4. HK-LOTTO TWIN SPECIAL (Tambahan dari V16.26)
+        # Menghancurkan 77 dari result 7736
+        if d0_p1[0] == d0_p1[1]:
+            scores[ID.get(d0_p1[0], '2')] += 35 # 7 -> 2
                 
     elif market_name == 'GREECE':
         # --- [V16.4 GREECE EURO-MIRROR & TWIN-REFLECTOR] ---
@@ -697,21 +716,22 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             if h == t: score -= 25
 
         elif market_name == 'HONGKONG LOTTO':
-            # --- [V16.26 HK-LOTTO JITU - SAFE MODE] ---
+            # --- [V16.27 HK-LOTTO ULTIMATE FILTER] ---
             # 1. BIJI TARGET (2, 5, 8)
-            if biji_f in [2, 5, 8]: score += 90 
+            if biji_f in [2, 5, 8]: score += 95 
             
-            # 2. AS-SHADOW (Prediksi As lari ke 2 atau 4)
-            if line[0] in ['2', '4']:
-                score += 55
+            # 2. MIDDLE RANGE VALIDATION (2, 3, 4, 5, 6, 7)
+            # Sesuai logika Sydney Elite Hybrid Mamang
+            if any(d in "234567" for d in line):
+                score += 35
             
-            # 3. KEPALA-EKOR "9" (Angka Hutang HK)
-            if line[2] == '9' or line[3] == '9':
-                score += 45
+            # 3. SHADOW OF TWIN (Mencari angka 2 hasil Indeks 7)
+            if line[0] == '2' or line[3] == '2':
+                score += 50
                 
-            # 4. ANTI-TWIN DEPAN (Mencegah 77 muncul lagi)
-            if line[0] == line[1]: 
-                score -= 80
+            # 4. ANTI-REPEAT AS (As 7 sudah keluar, jangan pasang 7 di depan)
+            if line[0] == '7':
+                score -= 60
                 
         # --- [V16.4 GREECE MAXIMAL PRECISION] ---
         elif market_name == 'GREECE':
