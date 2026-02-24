@@ -291,31 +291,26 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         scores['8'] += 30
 
     elif market_name == 'DANANG':
-        # --- DANANG TWIN & ANCHOR LOGIC V15.7 ---
+        # --- [V16.22 DANANG DIAGONAL SHIFT] ---
+        # 1. TWIN-ESCAPE (Result 0477 -> Twin 77)
+        # Angka 7 kemungkinan besar lari ke depan atau berubah jadi 2 (Indeks) atau 0 (Mistik)
+        t_digit = '7'
+        scores[ID.get(t_digit)] += 35 # 7 -> 2 (Kunci AM Mamang!)
+        scores[ML.get(t_digit)] += 25 # 7 -> 0 (Kunci AM Mamang!)
         
-        # 1. Anchor Protection (Mencegah Angka 0 Terbuang)
-        # Danang sering membawa kembali As/Kop P1 (7 dan 0)
-        scores[d0_p1[0]] += 25 
-        scores[d0_p1[1]] += 25
+        # 2. PRIZE-CROSS (P2: 3127, P3: 4592)
+        # Angka 9 dan 3 di P2/P3 adalah "Angka Gantung". 
+        p2_res = all_res_data[0][1] if len(all_res_data[0]) > 1 else ""
+        p3_res = all_res_data[0][2] if len(all_res_data[0]) > 2 else ""
+        for d in "93":
+            if d in (p2_res + p3_res): scores[d] += 30
 
-        # 2. Ekor Chain Transfer (P2 & P3)
-        if len(all_res_data[0]) >= 3:
-            eko_p2 = all_res_data[0][1][3] 
-            eko_p3 = all_res_data[0][2][3] 
-            scores[eko_p2] += 28
-            scores[eko_p3] += 28
-            scores[ID.get(eko_p2)] += 15
-            scores[ID.get(eko_p3)] += 15
-
-        # 3. Resonansi Mistik Kop P1 (7093 -> 0)
-        kop_p1 = d0_p1[1]
-        scores[ML.get(kop_p1)] += 20
-        scores[MB.get(kop_p1)] += 20
+        # 3. KEPALA-EKOR DELTA (Result 0477 -> 7-7 = 0)
+        # Delta 0 sering memicu kemunculan angka 5 (Indeks dari 0)
+        scores['5'] += 25
         
-        # 4. Twin-Sense & Biji 9 (0477 -> Total 18/Biji 9)
-        # Menambahkan bobot untuk angka yang membentuk harmoni biji 9
-        for n in "0479":
-            scores[n] += 15
+        # 4. DANANG AI ANCHOR (AI 2)
+        scores['2'] += 35 # Angka 2 sangat kuat karena muncul di P2 dan P3
 
     elif market_name == 'PENANG':
         # --- PENANG DIAGONAL-MIRROR LOGIC V15.8 ---
@@ -664,22 +659,30 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             if int(t) % 2 != 0:
                 score += 35
 
-        # --- [DANANG MAXIMAL PRECISION V15.7] ---
         elif market_name == 'DANANG':
-            # 1. Biji Utama Danang (3, 6, 9)
-            if biji_f in [3, 6, 9]: score += 75 # Skor dinaikkan
+            # --- [V16.22 DANANG MAXIMAL PRECISION] ---
+            # 1. BIJI DANANG (Siklus 1, 3, 6)
+            # Result 0477 (Biji 9), biasanya lari ke Biji 1 atau 6
+            if biji_f in [1, 3, 6]: 
+                score += 100 
             
-            # 2. Twin Detection (Belajar dari 77)
-            # Jika ada potensi twin di 2D belakang, beri bonus skor
-            if h == t: score += 50 
+            # 2. DIAGONAL POSITION (Ekor P1 lama jadi As P1 baru)
+            # Jika As adalah 7 (tarikan dari ekor 77)
+            if line[0] == last_p1[3]:
+                score += 55
             
-            # 3. Head-to-Head Logic
-            # Jika ekor 2D adalah Mistik/Indeks dari As atau Kop P1
-            if t in [ML.get(last_p1[0]), ID.get(last_p1[0]), ML.get(last_p1[1])]:
+            # 3. THE 2-DOMINANCE (AI 2 Mamang)
+            # Bonus besar jika angka 2 ada di posisi Kepala atau Ekor
+            if line[2] == '2' or line[3] == '2':
                 score += 45
                 
-            # 4. Injeksi Angka 0 (Anchor)
-            if '0' in line: score += 30
+            # 4. ANTI-TWIN BACK (Setelah 77, sangat jarang twin belakang lagi)
+            if h == t: 
+                score -= 80
+                
+            # 5. MISTIK-SHADOW (Mistik dari 4 adalah 7, Mistik dari 0 adalah 1)
+            if '1' in line or '7' in line:
+                score += 20
 
         # --- [PENANG MAXIMAL PRECISION V15.8] ---
         elif market_name == 'PENANG':
