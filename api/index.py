@@ -219,27 +219,6 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         scores['8'] += 30
         scores['2'] += 25
 
-    elif market_name == 'PHUKET':
-        # --- PHUKET CROSS-PRIZE FLOW V15.3 ---
-        
-        # 1. P2 to P1 Transfer (Analisa Angka 1425)
-        # Phuket sering menarik angka tengah dari P2 ke posisi krusial
-        if len(all_res_data[0]) >= 2:
-            p2_mid = all_res_data[0][1][1:3] # Mengambil angka 42
-            for d in p2_mid:
-                scores[d] += 25
-                scores[TY.get(d)] += 15 # Proteksi Tyseen angka tengah P2
-        
-        # 2. Ekor P1 Resonance (5963 -> 3)
-        # Mistik Baru 3 adalah 9, Mistik Lama 3 adalah 8
-        ekor_p1 = d0_p1[3]
-        scores[MB.get(ekor_p1)] += 22 
-        scores[ML.get(ekor_p1)] += 20
-        
-        # 3. Phuket "Hot" Number (Berdasarkan AM 1256)
-        for n in "1256":
-            scores[n] += 12
-
     elif market_name == 'SEOUL':
         # --- [V16.16 SEOUL GHOST-PRIZE LOGIC] ---
         # 1. GHOST-PRIZE EXTRACTION (P2 & P3)
@@ -282,6 +261,34 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         delta_wuhan = abs(int(d0_p1[2]) - int(all_res_data[0][1][3]))
         scores[str(delta_wuhan)] += 35
         scores[TY.get(str(delta_wuhan), '0')] += 20
+
+    elif market_name == 'PHUKET':
+        # --- [V16.21 PHUKET ULTIMATE - SANDWICH & BRIDGE] ---
+        # 1. SANDWICH VERIFICATION (Result 2452 -> As=Ekor=2)
+        # Jika As & Ekor kembar, periode depan angka tengah (4-5) sering jadi As/Kop
+        if d0_p1[0] == d0_p1[3]:
+            scores[d0_p1[1]] += 35 # Angka 4
+            scores[d0_p1[2]] += 35 # Angka 5
+            # Indeks dari angka sandwich (2 -> 7)
+            scores[ID.get(d0_p1[0])] += 25 
+            
+        # 2. THE BRIDGE (Angka Berurutan 4-5)
+        # Phuket suka angka berurutan. Setelah 4-5, potensi 6 atau 3 sangat besar.
+        bridge_next = str((int(d0_p1[2]) + 1) % 10) # 5 -> 6
+        bridge_prev = str((int(d0_p1[1]) - 1) % 10) # 4 -> 3
+        scores[bridge_next] += 30 
+        scores[bridge_prev] += 20
+
+        # 3. P2-P3 REBORN (P2: 5905, P3: 0184)
+        # Angka 9 dan 8 belum keluar di P1. Ini angka "Hutang".
+        p2_res = all_res_data[0][1] if len(all_res_data[0]) > 1 else ""
+        p3_res = all_res_data[0][2] if len(all_res_data[0]) > 2 else ""
+        for d in "89":
+            if d in (p2_res + p3_res): scores[d] += 40
+            
+        # 4. PHUKET AI ANCHOR (AI 68)
+        scores['6'] += 30
+        scores['8'] += 30
 
     elif market_name == 'DANANG':
         # --- DANANG TWIN & ANCHOR LOGIC V15.7 ---
@@ -600,15 +607,6 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             # 5. ANTI-TWIN DEPAN (Setelah Twin 11 dan 33, kemungkinan besar pecah)
             if line[0] == line[1]: 
                 score -= 60
-                
-        # --- [PHUKET SPECIFIC RACIKAN] ---
-        elif market_name == 'PHUKET':
-            # Phuket dominan di Biji 1, 2, 5, 7
-            if biji_f in [1, 2, 5, 7]: score += 65
-            # Head-to-Head: Jika angka depan 2D adalah angka dari P3 (3018 -> 1)
-            if h in all_res_data[0][2]: score += 35
-            # Bonus jika mengandung unsur AI (1 atau 8)
-            if '1' in line or '8' in line: score += 25
 
         elif market_name == 'SEOUL':
             # --- [V16.16 SEOUL MAXIMAL PRECISION] ---
@@ -639,6 +637,32 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             # Wuhan identik dengan Biji 2, 6, 9
             if biji_f in [2, 6, 9]: score += 65
             if t == MB.get(last_p1[3]): score += 40 # Mistik Baru Ekor
+
+        elif market_name == 'PHUKET':
+            # --- [V16.21 PHUKET MAXIMAL PRECISION] ---
+            # 1. BIJI PHUKET EVOLUTION (Biji 4, 7, 1)
+            # Result 2452 (Biji 4). Siklus Phuket biasanya melompat +3 (4 -> 7 -> 1)
+            if biji_f in [4, 7, 1]: 
+                score += 100 # Skor tertinggi untuk filter Biji
+            
+            # 2. AS-KOP MIRRORING
+            # Jika As-Kop periode baru adalah Indeks dari Kepala-Ekor lama (52 -> 07)
+            if line[0] == ID.get(last_p1[2]) and line[1] == ID.get(last_p1[3]):
+                score += 60
+            
+            # 3. THE BRIDGE SCORE
+            # Jika mengandung angka 6 atau 8 (Angka "Hutang" dari P2/P3)
+            if '6' in line or '8' in line:
+                score += 40
+                
+            # 4. ANTI-SANDWICH (Jangan pasang As=Ekor lagi, jarang terjadi 2x beruntun)
+            if line[0] == line[3]:
+                score -= 70
+                
+            # 5. POSITION LOCK (Ekor Ganjil)
+            # Phuket sering selang-seling Genap-Ganjil di Ekor (2 Genap -> x Ganjil)
+            if int(t) % 2 != 0:
+                score += 35
 
         # --- [DANANG MAXIMAL PRECISION V15.7] ---
         elif market_name == 'DANANG':
