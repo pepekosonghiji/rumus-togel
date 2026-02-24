@@ -340,34 +340,28 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
             scores[n] += 15
 
     elif market_name == 'HONGKONG LOTTO':
-        # --- [V16.1 HK-LOTTO ELITE WEIGHTING] ---
+        # --- [V16.26 HK-LOTTO SHADOW - TWIN BREAKDOWN] ---
+        # 1. TWIN-DECODER (Result 7736 -> Twin 77)
+        # 7 di-Indeks jadi 2, 7 di-Mistik Lama jadi 4.
+        scores['2'] += 40 # Angka 2 belum ada di AM Mamang, wajib masuk!
+        scores['4'] += 30 # Angka 4 (Kunci Macau Mamang!)
         
-        # A. JUMP DETECTION (As P1 -> Ekor Depan)
-        # Menangkap pola 6440 -> 7736 (6 Jadi 3 via Tyseen)
-        as_p1 = d0_p1[0]
-        scores[as_p1] += 25
-        scores[TY.get(as_p1)] += 30 # Proteksi Tyseen (Sangat Kuat di HK)
-        scores[ID.get(as_p1)] += 20 # Proteksi Indeks
+        # 2. PRIZE-SYNC (P2: 1935, P3: 9286)
+        # Angka 9 muncul di P2 dan P3 tapi absen di P1. Ini "Hutang" besar!
+        p2_res = all_res_data[0][1] if len(all_res_data[0]) > 1 else ""
+        p3_res = all_res_data[0][2] if len(all_res_data[0]) > 2 else ""
         
-        # B. TWIN-SHADOW RESONANCE
-        # Jika P1 sebelumnya Twin Tengah (44), maka HK Lotto cenderung lari ke 
-        # Mistik Lama dari angka tersebut (4 -> 7) secara Twin.
-        if d0_p1[1] == d0_p1[2]:
-            twin_digit = d0_p1[1]
-            scores[ML.get(twin_digit)] += 35 # Mengunci angka 7
-            scores[MB.get(twin_digit)] += 25 
-
-        # C. CROSS-PRIZE DELTA (P1-P2-P3)
-        if len(all_res_data[0]) >= 3:
-            # Selisih Ekor P2 (7) dan Ekor P3 (5) = 2. Mistik 2 = 5.
-            delta_eko = str(abs(int(all_res_data[0][1][3]) - int(all_res_data[0][2][3])))
-            scores[delta_eko] += 22
-            scores[ID.get(delta_eko)] += 18
+        if '9' in (p2_res + p3_res):
+            scores['9'] += 35
             
-        # D. AKURASI BIJI DOMINAN
-        # HK Lotto sangat kuat di Biji 1, 4, 6, 9
-        for n in "0123456789":
-            if n in "1469": scores[n] += 15
+        # 3. KOP-SPIRAL (Kop P2: 9, Kop P3: 2)
+        # Kombinasi Kop bawah sering naik jadi Kepala/Ekor P1
+        scores['9'] += 15
+        scores['2'] += 15
+
+        # 4. HK AI ANCHOR (AI 18)
+        scores['1'] += 25
+        scores['8'] += 25
                 
     elif market_name == 'GREECE':
         # --- [V16.4 GREECE EURO-MIRROR & TWIN-REFLECTOR] ---
@@ -705,27 +699,30 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             # 4. Anti-Twin di 2D Belakang (Penang jarang twin belakang)
             if h == t: score -= 25
 
-        # --- [HK LOTTO MAXIMAL PRECISION V15.9] ---
-        # --- [V16.1 HK-LOTTO PRECISE GENERATOR] ---
         elif market_name == 'HONGKONG LOTTO':
-            # 1. BIJI HARMONY (Filter Utama)
-            if biji_f in [1, 4, 6, 9]: 
-                score += 85 # Skor Filter Tertinggi
+            # --- [V16.26 HK-LOTTO MAXIMAL PRECISION] ---
+            # 1. BIJI HK SIKLUS (Favorit: 2, 5, 8)
+            # Result 7736 (Biji 5). Biasanya HK Lotto stabil di Biji Genap/Kelipatan 3
+            if biji_f in [2, 5, 8]: 
+                score += 95 
             
-            # 2. POSITIONAL VERIFICATION (Head-to-Head)
-            # Pola: Jika Kepala 2D adalah Tyseen dari Ekor P1 (0 -> 7)
-            if h == TY.get(last_p1[3]): score += 45
+            # 2. SHADOW VALIDATION (As 2 atau 4)
+            # Karena 2 dan 4 adalah bayangan dari Twin 77
+            if line[0] in ['2', '4']:
+                score += 55
             
-            # Pola: Jika Ekor 2D adalah Mistik/Indeks dari Kepala P1 (9 -> 6/4)
-            if t in [ML.get(last_p1[2]), ID.get(last_p1[2])]: score += 40
-
-            # 3. TWIN PROTECTION (Merespon 77)
-            # Jika angka depan (As/Kop) adalah angka yang sama, beri bonus besar
-            # Ini untuk menangkap pola Twin Depan/Belakang yang sering muncul di HK
-            if h == t: score += 35
-            
-            # 4. INJEKSI VIBRASI (Angka 7 dan 3)
-            if '7' in line or '3' in line: score += 30
+            # 3. THE "9" FACTOR (Angka Hutang)
+            # Bonus besar jika angka 9 ada di posisi Kepala atau Ekor
+            if line[2] == '9' or line[3] == '9':
+                score += 45
+                
+            # 4. ANTI-TWIN DEPAN (Setelah 77, jangan pasang kembar depan dulu)
+            if line[0] == line[1]: 
+                score -= 85
+                
+            # 5. MACAU SYNERGY (61 - 47)
+            if '6' in line or '1' in line:
+                score += 25
 
         # --- [V16.4 GREECE MAXIMAL PRECISION] ---
         elif market_name == 'GREECE':
