@@ -340,27 +340,34 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
             scores[n] += 15
 
     elif market_name == 'HONGKONG LOTTO':
-        # --- HK-LOTTO SHADOW-MIRROR LOGIC V16.29 ---
+        # --- [V16.30 HK-LOTTO ELITE SHADOW] ---
+        # 1. Lindungi Indeks/Mirror P1, P2, P3 (Gaya Cambodia)
+        all_p_digits = "".join([res[0] for res in all_res_data[:1]]) 
+        if len(all_res_data[0]) > 2:
+            all_p_digits += all_res_data[0][1] + all_res_data[0][2]
+            
+        for digit in set(all_p_digits):
+            # Menggunakan .get() agar aman jika ada karakter non-angka
+            scores[ID.get(digit, '0')] += 30  
+            scores[ML.get(digit, '0')] += 15  
+            
+        # 2. Delta Kepala-Ekor P1 (Result 7736 -> 3-6 = 3)
+        # Delta 3 akan sangat kuat, Tyseen dari 3 adalah 6.
+        d_kep = int(d0_p1[2])
+        d_eko = int(d0_p1[3])
+        delta = str(abs(d_kep - d_eko))
+        scores[delta] += 35
+        scores[TY.get(delta, '6')] += 25 
+
+        # 3. HK-Lotto AI Anchor (Sesuai AM 1467 & AI 18)
+        scores['1'] += 20
+        scores['8'] += 20
         
-        # 1. P2 & P3 Shadowing (P2: 1935, P3: 9286)
-        # HK Lotto sering menarik angka "Hutang" dari tengah P2 & P3
-        if len(all_res_data[0]) >= 3:
-            p2_mid = all_res_data[0][1][1:3] # Angka 93
-            p3_mid = all_res_data[0][2][1:3] # Angka 28
-            target_mid = p2_mid + p3_mid
-            for d in target_mid:
-                scores[ID.get(d, '0')] += 28 # Indeks 9->4, 3->8, 2->7, 8->3
-                scores[ML.get(d, '0')] += 18 # Mistik Lama
-        
-        # 2. Resonansi Twin 77 (Result P1: 7736)
-        # Menghancurkan Twin Depan ke angka bayangan
-        scores[ID.get('7', '0')] += 30 # Angka 2
-        scores[ML.get('7', '0')] += 20 # Angka 4
-        
-        # 3. HK-Lotto "High-Frequency" (Berdasarkan AM 1467)
-        # Mengunci angka 1, 4, 6, dan 7 sebagai poros BBFS
-        for n in "1467":
-            scores[n] += 15
+        # 4. Twin Shadow Protection (As 77 -> Indeks 22)
+        # Jika P1 diawali Twin 77, maka angka 2 wajib diperkuat
+        if d0_p1[0] == '7':
+            scores['2'] += 30
+            scores['4'] += 20 # Mistik Lama 7
             
     elif market_name == 'GREECE':
         # --- [V16.4 GREECE EURO-MIRROR & TWIN-REFLECTOR] ---
@@ -699,21 +706,20 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             if h == t: score -= 25
 
         elif market_name == 'HONGKONG LOTTO':
-            # --- HK-LOTTO PRECISION FILTER V16.29 ---
-            # 1. BIJI SIKLUS (Favorit: 2, 5, 8)
+            # --- [V16.30 HK-LOTTO PRECISION] ---
+            # 1. BIJI TARGET (2, 5, 8)
             if biji_f in [2, 5, 8]: 
                 score += 95 
             
-            # 2. SHADOW VALIDATION (As 2 atau 4 hasil pecahan Twin 77)
+            # 2. SHADOW POSITION (As 2 atau 4 hasil pecahan Twin 77)
             if line[0] in ['2', '4']:
                 score += 55
             
-            # 3. POSITION LOCK (Ekor Genap)
-            # Mengingat result 36 (Genap), HK sering lanjut di jalur Genap (0,2,4,8)
-            if int(line[3]) % 2 == 0:
-                score += 30
+            # 3. HK-Lotto AI Synergy (1 atau 8)
+            if '1' in line or '8' in line:
+                score += 35
                 
-            # 4. ANTI-REPEAT 77
+            # 4. ANTI-TWIN DEPAN (Jangan pasang 77 lagi)
             if line[0] == '7' and line[1] == '7':
                 score -= 100
                 
