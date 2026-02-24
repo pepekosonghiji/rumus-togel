@@ -233,28 +233,30 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
             scores[n] += 12
 
     elif market_name == 'SEOUL':
-        # --- [V16.15 SEOUL ULTIMATE - SPIRAL MIRROR LOGIC] ---
+        # --- [V16.15 SEOUL ULTIMATE - SPIRAL MIRROR LOGIC FIXED] ---
         
-        # 1. SPIRAL VERIFICATION (P3 -> P2 -> P1)
-        # Seoul sering mengambil angka P3 mentah untuk jadi bayangan di P1
-        p2_digits = all_res_data[0][1]
-        p3_digits = all_res_data[0][2]
-        for d in set(p2_digits + p3_digits):
-            scores[ID.get(d)] += 35 # Indeks adalah prioritas utama (0->5, 1->6)
-            scores[TY.get(d)] += 20 # Tyseen sebagai jembatan spiral
+        # 1. SPIRAL VERIFICATION (Ambil P2 dan P3 dengan Aman)
+        # Kita ambil string result dari all_res_data jika tersedia
+        p2_res = all_res_data[1][0] if len(all_res_data) > 1 else ""
+        p3_res = all_res_data[2][0] if len(all_res_data) > 2 else ""
+        
+        # Gabungkan digit P2 & P3 untuk mencari Indeks & Tyseen
+        spiral_digits = set(p2_res + p3_res)
+        for d in spiral_digits:
+            if d in ID: scores[ID[d]] += 30 # Indeks prioritas
+            if d in TY: scores[TY[d]] += 15 # Tyseen jembatan
             
-        # 2. ODD-EVEN PULSE (Result 8503 -> Ganjil 3)
-        # Seoul jarang pindah arus drastis. Jika ekor ganjil, 80% tetap ganjil/lompat 2
+        # 2. ODD-EVEN PULSE (Result 8503 -> Ekor 3 Ganjil)
+        # Mengunci arus ganjil/genap agar BBFS lebih ramping
         ekor_lalu = int(d0_p1[3])
-        if ekor_lalu % 2 != 0:
-            for n in "13579": scores[n] += 25
-        else:
-            for n in "02468": scores[n] += 25
+        pulse_nums = "13579" if ekor_lalu % 2 != 0 else "02468"
+        for n in pulse_nums: 
+            scores[n] += 25
             
-        # 3. AS-KOP STABILITY (Result 8503 -> As 8, Kop 5)
-        # Sering terjadi "As-Index-Shift" (As 8 jadi Indeks 3 di posisi lain)
-        scores[ID.get(d0_p1[0])] += 30 # Angka 3 terkunci kuat
-        scores[ID.get(d0_p1[1])] += 30 # Angka 0 terkunci kuat
+        # 3. AS-KOP SHIFT (8503 -> As 8, Kop 5)
+        # Menghitung pergeseran Indeks dari angka depan ke posisi lain
+        if d0_p1[0] in ID: scores[ID[d0_p1[0]]] += 30 # 8 -> 3
+        if d0_p1[1] in ID: scores[ID[d0_p1[1]]] += 30 # 5 -> 0
         
         # 4. SEOUL HOT ANCHOR (AI 58)
         scores['5'] += 25
