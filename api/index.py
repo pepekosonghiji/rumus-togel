@@ -1040,19 +1040,29 @@ def fetch_results(market_code):
                 soup = BeautifulSoup(r.text, 'html.parser')
                 table = soup.find('table')
                 if not table: return []
+                
                 res = []
-                for row in table.find('tbody').find_all('tr'):
+                tbody = table.find('tbody')
+                if not tbody: return []
+                
+                for row in tbody.find_all('tr'):
                     tds = row.find_all('td')
-                    if len(tds) >= 4: # Pastikan kolom cukup untuk P1, P2, P3
+                    if len(tds) >= 2: # Minimal ada kolom Market dan P1
+                        # Ambil P1 (Wajib)
                         p1 = re.sub(r'\D', '', tds[1].text.strip())
-                        p2 = re.sub(r'\D', '', tds[2].text.strip())
-                        p3 = re.sub(r'\D', '', tds[3].text.strip())
+                        
+                        # Ambil P2 & P3 jika ada, jika tidak ada isi string kosong
+                        # Ini krusial agar data Prize 1 tetap terproses maksimal
+                        p2 = re.sub(r'\D', '', tds[2].text.strip()) if len(tds) > 2 else ""
+                        p3 = re.sub(r'\D', '', tds[3].text.strip()) if len(tds) > 3 else ""
+                        
                         if len(p1) == 4:
-                            # Masukkan ketiga prize ke dalam list
+                            # List tetap berisi 3 elemen agar index tidak out of range
                             res.append([p1, p2, p3])
+                
                 return res[:40]
-            
-            # Jalur Umum (Tetap sama, tapi tambahkan proteksi list)
+
+            # Jalur Umum (Tidak diubah sesuai instruksi)
             url = f"https://nfx1avfcy8.salamtarget.com/history/result-mobile/{market_code}-pool-1"
             r = client.get(url, headers=headers)
             soup = BeautifulSoup(r.text, 'html.parser')
@@ -1070,7 +1080,6 @@ def fetch_results(market_code):
 
                     p1 = get_num(tds[3])
                     if len(p1) == 4:
-                        # Proteksi: Jika P2 atau P3 kosong di web, isi '0000' biar gak error
                         p2 = get_num(tds[4]) if len(tds) >= 5 else "0000"
                         p3 = get_num(tds[5]) if len(tds) >= 6 else "0000"
                         results.append([p1, p2, p3])
@@ -1078,7 +1087,6 @@ def fetch_results(market_code):
     except Exception as e:
         print(f"Fetch Error: {e}")
         return []
-
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
