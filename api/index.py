@@ -661,30 +661,7 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             if h == t:
                 if h in ['8', '4', '6']: score += 35
                 else: score -= 75
-            # --- [ V16.6 GREECE 4D DYNAMIC RADAR ] ---
-            try:
-                # AS: Mengambil Indeks dari AS P1 (7 -> 2) atau Mistik As P2
-                as_p1 = last_p1[0]
-                as_p2 = all_res_data[0][1][0] if len(all_res_data[0]) > 1 else '8'
-                
-                asn = ID.get(as_p1, best_as[i % len(best_as)])
-                kop = ID.get(as_p2, best_kop[i % len(best_kop)])
-
-                # Safety BBFS Check
-                if asn not in bbfs_list: asn = best_as[i % len(best_as)]
-                if kop not in bbfs_list: kop = bbfs_list[(i + 2) % len(bbfs_list)]
-
-                # Pattern Shifting (Mencegah As-Kop Statis)
-                if i % 2 == 0: 
-                    asn = ID.get(asn, asn) # Double Indeks Shifting
-                
-                # Logic Twin Tengah (Antisipasi pola x11x atau x66x)
-                if i == 1 and '1' in bbfs_list: kop = '1'
-                if i == 2 and '6' in bbfs_list: kop = '6'
-
-            except Exception:
-                asn = best_as[i % len(best_as)]
-                kop = best_kop[i % len(best_kop)]
+            
 
         # --- [V16.5 MANHATTAN MAXIMAL PRECISION] ---
         elif market_name == 'MANHATTAN':
@@ -815,9 +792,49 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             kop = res_map['kop'][0]
 
         # Sydney Anti-Crash: Keseimbangan Ganjil-Genap
-        if market_name == 'SYDNEY LOTTO':
+        elif market_name == 'SYDNEY LOTTO':
             if int(kop) % 2 == int(l2[0]) % 2:
                 kop = bbfs_list[(bbfs_list.index(kop) + 1) % len(bbfs_list)]
+
+        elif market_name == 'CAMBODIA':
+            # Konstruksi khusus untuk menangkap Twin Tengah (xAAx)
+            # Jika delta rendah (0 atau 1), potensi twin tengah naik.
+            if i < 3: # Untuk 3 baris teratas
+                asn = best_as[i % len(best_as)]
+                kop = asn # Paksa Twin Depan/Tengah
+            else:
+                asn = best_as[i % len(best_as)]
+                kop = best_kop[i % len(best_kop)]
+            
+            # Shifting jika angka tabrakan dengan 2D
+            if kop == l2[0]:
+                kop = bbfs_list[(bbfs_list.index(kop) + 1) % len(bbfs_list)]
+
+        # --- [ V16.6 GREECE 4D DYNAMIC RADAR ] ---
+        elif market_name == 'GREECE':
+            try:
+                # AS: Mengambil Indeks dari AS P1 (7 -> 2) atau Mistik As P2
+                as_p1 = last_p1[0]
+                as_p2 = all_res_data[0][1][0] if len(all_res_data[0]) > 1 else '8'
+                
+                asn = ID.get(as_p1, best_as[i % len(best_as)])
+                kop = ID.get(as_p2, best_kop[i % len(best_kop)])
+
+                # Safety BBFS Check
+                if asn not in bbfs_list: asn = best_as[i % len(best_as)]
+                if kop not in bbfs_list: kop = bbfs_list[(i + 2) % len(bbfs_list)]
+
+                # Pattern Shifting (Mencegah As-Kop Statis)
+                if i % 2 == 0: 
+                    asn = ID.get(asn, asn) # Double Indeks Shifting
+                
+                # Logic Twin Tengah (Antisipasi pola x11x atau x66x)
+                if i == 1 and '1' in bbfs_list: kop = '1'
+                if i == 2 and '6' in bbfs_list: kop = '6'
+
+            except Exception:
+                asn = best_as[i % len(best_as)]
+                kop = best_kop[i % len(best_kop)]
 
         safety_counter = 0
         while (kop in l2 or kop == asn) and safety_counter < len(bbfs_list):
