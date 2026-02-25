@@ -1064,8 +1064,6 @@ def fetch_results(market_code):
                 
                 return res[:40]
 
-            
-
             # Jalur Umum (Tidak diubah sesuai instruksi)
             url = f"https://nfx1avfcy8.salamtarget.com/history/result-mobile/{market_code}-pool-1"
             r = client.get(url, headers=headers)
