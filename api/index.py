@@ -797,31 +797,25 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
         # Sydney Anti-Crash: Keseimbangan Ganjil-Genap
         elif market_name == 'SYDNEY LOTTO':
             try:
-                # Sydney Logic: As sering kali adalah Indeks dari Kop P1 lama
-                # Kop sering kali adalah Mistik Lama dari As P1 lama
                 as_p1_lama = last_p1[0] if len(last_p1) >= 1 else '5'
                 kop_p1_lama = last_p1[1] if len(last_p1) >= 2 else '2'
                 
-                # Penentuan AS & KOP Dynamic
+                # Gunakan rotasi 'i' agar setiap baris memiliki As/Kop berbeda
                 asn = ID.get(kop_p1_lama, best_as[i % len(best_as)])
-                kop = ML.get(as_p1_lama, best_kop[i % len(best_kop)])
+                kop = ML.get(as_p1_lama, best_kop[(i + 1) % len(best_kop)])
 
-                # Safety Check: Pastikan masuk dalam BBFS
-                if asn not in bbfs_list: asn = best_as[i % len(best_as)]
-                if kop not in bbfs_list: kop = best_kop[i % len(best_kop)]
+                # Proteksi agar As/Kop tidak sama dengan angka 2D (l2)
+                if asn in l2: asn = [x for x in bbfs_list if x not in l2][0]
+                if kop == asn or kop in l2: 
+                    kop = [x for x in bbfs_list if x != asn and x not in l2][0]
 
-                # Varian Sydney: Pola Selang-Seling (As = Tetangga As lama)
-                if i % 2 != 0:
-                    val_as = int(as_p1_lama) if as_p1_lama.isdigit() else 5
-                    asn = str((val_as + 1) % 10)
-                    if asn not in bbfs_list: asn = bbfs_list[0]
-
-                top3.append(f"{kop}{l2}")
-                top4.append(f"{asn}{kop}{l2}")
-            except (IndexError, ValueError):
-                # Fallback Safe Logic
-                top3.append(f"{bbfs_list[0]}{l2}")
-                top4.append(f"{bbfs_list[1]}{bbfs_list[0]}{l2}")
+                line3, line4 = f"{kop}{l2}", f"{asn}{kop}{l2}"
+                
+                # FILTER UNIK: Hanya masukkan jika belum ada di list
+                if line3 not in top3: top3.append(line3)
+                if line4 not in top4: top4.append(line4)
+            except Exception:
+                continue
 
         elif market_name == 'CAMBODIA':
             try:
