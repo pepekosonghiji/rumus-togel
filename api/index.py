@@ -430,7 +430,7 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
         biji_f = (biji if biji < 10 else biji % 9 or 9)
         
         # --- [SYDNEY SPECIFIC RACIKAN] ---
-        elif market_name == 'SYDNEY LOTTO':
+        if market_name == 'SYDNEY LOTTO':
             # 1. BIJI HARMONY (2, 5, 8) + Biji Cadangan (Sydney Style)
             if biji_f in [2, 5, 8]: 
                 score += 75
