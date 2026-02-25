@@ -113,6 +113,31 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         p3_res = all_res_data[0][2] if len(all_res_data[0]) > 2 else ""
         for d in set(p2_res + p3_res):
             scores[ID.get(d, d)] += 25
+
+    elif market_name == 'HONGKONG POOLS':
+            # --- [V17.0 HKP MONSTER WEIGHTING - P1 ONLY] ---
+            # Menggunakan result terakhir (Contoh: 3593)
+            p1_d = d0_p1 if d0_p1 else "3593"
+            
+            # 1. TWIN-DESTRUCTION (Indeks dari Twin Terapit)
+            # Result 3...3 -> Angka 3 adalah kunci. Indeksnya (8) diledakkan.
+            t_key = p1_d[0]
+            scores[ID.get(t_key, '8')] += 50  # Prioritas Utama (Indeks)
+            scores[ML.get(t_key, '8')] += 30  # Prioritas Kedua (Mistik)
+            
+            # 2. MIDDLE-SHIFT (Angka tengah 5-9)
+            # HK Pools sangat hobi menggeser angka tengah ke posisi belakang
+            scores[p1_d[1]] += 35 # Angka 5
+            scores[p1_d[2]] += 35 # Angka 9
+            
+            # 3. GAP FILLER (AI 48)
+            # Menembak angka yang belum keluar di P1 sebelumnya
+            for n in "480":
+                scores[n] += 40
+
+            # 4. BIJI RESONANCE (Biji 2 -> Target Biji 9)
+            # Karena 3593 = Biji 2, maka angka dengan Biji 9 diberi bonus
+            # (Proses ini dilakukan otomatis di bagian filter 2D)
         
     elif market_name == 'MACAU':
         scores[str((int(d0_p1[3]) + 1) % 10)] += 15
@@ -157,19 +182,21 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         scores['6'] += 15
         
     elif market_name == 'OSAKA':
-        # --- [V17.0 OSAKA MONSTER VORTEX] ---
-        # 1. TWIN MIRROR JUMP (Analisa Result 33xx)
-        t_digit = d0_p1[0] if d0_p1 else '3'
-        scores[ID.get(t_digit, '8')] += 40 # 3 -> 8 (Indeks Twin)
-        scores[ML.get(t_digit, '8')] += 30 # 3 -> 8 (Double Lock!)
+        # --- [V17.1 OSAKA MONSTER - UPDATED] ---
+        p1_d = d0_p1 if d0_p1 else "0574"
         
-        # 2. STEP-UP/DOWN CORRECTION (Ekor 7)
-        e_lalu = int(d0_p1[3]) if len(d0_p1) > 3 else 7
-        scores[str((e_lalu + 1) % 10)] += 35 # Target Step-Up
-        scores[str((e_lalu - 1) % 10)] += 25 # Target Step-Down
+        # 1. DOWN-SHIFT PRIORITY (Angka Turun Kelas)
+        # Kepala & Ekor lama punya kecenderungan naik jadi As/Kop
+        scores[p1_d[2]] += 40 # Kepala lama (7)
+        scores[p1_d[3]] += 35 # Ekor lama (4)
         
-        # 3. GHOST & ANCHOR (AI 82)
-        for n in "820": scores[n] += 30
+        # 2. VORTEX MIRROR (Indeks dari Result)
+        for d in p1_d:
+            scores[ID.get(d)] += 30 
+        
+        # 3. OSAKA ANCHOR (AI 028)
+        # Tetap menjaga angka 8 sebagai Step-Up dan 2 sebagai Mistik
+        for n in "028": scores[n] += 25
 
     elif market_name == 'SEOUL':
         # --- [V16.16 SEOUL GHOST-PRIZE LOGIC] ---
@@ -201,24 +228,20 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         for n in "478": scores[n] += 25
 
     elif market_name == 'PHUKET':
-        # --- [V17.0 PHUKET MONSTER: SANDWICH & BRIDGE] ---
-        p1_d = d0_p1 if d0_p1 else "2452"
+        # --- [V17.2 PHUKET MONSTER: REBIRTH & GAP] ---
+        p1_d = d0_p1 if d0_p1 else "2206"
         
-        # 1. SANDWICH EFFECT (2-45-2)
-        if p1_d[0] == p1_d[3]:
-            # Angka tengah (4, 5) dipaksa naik kelas
-            scores[p1_d[1]] += 40 
-            scores[p1_d[2]] += 40
-            # Indeks dari Sandwich (2 -> 7)
-            scores[ID.get(p1_d[0])] += 30 
+        # 1. THE GAP DETECTOR (Lompatan Angka)
+        # Result 2-2-0-6. Angka 1, 3, 4, 5 adalah "Gap" yang tertinggal.
+        for n in "1345":
+            scores[n] += 35
+            
+        # 2. TWIN REBORN (Karena 22 sudah keluar, waspada Twin 00 atau 66)
+        scores[ID.get(p1_d[0])] += 25 # Indeks 2 -> 7
         
-        # 2. PROGRESSIVE BRIDGE
-        # Setelah 4-5, Phuket sering lari ke 6 atau 3
-        scores[str((int(p1_d[2]) + 1) % 10)] += 35 # 5 -> 6
-        scores[str((int(p1_d[1]) - 1) % 10)] += 25 # 4 -> 3
-        
-        # 3. DEBT RECOVERY (Angka P2/P3 yang tertinggal)
-        for n in "689": scores[n] += 30
+        # 3. AI ANCHOR (AI 79)
+        scores['7'] += 30
+        scores['9'] += 30
 
     elif market_name == 'DANANG':
         # --- [V16.22 DANANG DIAGONAL SHIFT FIXED] ---
@@ -505,30 +528,25 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             if h == t: score -= 30
 
         elif market_name == 'OSAKA':
-            # --- [V16.19 OSAKA MAXIMAL PRECISION] ---
-            # 1. BIJI SPECTRUM (Osaka Siklus: 1, 3, 5, 9)
-            # Result 3357 (Biji 9), biasanya akan balik ke Biji Ganjil atau Biji 1
-            if biji_f in [1, 3, 5, 9]: 
-                score += 95 
+            # --- [V17.1 OSAKA MAXIMAL PRECISION] ---
+            # 1. BIJI SIKLUS GANJIL (1, 3, 5, 7, 9)
+            # Osaka sedang dalam tren Biji Ganjil (0574 -> 0+5+7+4 = 16 -> Biji 7)
+            if biji_f % 2 != 0: 
+                score += 100 
             
-            # 2. SHADOW-POSITION (Indeks Kepala -> Ekor Baru)
-            # Kepala 5 -> Indeks 0. Kita cari angka yang ekornya 0
-            if t == ID.get(last_p1[2], 'x'):
-                score += 55
+            # 2. SHADOW POSITION (Kepala lama ke Ekor Baru)
+            # Jika ekor baru adalah Indeks/Mistik dari kepala lama (7)
+            if t == ID.get(last_p1[2]) or t == ML.get(last_p1[2]):
+                score += 65
             
-            # 3. VORTEX AS-KOP (As-Kop dari Mistik/Indeks Result)
-            # Mengincar pola 88xx atau 80xx (Indeks dari 33)
-            if line[0] == '8' or line[1] == '8':
+            # 3. VORTEX AS-KOP BOOSTER
+            # Memberikan bonus jika As atau Kop menggunakan angka 0, 2, atau 8
+            if line[0] in "028" or line[1] in "028":
                 score += 45
-                
-            # 4. STEP-VERIFICATION
-            # Bonus jika angka mengandung 8 (Step up dari ekor 7)
-            if '8' in line:
-                score += 30
-                
-            # 5. ANTI-TWIN DEPAN (Setelah Twin 11 dan 33, kemungkinan besar pecah)
-            if line[0] == line[1]: 
-                score -= 60
+            
+            # 4. ANTI-SERI (Mencegah angka seperti 78 atau 45 di belakang)
+            if abs(int(h) - int(t)) == 1:
+                score -= 50
 
         elif market_name == 'SEOUL':
             # --- [V16.16 SEOUL MAXIMAL PRECISION] ---
@@ -787,34 +805,37 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
                     asn = ID.get(asn, bbfs_list[(i+4)%len(bbfs_list)])
             except: pass
 
-        # --- [ V17.0 OSAKA MONSTER: SHADOW & VORTEX SHIFTING ] ---
         elif market_name == 'OSAKA':
             try:
-                # Ambil data kunci
-                as_lama = last_p1[0] if len(last_p1) > 0 else '3'
-                kop_lama = last_p1[1] if len(last_p1) > 1 else '3'
-                ekor_lama = last_p1[3] if len(last_p1) > 3 else '7'
+                as_l = last_p1[0] # 0
+                kop_l = last_p1[1] # 5
+                kep_l = last_p1[2] # 7
+                ek_l = last_p1[3] # 4
 
                 if i == 0:
-                    # POLA VORTEX (Indeks Total dari Twin Depan)
-                    asn = ID.get(as_lama, '8')
-                    kop = ID.get(kop_lama, '8')
+                    # POLA HEAD-TO-KOP (Belajar dari 0574)
+                    # Mengambil Kepala lama sebagai Kop baru
+                    asn = ID.get(as_l, '5') 
+                    kop = kep_l 
                 elif i == 1:
-                    # POLA STEP-SHADOW (As naik 1, Kop Indeks)
-                    asn = str((int(as_lama) + 1) % 10)
-                    kop = ID.get(ekor_lama, '2')
+                    # POLA MIRROR SQUASH (Kebalikan total)
+                    asn = ID.get(kep_l, '2')
+                    kop = ID.get(ek_l, '9')
                 elif i == 2:
-                    # POLA MIRROR SQUASH
-                    asn = ML.get(as_lama, '8')
-                    kop = TY.get(kop_lama, '6')
+                    # POLA STEP-UP BRIDGE
+                    asn = str((int(as_l) + 1) % 10)
+                    kop = ID.get(as_l, '5')
+                elif i == 3:
+                    # POLA VORTEX (As & Kop dari AI terkuat)
+                    asn = best_as[0]
+                    kop = best_kop[0]
                 else:
-                    # Rotasi Berdasarkan Skor Tertinggi
                     asn = best_as[i % len(best_as)]
                     kop = best_kop[(i + 1) % len(best_kop)]
 
-                # Audit Khusus Osaka: Osaka benci Twin Depan setelah Twin 33
-                if asn == kop:
-                    asn = ID.get(asn, bbfs_list[(i+5)%len(bbfs_list)])
+                # Audit Khusus Osaka: Mencegah pola urut (misal 4567)
+                if abs(int(asn) - int(kop)) == 1:
+                    kop = MB.get(asn, bbfs_list[(i+2)%len(bbfs_list)])
 
                 line3, line4 = f"{kop}{l2}", f"{asn}{kop}{l2}"
                 if line3 not in top3: top3.append(line3)
@@ -824,29 +845,15 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
         # --- [ V17.0 PHUKET MONSTER: BRIDGE-CROSSING LOGIC ] ---
         elif market_name == 'PHUKET':
             try:
-                as_l = last_p1[0] if len(last_p1) > 0 else '2'
-                tgh_1 = last_p1[1] if len(last_p1) > 1 else '4'
-                tgh_2 = last_p1[2] if len(last_p1) > 2 else '5'
-                ek_l = last_p1[3] if len(last_p1) > 3 else '2'
-
+                # Pola 2206 -> Twin Depan + Ekor Genap
+                # Kita tembak pola Indeks-nya untuk periode depan
                 if i == 0:
-                    # POLA SHIFTING TENGAH (Angka tengah lama jadi As-Kop baru)
-                    asn, kop = tgh_1, tgh_2
+                    asn, kop = '7', '7' # Twin Indeks dari 22
                 elif i == 1:
-                    # POLA MIRROR BRIDGE (Indeks dari Kepala-Ekor lama)
-                    asn = ID.get(tgh_2, '0')
-                    kop = ID.get(ek_l, '7')
-                elif i == 2:
-                    # POLA DEBT RECOVERY (Menggunakan angka 6 atau 8 sebagai Anchor)
-                    asn = '6' if '6' in bbfs_list else best_as[0]
-                    kop = '8' if '8' in bbfs_list else best_kop[0]
+                    asn, kop = '5', '1' # Mistik/Indeks dari 06
                 else:
                     asn = best_as[i % len(best_as)]
-                    kop = best_kop[(i + 2) % len(best_kop)]
-
-                # Audit Phuket: Anti-Sandwich & Ganjil Lock
-                if asn == ek_l: # Mencegah pola sandwich berulang
-                    asn = ID.get(asn, bbfs_list[(i+3)%len(bbfs_list)])
+                    kop = best_kop[(i + 1) % len(best_kop)]
 
                 line3, line4 = f"{kop}{l2}", f"{asn}{kop}{l2}"
                 if line3 not in top3: top3.append(line3)
@@ -923,6 +930,52 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
                 if line3 not in top3: top3.append(line3)
                 if line4 not in top4: top4.append(line4)
             except: pass
+
+        # --- [ V17.0 HKP MONSTER CONSTRUCTION ] ---
+        elif market_name == 'HONGKONG POOLS':
+            try:
+                # Ambil data kunci dari P1 (Contoh: 3593)
+                as_l = last_p1[0]  # 3
+                kop_l = last_p1[1] # 5
+                kep_l = last_p1[2] # 9
+                ek_l = last_p1[3]  # 3
+
+                # --- 4D & 3D Sniping Logic ---
+                if i == 0:
+                    # POLA MIDDLE-RISE (Tengah lama jadi depan baru)
+                    asn, kop = kop_l, kep_l # Hasil: 59xx
+                elif i == 1:
+                    # POLA MIRROR TOTAL (Indeks dari 3-3)
+                    asn, kop = ID.get(as_l, '8'), ID.get(ek_l, '8') # Hasil: 88xx
+                elif i == 2:
+                    # POLA DEBT-RECOVERY (AI 48)
+                    asn, kop = '4', '8' # Hasil: 48xx
+                else:
+                    # Rotasi berdasarkan skor tertinggi BBFS
+                    asn = best_as[i % len(best_as)]
+                    kop = best_kop[(i + 1) % len(best_kop)]
+
+                # --- 2D Monster Precision Filter ---
+                # 1. BIJI SIKLUS (Biji 9, 1, 4, 7)
+                if biji_f in [9, 1, 4, 7]:
+                    score += 95
+                
+                # 2. SHADOW POSITION (Kepala ke Ekor)
+                # Jika ekor baru (t) adalah Indeks dari kepala lama (9)
+                if t == ID.get(kep_l, 'x'):
+                    score += 60
+                
+                # 3. ANTI-SANDWICH (Jangan biarkan As=Ekor lagi)
+                if line[0] == line[3]:
+                    score -= 80
+
+                # --- Final Construction ---
+                line3, line4 = f"{kop}{l2}", f"{asn}{kop}{l2}"
+                if line3 not in top3: top3.append(line3)
+                if line4 not in top4: top4.append(line4)
+                
+            except Exception as e:
+                pass
 
         elif market_name == 'GREECE':
             try:
