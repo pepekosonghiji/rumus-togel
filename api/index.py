@@ -41,9 +41,7 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
     
     freq_p1 = Counter("".join(p1_history[:30]))
     for n in "0123456789":
-        # Skor Prize 1 (Utama)
         scores[n] += freq_p1.get(n, 0) * 1.5
-        # Repeat Number Protection
         if n in d0_p1: scores[n] += 15
     
     for res in all_res_data[:10]:
@@ -51,30 +49,34 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
             shadow = "".join(res[1:])
             for n in set(shadow): scores[n] += 5
 
+    # --- PERBAIKAN STRUKTUR IF-ELIF ---
     if market_name == 'CAMBODIA':
-        # --- [V16.8 CAMBODIA DYNAMIC WEIGHT] ---
-        # Ambil semua angka dari P1, P2, P3
         p_list = [res for res in all_res_data[0] if res] if all_res_data else []
         all_p_digits = "".join(p_list)
-            
         for digit in set(all_p_digits):
             if digit.isdigit():
-                # Indeks & Mistik tetap jadi fondasi
                 scores[ID.get(digit, digit)] += 30 
                 scores[ML.get(digit, digit)] += 15 
-                # Peningkatan: Bobot angka mentah Prize 3 dinaikkan
                 if len(all_res_data[0]) > 2 and digit in all_res_data[0][2]:
                     scores[digit] += 25 
-        
-        # Delta Analysis dengan proteksi error
         if len(d0_p1) >= 4 and d0_p1[2].isdigit() and d0_p1[3].isdigit():
             delta = str(abs(int(d0_p1[2]) - int(d0_p1[3])))
             scores[delta] = scores.get(delta, 0) + 35
             scores[TY.get(delta, '0')] = scores.get(TY.get(delta, '0'), 0) + 25
-        
-        # Penajaman AI: Angka 9 dan 4 (Mistik/Indeks dari tren saat ini)
-        for n in ['3', '8', '9', '4']: 
-            scores[n] = scores.get(n, 0) + 20
+        for n in ['3', '8', '9', '4']: scores[n] = scores.get(n, 0) + 20
+
+    elif market_name == 'SYDNEY LOTTO':
+        for digit in d0_p1:
+            if digit.isdigit():
+                val = int(digit)
+                scores[str((val + 1) % 10)] += 22 
+                scores[str((val - 1) % 10)] += 22
+                scores[MB.get(digit, '0')] += 25 
+                scores[ID.get(digit, '0')] += 30 
+        p1_short = "".join([res[0] for res in all_res_data[:5] if res])
+        for n in "0123456789":
+            if n not in p1_short: scores[n] += 30 
+            if n in "234567": scores[n] += 15
 
     elif market_name == 'HONGKONG LOTTO':
         # --- [V16.26 HK-RESONANCE UPGRADE] ---
@@ -102,30 +104,6 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         scores[str((int(d0_p1[3]) + 1) % 10)] += 15
         scores[str((int(d0_p1[3]) - 1) % 10)] += 15
         scores[ID.get(d0_p1[1], '0')] += 10 
-
-    elif market_name == 'SYDNEY LOTTO':
-        # --- [V16.9 SYDNEY NEIGHBOR & COLD POWER] ---
-        for digit in d0_p1:
-            if digit.isdigit():
-                val = int(digit)
-                # Logika Tetangga & Lompat (Khas Sydney)
-                scores[str((val + 1) % 10)] += 22 
-                scores[str((val - 1) % 10)] += 22
-                scores[str((val + 2) % 10)] += 20 
-                scores[str((val - 2) % 10)] += 20
-                
-                # Mistik & Indeks (Resonansi Mirror)
-                scores[MB.get(digit, '0')] += 25 
-                scores[ID.get(digit, '0')] += 30 
-
-        # Cold Number Detection (Angka yang jarang muncul dalam 5 hari terakhir)
-        p1_short = "".join([res[0] for res in all_res_data[:5] if res])
-        for n in "0123456789":
-            if n not in p1_short:
-                scores[n] += 30 
-            # Prioritas Range Tengah Sydney (2-7)
-            if n in "234567":
-                scores[n] += 15
     
     elif market_name == 'COLORADO':
         scores[MB.get(d0_p1[1], '0')] += 20
@@ -1021,4 +999,4 @@ def index():
     return render_template('index.html', markets=markets, analysis=analysis, selected=selected)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(debug=True)
