@@ -158,33 +158,19 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         scores['6'] += 15
         
     elif market_name == 'OSAKA':
-        # --- [V16.19 OSAKA VORTEX - STEP-UP & TWIN JUMP] ---
-        # 1. TWIN MIRROR JUMP (Result 3357 -> Twin 33)
-        # Jika keluar twin, periode depan biasanya angka tersebut di-Indeks atau Mistik
-        t_digit = d0_p1[0] # Angka 3
-        scores[ID.get(t_digit, '8')] += 35 # 3 -> 8 (Kunci Utama)
-        scores[ML.get(t_digit, '8')] += 25 # 3 -> 8 (Double Lock!)
+        # --- [V17.0 OSAKA MONSTER VORTEX] ---
+        # 1. TWIN MIRROR JUMP (Analisa Result 33xx)
+        t_digit = d0_p1[0] if d0_p1 else '3'
+        scores[ID.get(t_digit, '8')] += 40 # 3 -> 8 (Indeks Twin)
+        scores[ML.get(t_digit, '8')] += 30 # 3 -> 8 (Double Lock!)
         
-        # 2. STEP-UP CORRECTION (Ekor 7)
-        # Mengantisipasi bandot yang hobi naik/turun tangga (6->7->8 atau 6->7->6)
-        e_lalu = int(d0_p1[3])
-        step_up = str((e_lalu + 1) % 10)
-        step_down = str((e_lalu - 1) % 10)
-        scores[step_up] += 30 # Angka 8
-        scores[step_down] += 20 # Angka 6
+        # 2. STEP-UP/DOWN CORRECTION (Ekor 7)
+        e_lalu = int(d0_p1[3]) if len(d0_p1) > 3 else 7
+        scores[str((e_lalu + 1) % 10)] += 35 # Target Step-Up
+        scores[str((e_lalu - 1) % 10)] += 25 # Target Step-Down
         
-        # 3. GHOST EXTRACTION (Ambil angka dingin dari P2/P3)
-        p2_res = all_res_data[0][1] if len(all_res_data[0]) > 1 else ""
-        p3_res = all_res_data[0][2] if len(all_res_data[0]) > 2 else ""
-        ghost_digits = set(p2_res + p3_res)
-        for d in ghost_digits:
-            scores[d] += 15
-            scores[ID.get(d)] += 15
-
-        # 4. OSAKA ANCHOR (AI 82)
-        # 8 dari Indeks Twin 3, 2 dari Mistik 5
-        scores['8'] += 30
-        scores['2'] += 25
+        # 3. GHOST & ANCHOR (AI 82)
+        for n in "820": scores[n] += 30
 
     elif market_name == 'SEOUL':
         # --- [V16.16 SEOUL GHOST-PRIZE LOGIC] ---
@@ -774,8 +760,8 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
     scored_2d.sort(key=lambda x: x[1], reverse=True)
     top2 = [x[0] for x in scored_2d[:count]]
 
-    # 3. 3D & 4D CONSTRUCTION (LAYER 3 & 4)
-   # --- [ DATABASE POSISI & SCORES ] ---
+# 3. 3D & 4D CONSTRUCTION (LAYER 3 & 4)
+    # --- [ DATABASE POSISI & SCORES ] ---
     top3, top4 = [], []
     
     # Mengambil 3 angka terkuat berdasarkan bobot scores global
@@ -789,154 +775,130 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
         
         # --- [ MARKET SPECIFIC LOGIC ] ---
         
+        # --- [ V17.0 BUSAN MONSTER ] ---
         if market_name == 'BUSAN POOLS':
             try:
-                # Busan sering menggunakan Kop yang kuat dari tarikan P1 sebelumnya
-                as_p1_lama = last_p1[0] if len(last_p1) > 0 else '8'
-                # Anchor Kop: Mistik Lama dari As P1
-                kop_anchor = ML.get(as_p1_lama, best_kop[0])
-                
-                if i < 5:
-                    kop = kop_anchor
-                    asn = best_as[i % len(best_as)]
+                as_p1 = last_p1[0]
+                kop_p1 = last_p1[1]
+                anchor_1 = ML.get(as_p1, bbfs_list[0])
+                anchor_2 = ID.get(kop_p1, bbfs_list[1])
+
+                if i < 4:
+                    kop = anchor_1
+                    asn = anchor_2 if i % 2 == 0 else best_as[i % len(best_as)]
+                elif i == 4:
+                    asn, kop = l2[1], l2[0] # Butterfly ABBA
                 else:
-                    # Pola Cross-Mirror untuk line sisa
-                    asn = ID.get(kop_anchor, best_as[i % len(best_as)])
-                    kop = best_kop[i % len(best_kop)]
-                
-                # Pola 2D Busan: Sering angka berjarak 3 (Contoh: 0-3, 6-9)
-                l2 = top2[i] if i < len(top2) else f"{bbfs_list[0]}{bbfs_list[1]}"
-                
+                    asn = best_as[i % len(best_as)]
+                    kop = best_kop[(i + 3) % len(best_kop)]
+
+                if abs(int(asn) - int(kop)) == 1:
+                    asn = ID.get(asn, bbfs_list[(i+4)%len(bbfs_list)])
+            except: pass
+
+        # --- [ V17.0 OSAKA MONSTER: SHADOW & VORTEX SHIFTING ] ---
+        elif market_name == 'OSAKA':
+            try:
+                # Ambil data kunci
+                as_lama = last_p1[0] if len(last_p1) > 0 else '3'
+                kop_lama = last_p1[1] if len(last_p1) > 1 else '3'
+                ekor_lama = last_p1[3] if len(last_p1) > 3 else '7'
+
+                if i == 0:
+                    # POLA VORTEX (Indeks Total dari Twin Depan)
+                    asn = ID.get(as_lama, '8')
+                    kop = ID.get(kop_lama, '8')
+                elif i == 1:
+                    # POLA STEP-SHADOW (As naik 1, Kop Indeks)
+                    asn = str((int(as_lama) + 1) % 10)
+                    kop = ID.get(ekor_lama, '2')
+                elif i == 2:
+                    # POLA MIRROR SQUASH
+                    asn = ML.get(as_lama, '8')
+                    kop = TY.get(kop_lama, '6')
+                else:
+                    # Rotasi Berdasarkan Skor Tertinggi
+                    asn = best_as[i % len(best_as)]
+                    kop = best_kop[(i + 1) % len(best_kop)]
+
+                # Audit Khusus Osaka: Osaka benci Twin Depan setelah Twin 33
+                if asn == kop:
+                    asn = ID.get(asn, bbfs_list[(i+5)%len(bbfs_list)])
+
                 line3, line4 = f"{kop}{l2}", f"{asn}{kop}{l2}"
-                
                 if line3 not in top3: top3.append(line3)
                 if line4 not in top4: top4.append(line4)
-            except:
-                continue
+            except: pass
 
-        # 2. SYDNEY LOTTO (Anti-Duplicate & Mirroring)
-        # --- [ V16.9.2 SYDNEY DYNAMIC RADAR & BUTTERFLY ] ---
+        # --- [ V17.0 WUHAN MONSTER ] ---
+        elif market_name == 'WUHAN':
+            try:
+                p1_l = last_p1
+                p2_l = all_res_data[0][1] if len(all_res_data[0]) > 1 else "1208"
+                
+                if i == 0:
+                    asn, kop = p2_l[0], p2_l[1] # Estafet P2
+                elif i == 1:
+                    asn = kop = l2[0] # Twin Depan (Radar 2280)
+                elif i == 2:
+                    asn = ID.get(p1_l[3], bbfs_list[0]) # Mirror Ekor P1
+                    kop = ID.get(p1_l[2], bbfs_list[1])
+                
+                if i < 3 and asn == kop:
+                    kop = MB.get(asn, bbfs_list[i])
+            except: pass
+
+        # --- [ V16.9.2 SYDNEY MONSTER ] ---
         elif market_name == 'SYDNEY LOTTO':
             try:
                 as_lama = last_p1[0] if len(last_p1) >= 1 else '8'
                 kop_lama = last_p1[1] if len(last_p1) >= 2 else '1'
                 
-                # 1. POSISI AS & KOP DINAMIS
                 if i == 0:
-                    # POLA BUTTERFLY (ABBA) - Belajar dari 8118
-                    asn = as_lama
-                    kop = ID.get(as_lama, '1')
-                elif i == 1:
-                    # POLA MIRROR TOTAL (Indeks dari P1)
-                    asn = ID.get(as_lama, '3')
-                    kop = ID.get(kop_lama, '6')
-                elif i == 2:
-                    # POLA TAYSEN SHIFTING
-                    asn = TY.get(as_lama, '2')
-                    kop = best_kop[i % len(best_kop)]
-                else:
-                    # ROTASI STANDAR BERDASARKAN SKOR TERKUAT
-                    asn = best_as[i % len(best_as)]
-                    kop = best_kop[(i + 1) % len(best_kop)]
-
-                # 2. POSISI 2D (EKOR) DINAMIS
-                if i == 0:
-                    # Menghasilkan pola ABBA jika i=0 (Contoh: 81-18)
+                    asn, kop = as_lama, ID.get(as_lama, '1') # Butterfly 8118
                     l2 = f"{kop}{asn}"
                 elif i % 3 == 0:
-                    # Paksa Pola Twin di baris tertentu
-                    twin_digit = bbfs_list[i % len(bbfs_list)]
-                    l2 = f"{twin_digit}{twin_digit}"
-                else:
-                    # Ambil dari Top 2D yang sudah disortir
-                    l2 = top2[i] if i < len(top2) else f"{bbfs_list[0]}{bbfs_list[1]}"
+                    twin = bbfs_list[i % len(bbfs_list)]
+                    l2 = f"{twin}{twin}" # Twin Injection
+                elif i == 1:
+                    asn, kop = ID.get(as_lama), ID.get(kop_lama)
+            except: pass
 
-                # SAFETY CHECK: Jika Kop sama dengan As, geser menggunakan BBFS
-                if kop == asn:
-                    kop = [x for x in bbfs_list if x != asn][0]
-
-                line3, line4 = f"{kop}{l2}", f"{asn}{kop}{l2}"
-                
-                # FILTER UNIK (Anti-Duplikat)
-                if line3 not in top3: top3.append(line3)
-                if line4 not in top4: top4.append(line4)
-
-            except Exception as e:
-                # Fallback jika terjadi error indexing
-                asn, kop = bbfs_list[0], bbfs_list[1]
-                top3.append(f"{kop}{top2[i]}")
-                top4.append(f"{asn}{kop}{top2[i]}")
-
-        elif market_name == 'WUHAN':
-            try:
-                # Logika Wuhan: As sering mengambil nilai Kop atau Ekor P1 sebelumnya
-                kop_p1_lama = last_p1[1] if len(last_p1) > 1 else '5'
-                ekor_p1_lama = last_p1[3] if len(last_p1) > 3 else '9'
-                
-                asn = kop_p1_lama # As bergeser dari Kop
-                kop = TY.get(ekor_p1_lama, best_kop[i % len(best_kop)]) # Kop dari Mistik Taysen Ekor
-                
-                # Shifting jika angka depan terlalu monoton
-                if i > 4:
-                    asn = best_as[i % len(best_as)]
-            except:
-                asn, kop = best_as[0], best_kop[1]
-
-        # 3. CAMBODIA (Twin Tengah Logic)
         elif market_name == 'CAMBODIA':
             asn = best_as[i % len(best_as)]
-            if i < 3:
-                kop = asn # Injeksi Twin Tengah (xAAx)
-            else:
-                kop = best_kop[i % len(best_kop)]
+            if i < 3: kop = asn
 
-        # 4. GREECE (Dynamic Radar)
         elif market_name == 'GREECE':
             try:
                 as_p1 = last_p1[0]
                 as_p2 = all_res_data[0][1][0] if len(all_res_data[0]) > 1 else '8'
                 asn = ID.get(as_p1, best_as[i % len(best_as)])
                 kop = ID.get(as_p2, best_kop[i % len(best_kop)])
-                if i % 2 == 0: asn = ID.get(asn, asn)
-                if i == 1 and '1' in bbfs_list: kop = '1'
-                if i == 2 and '6' in bbfs_list: kop = '6'
             except: pass
 
-        # --- [ GLOBAL VERIFICATION LAYER ] ---
-        
-        # A. Anti-Crash & Collision (Mencegah Kop=As atau Kop masuk di 2D)
+        # --- [ GLOBAL VERIFICATION & ANTI-DUPLICATE ] ---
         safety_counter = 0
         while (kop in l2 or kop == asn) and safety_counter < len(bbfs_list):
             kop = bbfs_list[(bbfs_list.index(kop) + 1) % len(bbfs_list)]
             safety_counter += 1
 
-        # B. Best Position Strengthening (Top 5 Only)
-        if i < 5:
-            if scores.get(kop, 0) < scores.get(best_kop[0], 0):
-                kop = best_kop[i % len(best_kop)]
-            if scores.get(asn, 0) < scores.get(best_as[0], 0):
-                asn = best_as[i % len(best_as)]
-
-        # C. Sum-Biji Harmony Check
-        line_check = f"{asn}{kop}{l2}"
-        total_4d = sum(int(d) for d in line_check if d.isdigit())
-        if total_4d < 10 or total_4d > 32:
-            asn = ID.get(asn, asn)
-
-        # --- [ FINAL UNIQUE PUSH ] ---
+        # Final Construction
         l3_final = f"{kop}{l2}"
         l4_final = f"{asn}{kop}{l2}"
         
-        # Filter Duplikat Global: Hanya masukkan jika belum ada di list
-        if l3_final not in top3:
-            top3.append(l3_final)
-        if l4_final not in top4:
-            top4.append(l4_final)
+        if l3_final not in top3: top3.append(l3_final)
+        if l4_final not in top4: top4.append(l4_final)
 
-    # D. Final Harmony Sorting (Angka Harmoni Bandot)
-    top4.sort(key=lambda x: 1 if sum(int(d) for d in x if d.isdigit()) in [15, 18, 24, 27] else 0, reverse=True)
-    
-    return top2, top3, top4
+    # --- [ MONSTER AUDIT LAYER: AFTER LOOP ] ---
+    # 1. Harmony Audit (Hapus angka kembar 4 atau urut)
+    for idx, val in enumerate(top4):
+        if len(set(val)) == 1 or val in "0123123423453456456756786789":
+            top4[idx] = "".join([ID.get(d, d) if j % 2 == 0 else d for j, d in enumerate(val)])
+
+    # 2. Sorting Monster
+    top4.sort(key=lambda x: sum(scores.get(d, 0) for d in x), reverse=True)
+
+    return top2[:15], top3[:15], top4[:15]
 
 def get_comprehensive_logic(all_res_data, m_name):
     d0_p1 = all_res_data[0][0] # Ambil P1 terakhir (4 digit)
