@@ -286,30 +286,30 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         scores['0'] += 15
 
     elif market_name == 'GREECE':
-        # --- [V16.5 GREECE EURO-MIRROR & TWIN-REFLECTOR SAFE] ---
-        # 1. P2 Indeks Transfer (Safe Check)
+        # --- [V16.6 GREECE STEP-DOWN & MIRROR LOGIC] ---
+        # 1. ANALISA TRANSIT P2/P3 (Resonansi Cross-Pool)
         if len(all_res_data[0]) >= 2:
-            p2_digits = all_res_data[0][1] # Ambil Prize 2
-            for d in p2_digits:
+            p2_digits = all_res_data[0][1]
+            p3_digits = all_res_data[0][2] if len(all_res_data[0]) > 2 else ""
+            for d in set(p2_digits + p3_digits):
                 if d.isdigit():
-                    scores[ID.get(d, d)] += 30 # Indeks
-                    scores[TY.get(d, d)] += 15 # Tyseen
+                    scores[ID.get(d, d)] += 35 # Indeks adalah prioritas utama Greece
+                    scores[TY.get(d, d)] += 20 # Tyseen sebagai cadangan
         
-        # 2. Twin-Reflector (Pola Result 8966)
-        # Menangkap Indeks dari AS P1 lama (8 -> 3)
-        scores[ID.get(d0_p1[0], d0_p1[0])] += 35 
+        # 2. INDEKS BALIK (Belajar dari 7121)
+        # Jika P1 lama punya angka 1 atau 7, potensi Indeksnya (6 atau 2) sangat besar
+        for d in d0_p1:
+            if d in ['1', '7', '2']:
+                scores[ID.get(d, d)] += 40
+                scores[ML.get(d, d)] += 25
+
+        # 3. GREECE SOLID ANCHOR (Angka yang sering bertahan/Stay)
+        # Angka 8 dan 4 memiliki persistensi tinggi di Greece
+        scores['8'] += 30
+        scores['4'] += 25
         
-        # 3. Twin-Resonance (Mistik dari Angka Kembar P1)
-        # Jika Result 8966 -> Kop 9, Ekor 6 (Tidak kembar)
-        # Jika Result sebelumnya ada kembar (misal 8966 di posisi Kop-Ekor tidak kembar, tapi 66 di belakang)
-        if d0_p1[2] == d0_p1[3]: # Cek Twin Belakang (66)
-            twin_digit = d0_p1[3]
-            scores[ML.get(twin_digit, twin_digit)] += 25 # Mistik Lama 6 = 9
-            scores[MB.get(twin_digit, twin_digit)] += 20 # Mistik Baru 6 = 2
-            
-        # 4. Greece "Solid" Anchor (AI Abadi Greece)
-        scores['0'] += 15
-        scores['8'] += 25
+        # 4. ZERO RESONANCE
+        if '0' not in d0_p1: scores['0'] += 20
 
     elif market_name == 'MANHATTAN':
         # --- [V16.5 MANHATTAN REBORN - AS 7 SECURED] ---
@@ -473,6 +473,7 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             # Setelah 00 keluar, HK biasanya pecah (Anti-Twin belakang aktif lagi)
             if h == t and '0' not in line: 
                 score -= 70
+
         elif market_name == 'CAMBODIA':
             # --- [V14.15 CAMBODIA MAXIMAL PRECISION] ---
             # 1. BIJI KHUSUS (Ditambah Biji 2 & 5 karena trend Cambodia saat ini)
@@ -496,6 +497,16 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
 
             # 5. ANTI-TWIN (Cambodia sering Twin Tengah, tapi jarang Twin Belakang)
             if h == t: score -= 40
+            if i < 3: # Untuk 3 baris teratas
+                asn = best_as[i % len(best_as)]
+                kop = asn # Paksa Twin Depan/Tengah
+            else:
+                asn = best_as[i % len(best_as)]
+                kop = best_kop[i % len(best_kop)]
+            
+            # Shifting jika angka tabrakan dengan 2D
+            if kop == l2[0]:
+                kop = bbfs_list[(bbfs_list.index(kop) + 1) % len(bbfs_list)]
 
         # --- [BUSAN POOLS SPECIFIC RACIKAN] ---
         elif market_name == 'BUSAN POOLS':
@@ -633,33 +644,57 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
                 score += 25
 
         elif market_name == 'GREECE':
-            # 1. BIJI HARMONY (Biji 2, 5, 7, 8) + Biji 1 (Pasca Twin)
-            if biji_f in [1, 2, 5, 7, 8]: 
-                score += 85 
+            # 1. BIJI HARMONY V16.6 (Ditambah Biji 3 & 6)
+            # Siklus: 1, 2, 3, 5, 6, 7, 8
+            if biji_f in [1, 2, 3, 5, 6, 7, 8]: 
+                score += 95 
             
-            # 2. POSITIONAL VERIFICATION (Kepala Baru = Indeks Kepala Lama)
-            # Result 8966 -> Kepala 6 -> Indeks Kepala Baru = 1
-            kepala_lama = last_p1[2] if len(last_p1) >= 3 else 'x'
-            if h == ID.get(kepala_lama, 'x'): 
+            # 2. SLIDE LOGIC (Angka Berurutan seperti 21 atau 12)
+            # Greece sering mengeluarkan angka selisih 1 (Step-Down/Up)
+            if abs(int(h) - int(t)) == 1:
+                score += 50
+            
+            # 3. POSITION REFLECTOR (Kepala P1 -> Ekor Baru)
+            # Result 7121 -> Kepala 2. Ekor baru potensi Indeks 2 = 7
+            kepala_p1 = last_p1[2] if len(last_p1) >= 3 else 'x'
+            if t == ID.get(kepala_p1, 'x'): 
                 score += 55 
             
-            # 3. GREECE PATTERN: CROSS-P3 (Safe Version)
-            # Mengambil angka depan Prize 3 (7167 -> 7)
-            if len(all_res_data[0]) > 2 and len(all_res_data[0][2]) > 0:
-                if t == all_res_data[0][2][0]: 
+            # 4. CROSS-P3 CENTER (Angka tengah Prize 3)
+            # Misal P3: 7167, angka tengah 1 & 6 adalah AI kuat
+            if len(all_res_data[0]) > 2:
+                p3_res = all_res_data[0][2]
+                if len(p3_res) >= 3 and (h in p3_res[1:3] or t in p3_res[1:3]):
                     score += 45
-            
-            # 4. TWIN DETECTION (Exit strategy dari 66)
-            if h == t:
-                if h in ['1', '3', '8']: score += 40 # Twin AI lebih kuat
-                else: score -= 60 # Twin lain dikurangi
 
-            # 5. AS-KOP MIRRORING (Safe Loop)
-            # Cek jika angka depan 2D (h) ada di Indeks Prize 2
-            if len(all_res_data[0]) >= 2:
-                p2_indices = [ID.get(x, 'x') for x in all_res_data[0][1]]
-                if h in p2_indices:
-                    score += 35
+            # 5. ANTI-TWIN (Setelah 7121, peluang twin mengecil kecuali twin AI)
+            if h == t:
+                if h in ['8', '4', '6']: score += 35
+                else: score -= 75
+            # --- [ V16.6 GREECE 4D DYNAMIC RADAR ] ---
+            try:
+                # AS: Mengambil Indeks dari AS P1 (7 -> 2) atau Mistik As P2
+                as_p1 = last_p1[0]
+                as_p2 = all_res_data[0][1][0] if len(all_res_data[0]) > 1 else '8'
+                
+                asn = ID.get(as_p1, best_as[i % len(best_as)])
+                kop = ID.get(as_p2, best_kop[i % len(best_kop)])
+
+                # Safety BBFS Check
+                if asn not in bbfs_list: asn = best_as[i % len(best_as)]
+                if kop not in bbfs_list: kop = bbfs_list[(i + 2) % len(bbfs_list)]
+
+                # Pattern Shifting (Mencegah As-Kop Statis)
+                if i % 2 == 0: 
+                    asn = ID.get(asn, asn) # Double Indeks Shifting
+                
+                # Logic Twin Tengah (Antisipasi pola x11x atau x66x)
+                if i == 1 and '1' in bbfs_list: kop = '1'
+                if i == 2 and '6' in bbfs_list: kop = '6'
+
+            except Exception:
+                asn = best_as[i % len(best_as)]
+                kop = best_kop[i % len(best_kop)]
 
         # --- [V16.5 MANHATTAN MAXIMAL PRECISION] ---
         elif market_name == 'MANHATTAN':
