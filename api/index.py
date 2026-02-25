@@ -1053,8 +1053,8 @@ def fetch_results(market_code):
                         
                         # Ambil P2 & P3 jika ada, jika tidak ada isi string kosong
                         # Ini krusial agar data Prize 1 tetap terproses maksimal
-                        p2 = re.sub(r'\D', '', tds[2].text.strip()) if len(tds) > 2 else ""
-                        p3 = re.sub(r'\D', '', tds[3].text.strip()) if len(tds) > 3 else ""
+                        p2 = ''
+                        p3 = ''
                         
                         if len(p1) == 4:
                             # List tetap berisi 3 elemen agar index tidak out of range
