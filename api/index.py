@@ -431,18 +431,23 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
         
         # --- [SYDNEY SPECIFIC RACIKAN] ---
         if market_name == 'SYDNEY LOTTO':
-            # Logika Sydney: As-Kop sering mengambil dari Mirroring result sebelumnya
-            as_lama = last_p1[0] if len(last_p1) >= 1 else '5'
-            kop_lama = last_p1[1] if len(last_p1) >= 2 else '2'
+            # 1. BIJI HARMONY (2, 5, 8) + Biji Cadangan (Sydney Style)
+            if biji_f in [2, 5, 8]: 
+                score += 75
+            elif biji_f in [1, 4, 7]: # Indeks dari 2, 5, 8
+                score += 35
+                
+            # 2. SEQUENTIAL BONUS (Angka Berurutan: 23, 45, 87, dll)
+            if abs(int(h) - int(t)) == 1: 
+                score += 50
             
-            # ASN (As baru) = Indeks dari Kop Lama
-            asn = ID.get(kop_lama, best_as[i % len(best_as)])
-            # KOP (Kop baru) = Mistik Baru/Lama dari As Lama
-            kop = MB.get(as_lama, best_kop[i % len(best_kop)])
+            # 3. MIRROR BALANCE (H & T Pasangan Indeks: 27, 38, 05, dll)
+            if ID.get(h) == t: 
+                score += 45
             
-            # Jika angka As atau Kop sama dengan angka di 2D, geser ke angka BBFS lain
-            if asn in l2: asn = [x for x in bbfs_list if x not in l2][0]
-            if kop == asn or kop in l2: kop = [x for x in bbfs_list if x != asn and x not in l2][0]
+            # 4. ANTI-TWIN (Sydney jarang sekali twin belakang kecuali setelah pola ganjil)
+            if h == t:
+                score -= 60
 
         elif market_name == 'HONGKONG LOTTO':
             # 1. BIJI SIKLUS HK (Ditambah Biji 6 sebagai Mistik dari Biji 9)
