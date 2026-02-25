@@ -202,32 +202,24 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         for n in "478": scores[n] += 25
 
     elif market_name == 'PHUKET':
-        # --- [V16.21 PHUKET ULTIMATE - SANDWICH & BRIDGE] ---
-        # 1. SANDWICH VERIFICATION (Result 2452 -> As=Ekor=2)
-        # Jika As & Ekor kembar, periode depan angka tengah (4-5) sering jadi As/Kop
-        if d0_p1[0] == d0_p1[3]:
-            scores[d0_p1[1]] += 35 # Angka 4
-            scores[d0_p1[2]] += 35 # Angka 5
-            # Indeks dari angka sandwich (2 -> 7)
-            scores[ID.get(d0_p1[0])] += 25 
-            
-        # 2. THE BRIDGE (Angka Berurutan 4-5)
-        # Phuket suka angka berurutan. Setelah 4-5, potensi 6 atau 3 sangat besar.
-        bridge_next = str((int(d0_p1[2]) + 1) % 10) # 5 -> 6
-        bridge_prev = str((int(d0_p1[1]) - 1) % 10) # 4 -> 3
-        scores[bridge_next] += 30 
-        scores[bridge_prev] += 20
-
-        # 3. P2-P3 REBORN (P2: 5905, P3: 0184)
-        # Angka 9 dan 8 belum keluar di P1. Ini angka "Hutang".
-        p2_res = all_res_data[0][1] if len(all_res_data[0]) > 1 else ""
-        p3_res = all_res_data[0][2] if len(all_res_data[0]) > 2 else ""
-        for d in "89":
-            if d in (p2_res + p3_res): scores[d] += 40
-            
-        # 4. PHUKET AI ANCHOR (AI 68)
-        scores['6'] += 30
-        scores['8'] += 30
+        # --- [V17.0 PHUKET MONSTER: SANDWICH & BRIDGE] ---
+        p1_d = d0_p1 if d0_p1 else "2452"
+        
+        # 1. SANDWICH EFFECT (2-45-2)
+        if p1_d[0] == p1_d[3]:
+            # Angka tengah (4, 5) dipaksa naik kelas
+            scores[p1_d[1]] += 40 
+            scores[p1_d[2]] += 40
+            # Indeks dari Sandwich (2 -> 7)
+            scores[ID.get(p1_d[0])] += 30 
+        
+        # 2. PROGRESSIVE BRIDGE
+        # Setelah 4-5, Phuket sering lari ke 6 atau 3
+        scores[str((int(p1_d[2]) + 1) % 10)] += 35 # 5 -> 6
+        scores[str((int(p1_d[1]) - 1) % 10)] += 25 # 4 -> 3
+        
+        # 3. DEBT RECOVERY (Angka P2/P3 yang tertinggal)
+        for n in "689": scores[n] += 30
 
     elif market_name == 'DANANG':
         # --- [V16.22 DANANG DIAGONAL SHIFT FIXED] ---
@@ -824,6 +816,38 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
                 # Audit Khusus Osaka: Osaka benci Twin Depan setelah Twin 33
                 if asn == kop:
                     asn = ID.get(asn, bbfs_list[(i+5)%len(bbfs_list)])
+
+                line3, line4 = f"{kop}{l2}", f"{asn}{kop}{l2}"
+                if line3 not in top3: top3.append(line3)
+                if line4 not in top4: top4.append(line4)
+            except: pass
+
+        # --- [ V17.0 PHUKET MONSTER: BRIDGE-CROSSING LOGIC ] ---
+        elif market_name == 'PHUKET':
+            try:
+                as_l = last_p1[0] if len(last_p1) > 0 else '2'
+                tgh_1 = last_p1[1] if len(last_p1) > 1 else '4'
+                tgh_2 = last_p1[2] if len(last_p1) > 2 else '5'
+                ek_l = last_p1[3] if len(last_p1) > 3 else '2'
+
+                if i == 0:
+                    # POLA SHIFTING TENGAH (Angka tengah lama jadi As-Kop baru)
+                    asn, kop = tgh_1, tgh_2
+                elif i == 1:
+                    # POLA MIRROR BRIDGE (Indeks dari Kepala-Ekor lama)
+                    asn = ID.get(tgh_2, '0')
+                    kop = ID.get(ek_l, '7')
+                elif i == 2:
+                    # POLA DEBT RECOVERY (Menggunakan angka 6 atau 8 sebagai Anchor)
+                    asn = '6' if '6' in bbfs_list else best_as[0]
+                    kop = '8' if '8' in bbfs_list else best_kop[0]
+                else:
+                    asn = best_as[i % len(best_as)]
+                    kop = best_kop[(i + 2) % len(best_kop)]
+
+                # Audit Phuket: Anti-Sandwich & Ganjil Lock
+                if asn == ek_l: # Mencegah pola sandwich berulang
+                    asn = ID.get(asn, bbfs_list[(i+3)%len(bbfs_list)])
 
                 line3, line4 = f"{kop}{l2}", f"{asn}{kop}{l2}"
                 if line3 not in top3: top3.append(line3)
