@@ -94,25 +94,22 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
             scores[n] += 12
 
     elif market_name == 'HONGKONG LOTTO':
-        # --- [V17.0 HK-MONSTER RESONANCE] ---
-        p1_d = d0_p1 if d0_p1 else "3006"
+        # --- [V18.1 HKL MONSTER - MOMENTUM TRACKER] ---
+        p1_d = d0_p1 if d0_p1 else "6314"
         
-        # 1. ZERO-SLOT AGGRESSOR
-        # Jika ada twin (00 di tengah), angka 0 dan 5 (indeks) harus dominan
-        if p1_d[1] == p1_d[2] or p1_d[0] == p1_d[1]:
-            scores['0'] += 60 
-            scores['5'] += 40
+        # 1. THE SLIDE EFFECT (As/Ekor lama jadi magnet)
+        # Angka 6 dan 4 adalah angka "aktif". Kita cari Indeks & Mistiknya.
+        scores[ID.get(p1_d[0])] += 45 # 6 -> 1
+        scores[ID.get(p1_d[3])] += 45 # 4 -> 9
         
-        # 2. EKOR-TO-AS RESONANCE (Ekor 6)
-        # Ekor 6 -> As berpotensi Indeks (1) atau Mistik Baru (2)
-        scores[ID.get(p1_d[3], '1')] += 35
-        scores[MB.get(p1_d[3], '2')] += 30
+        # 2. CROSS-MIRROR (Tengah 3-1)
+        # Jika tengah 31, maka Lawan Biji atau Mistiknya (8 atau 0) harus naik
+        scores['8'] += 40
+        scores['0'] += 35
         
-        # 3. TRANSIT DEBT (P2/P3)
-        p2_res = all_res_data[0][1] if len(all_res_data[0]) > 1 else ""
-        p3_res = all_res_data[0][2] if len(all_res_data[0]) > 2 else ""
-        for d in set(p2_res + p3_res):
-            scores[ID.get(d, d)] += 25
+        # 3. DEBT COLLECTOR (Angka 5 & 2)
+        # Angka 5 dan 2 tidak muncul di semua result HK malam ini. Ini "Hutang Berdarah".
+        for n in "257": scores[n] += 30
 
     elif market_name == 'HONGKONG POOLS':
             # --- [V17.0 HKP MONSTER WEIGHTING - P1 ONLY] ---
@@ -900,36 +897,41 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
 
         # --- [ V17.0 HK-MONSTER: SHADOW & BRIDGE SHIFTING ] ---
         elif market_name == 'HONGKONG LOTTO':
-            try:
-                as_l = last_p1[0] if len(last_p1) > 0 else '3'
-                kop_l = last_p1[1] if len(last_p1) > 1 else '0'
-                kep_l = last_p1[2] if len(last_p1) > 2 else '0'
-                ek_l = last_p1[3] if len(last_p1) > 3 else '6'
+        try:
+            # Result: 6314
+            as_l, kop_l, kep_l, ek_l = last_p1[0], last_p1[1], last_p1[2], last_p1[3]
 
-                if i == 0:
-                    # POLA HK-BRIDGE (Kop lama jadi panduan As-Kop baru)
-                    asn = ID.get(kop_l, '5')
-                    kop = ML.get(kop_l, '1')
-                elif i == 1:
-                    # POLA SHADOW POSITION (Resonansi Ekor ke Depan)
-                    asn = ID.get(ek_l, '1')
-                    kop = TY.get(kep_l, '7')
-                elif i == 2:
-                    # ZERO-INJECTION (Memaksa angka 0 muncul di depan)
-                    asn = '0' if '0' in bbfs_list else best_as[0]
-                    kop = best_kop[i % len(best_kop)]
-                else:
-                    asn = best_as[i % len(best_as)]
-                    kop = best_kop[(i + 4) % len(best_kop)]
+            if i == 0:
+                # POLA REVERSAL (Ekor lama jadi As baru, Kop lama jadi Kop baru)
+                asn = ek_l # 4
+                kop = ID.get(kop_l, '8') # 3 -> 8 (Hasil: 48xx)
+            elif i == 1:
+                # POLA SHADOW SHIFT (Indeks Kepala jadi As)
+                asn = ID.get(kep_l, '6') # 1 -> 6
+                kop = ML.get(as_l, '9')  # 6 -> 9 (Hasil: 69xx)
+            elif i == 2:
+                # POLA NEUTRALIZER (05 Anchor)
+                asn, kop = '0', '5' 
+            else:
+                asn = best_as[i % len(best_as)]
+                kop = best_kop[(i + 1) % len(best_kop)]
 
-                # Audit HK: Jika Kop=As, gunakan Mistik Lama untuk memecah
-                if asn == kop:
-                    kop = ML.get(asn, bbfs_list[(i+2)%len(bbfs_list)])
+            # --- 2D SNIPER FILTER V18.1 ---
+            # 1. BIJI SIKLUS (Fokus Biji 2, 5, 8 - Siklus Lompat +3)
+            if biji_f in [2, 5, 8]: score += 120
+            
+            # 2. POSITION LOCK (Ganjil-Genap Shifting)
+            # Result 6314 (Genap-Ganjil-Ganjil-Genap) -> Target Ganjil di Ekor!
+            if int(t) % 2 != 0: score += 60
+            
+            # 3. ANTI-SAME (Buang angka 6, 3, 1, 4 di posisi 2D belakang)
+            if h in p1_d or t in p1_d:
+                score -= 40 
 
-                line3, line4 = f"{kop}{l2}", f"{asn}{kop}{l2}"
-                if line3 not in top3: top3.append(line3)
-                if line4 not in top4: top4.append(line4)
-            except: pass
+            line3, line4 = f"{kop}{l2}", f"{asn}{kop}{l2}"
+            if line3 not in top3: top3.append(line3)
+            if line4 not in top4: top4.append(line4)
+        except: pass
 
         # --- [ V17.0 HKP MONSTER CONSTRUCTION ] ---
         elif market_name == 'HONGKONG POOLS':
