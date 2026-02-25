@@ -51,24 +51,30 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
             shadow = "".join(res[1:])
             for n in set(shadow): scores[n] += 5
 
-    if market_name == 'CAMBODIA':
-        all_p_digits = "".join([res[0] for res in all_res_data[:1]]) 
-        if len(all_res_data[0]) > 2:
-            all_p_digits += all_res_data[0][1] + all_res_data[0][2]
+    elif market_name == 'CAMBODIA':
+        # --- [V16.8 CAMBODIA DYNAMIC WEIGHT] ---
+        # Ambil semua angka dari P1, P2, P3
+        p_list = [res for res in all_res_data[0] if res] if all_res_data else []
+        all_p_digits = "".join(p_list)
             
         for digit in set(all_p_digits):
-            scores[ID.get(digit)] += 30  # Indeks (Contoh: 3 -> 8)
-            scores[ML.get(digit)] += 15  # Mistik Lama
-        d_kep = int(d0_p1[2])
-        d_eko = int(d0_p1[3])
-        delta = str(abs(d_kep - d_eko))
-        scores[delta] += 35
-        scores[TY.get(delta, '0')] += 25 # Tyseen dari 5 adalah 8 (Double Lock!)
-        scores['3'] += 20
-        scores['8'] += 20
-        if '0' in all_res_data[0][2]:
-            scores['5'] += 20
-            scores['1'] += 15
+            if digit.isdigit():
+                # Indeks & Mistik tetap jadi fondasi
+                scores[ID.get(digit, digit)] += 30 
+                scores[ML.get(digit, digit)] += 15 
+                # Peningkatan: Bobot angka mentah Prize 3 dinaikkan
+                if len(all_res_data[0]) > 2 and digit in all_res_data[0][2]:
+                    scores[digit] += 25 
+        
+        # Delta Analysis dengan proteksi error
+        if len(d0_p1) >= 4 and d0_p1[2].isdigit() and d0_p1[3].isdigit():
+            delta = str(abs(int(d0_p1[2]) - int(d0_p1[3])))
+            scores[delta] = scores.get(delta, 0) + 35
+            scores[TY.get(delta, '0')] = scores.get(TY.get(delta, '0'), 0) + 25
+        
+        # Penajaman AI: Angka 9 dan 4 (Mistik/Indeks dari tren saat ini)
+        for n in ['3', '8', '9', '4']: 
+            scores[n] = scores.get(n, 0) + 20
 
     elif market_name == 'HONGKONG LOTTO':
         # --- [V16.26 HK-RESONANCE UPGRADE] ---
@@ -98,21 +104,28 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         scores[ID.get(d0_p1[1], '0')] += 10 
 
     elif market_name == 'SYDNEY LOTTO':
+        # --- [V16.9 SYDNEY NEIGHBOR & COLD POWER] ---
         for digit in d0_p1:
-            val = int(digit)
-            scores[str((val + 1) % 10)] += 22 # Tetangga
-            scores[str((val - 1) % 10)] += 22
-            scores[str((val + 2) % 10)] += 20 # Lompat 2 (V14.7 Update)
-            scores[str((val - 2) % 10)] += 20
-        for digit in d0_p1:
-            scores[MB.get(digit, '0')] += 25 # Mistik Baru (Sub-Logic Lama)
-            scores[ID.get(digit, '0')] += 30 # Mirror/Indeks (V14.7 Update - Menangkap 7 & 2)
-        p1_short = "".join([res[0] for res in all_res_data[:5]])
+            if digit.isdigit():
+                val = int(digit)
+                # Logika Tetangga & Lompat (Khas Sydney)
+                scores[str((val + 1) % 10)] += 22 
+                scores[str((val - 1) % 10)] += 22
+                scores[str((val + 2) % 10)] += 20 
+                scores[str((val - 2) % 10)] += 20
+                
+                # Mistik & Indeks (Resonansi Mirror)
+                scores[MB.get(digit, '0')] += 25 
+                scores[ID.get(digit, '0')] += 30 
+
+        # Cold Number Detection (Angka yang jarang muncul dalam 5 hari terakhir)
+        p1_short = "".join([res[0] for res in all_res_data[:5] if res])
         for n in "0123456789":
             if n not in p1_short:
-                scores[n] += 30 # Cold Number Power
+                scores[n] += 30 
+            # Prioritas Range Tengah Sydney (2-7)
             if n in "234567":
-                scores[n] += 15 # Sydney Middle-Range Priority
+                scores[n] += 15
     
     elif market_name == 'COLORADO':
         scores[MB.get(d0_p1[1], '0')] += 20
@@ -439,13 +452,24 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
         biji_f = (biji if biji < 10 else biji % 9 or 9)
         
         # --- [SYDNEY SPECIFIC RACIKAN] ---
-        if market_name == 'SYDNEY LOTTO':
-            # Sydney sangat identik dengan Biji 2, 5, 8
-            if biji_f in [2, 5, 8]: score += 65
-            # Sequential Bonus (+/- 1)
-            if abs(int(h) - int(t)) == 1: score += 40
-            # NEW: Mirror Balance (Jika H dan T adalah pasangan Indeks, skor naik)
-            if ID.get(h) == t: score += 35
+        elif market_name == 'SYDNEY LOTTO':
+            # 1. BIJI HARMONY (2, 5, 8) + Biji Cadangan (Sydney Style)
+            if biji_f in [2, 5, 8]: 
+                score += 75
+            elif biji_f in [1, 4, 7]: # Indeks dari 2, 5, 8
+                score += 35
+                
+            # 2. SEQUENTIAL BONUS (Angka Berurutan: 23, 45, 87, dll)
+            if abs(int(h) - int(t)) == 1: 
+                score += 50
+            
+            # 3. MIRROR BALANCE (H & T Pasangan Indeks: 27, 38, 05, dll)
+            if ID.get(h) == t: 
+                score += 45
+            
+            # 4. ANTI-TWIN (Sydney jarang sekali twin belakang kecuali setelah pola ganjil)
+            if h == t:
+                score -= 60
 
         elif market_name == 'HONGKONG LOTTO':
             # 1. BIJI SIKLUS HK (Ditambah Biji 6 sebagai Mistik dari Biji 9)
@@ -475,28 +499,29 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
                 score -= 70
 
         elif market_name == 'CAMBODIA':
-            # --- [V14.15 CAMBODIA MAXIMAL PRECISION] ---
-            # 1. BIJI KHUSUS (Ditambah Biji 2 & 5 karena trend Cambodia saat ini)
-            # Fokus Biji: 1, 4, 7 (Lama) + 2, 5 (Baru)
-            if biji_f in [1, 2, 4, 5, 7]: 
-                score += 80 
+            # --- [V16.8 CAMBODIA MAXIMAL PRECISION] ---
+            # 1. BIJI KHUSUS (Update: Tambah Biji 9 & 6)
+            if biji_f in [1, 2, 4, 5, 7, 9, 6]: 
+                score += 85 
             
-            # 2. TYSEEN TAIL VERIFICATION (Ekor 3 -> Tyseen 6)
-            # Jika Ekor 2D adalah Tyseen dari Ekor P1 lama (3 -> 6)
-            if t == TY.get(last_p1[3]): 
-                score += 55 # Kita naikkan bobotnya karena 6 dominan di analisa Mamang
+            # 2. TYSEEN TAIL (Safe Access)
+            t_p1 = last_p1[3] if len(last_p1) >= 4 else 'x'
+            if t == TY.get(t_p1, 'x'): score += 55 
             
-            # 3. DELTA ANALYSIS
-            delta = abs(int(last_p1[2]) - int(last_p1[3]))
-            if str(delta) in line: 
-                score += 35
+            # 3. DELTA ANALYSIS (Safe Math)
+            if len(last_p1) >= 4 and last_p1[2].isdigit() and last_p1[3].isdigit():
+                delta_val = str(abs(int(last_p1[2]) - int(last_p1[3])))
+                if delta_val in line: score += 35
             
-            # 4. POSITION CHECK (AS 3/1 dari AI/AM)
-            if line[0] in ['3', '1']:
-                score += 30
+            # 4. TWIN STRATEGY (Belajar dari 99)
+            # Jika result P1 mengandung twin (seperti 99), bonus twin belakang aktif
+            if len(last_p1) >= 4 and (last_p1[2] == last_p1[3] or last_p1[0] == last_p1[1]):
+                if h == t: score += 70 # Bonus besar jika terdeteksi trend twin
+            else:
+                if h == t: score -= 40 # Anti-twin jika tidak ada trend
 
-            # 5. ANTI-TWIN (Cambodia sering Twin Tengah, tapi jarang Twin Belakang)
-            if h == t: score -= 40
+            # 5. POSITION CHECK
+            if h in ['3', '1', '9']: score += 30
 
         # --- [BUSAN POOLS SPECIFIC RACIKAN] ---
         elif market_name == 'BUSAN POOLS':
@@ -793,22 +818,58 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
 
         # Sydney Anti-Crash: Keseimbangan Ganjil-Genap
         elif market_name == 'SYDNEY LOTTO':
-            if int(kop) % 2 == int(l2[0]) % 2:
-                kop = bbfs_list[(bbfs_list.index(kop) + 1) % len(bbfs_list)]
+            try:
+                # Sydney Logic: As sering kali adalah Indeks dari Kop P1 lama
+                # Kop sering kali adalah Mistik Lama dari As P1 lama
+                as_p1_lama = last_p1[0] if len(last_p1) >= 1 else '5'
+                kop_p1_lama = last_p1[1] if len(last_p1) >= 2 else '2'
+                
+                # Penentuan AS & KOP Dynamic
+                asn = ID.get(kop_p1_lama, best_as[i % len(best_as)])
+                kop = ML.get(as_p1_lama, best_kop[i % len(best_kop)])
+
+                # Safety Check: Pastikan masuk dalam BBFS
+                if asn not in bbfs_list: asn = best_as[i % len(best_as)]
+                if kop not in bbfs_list: kop = best_kop[i % len(best_kop)]
+
+                # Varian Sydney: Pola Selang-Seling (As = Tetangga As lama)
+                if i % 2 != 0:
+                    val_as = int(as_p1_lama) if as_p1_lama.isdigit() else 5
+                    asn = str((val_as + 1) % 10)
+                    if asn not in bbfs_list: asn = bbfs_list[0]
+
+                top3.append(f"{kop}{l2}")
+                top4.append(f"{asn}{kop}{l2}")
+            except (IndexError, ValueError):
+                # Fallback Safe Logic
+                top3.append(f"{bbfs_list[0]}{l2}")
+                top4.append(f"{bbfs_list[1]}{bbfs_list[0]}{l2}")
 
         elif market_name == 'CAMBODIA':
-            # Konstruksi khusus untuk menangkap Twin Tengah (xAAx)
-            # Jika delta rendah (0 atau 1), potensi twin tengah naik.
-            if i < 3: # Untuk 3 baris teratas
-                asn = best_as[i % len(best_as)]
-                kop = asn # Paksa Twin Depan/Tengah
-            else:
-                asn = best_as[i % len(best_as)]
-                kop = best_kop[i % len(best_kop)]
-            
-            # Shifting jika angka tabrakan dengan 2D
-            if kop == l2[0]:
-                kop = bbfs_list[(bbfs_list.index(kop) + 1) % len(bbfs_list)]
+            try:
+                # Ambil AS & KOP dari list terbaik, fallback ke bbfs jika kosong
+                asn = best_as[i % len(best_as)] if best_as else bbfs_list[0]
+                
+                # Logika Twin Tengah/Depan (xAAx)
+                if i < 3:
+                    kop = asn 
+                else:
+                    kop = best_kop[i % len(best_kop)] if best_kop else bbfs_list[1]
+                
+                # Shifting aman jika tabrakan dengan Kepala 2D
+                if kop == l2[0]:
+                    if kop in bbfs_list:
+                        idx = (bbfs_list.index(kop) + 1) % len(bbfs_list)
+                        kop = bbfs_list[idx]
+                    else:
+                        kop = bbfs_list[(i + 2) % len(bbfs_list)]
+
+                top3.append(f"{kop}{l2}")
+                top4.append(f"{asn}{kop}{l2}")
+            except (IndexError, ValueError):
+                # Fallback jika terjadi error data
+                top3.append(f"{bbfs_list[0]}{l2}")
+                top4.append(f"{bbfs_list[1]}{bbfs_list[0]}{l2}")    
 
         # --- [ V16.6 GREECE 4D DYNAMIC RADAR ] ---
         elif market_name == 'GREECE':
