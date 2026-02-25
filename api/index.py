@@ -94,26 +94,25 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
             scores[n] += 12
 
     elif market_name == 'HONGKONG LOTTO':
-        # --- [V16.26 HK-RESONANCE UPGRADE] ---
-        # 1. P2/P3 TRANSIT (Tetap dipertahankan)
+        # --- [V17.0 HK-MONSTER RESONANCE] ---
+        p1_d = d0_p1 if d0_p1 else "3006"
+        
+        # 1. ZERO-SLOT AGGRESSOR
+        # Jika ada twin (00 di tengah), angka 0 dan 5 (indeks) harus dominan
+        if p1_d[1] == p1_d[2] or p1_d[0] == p1_d[1]:
+            scores['0'] += 60 
+            scores['5'] += 40
+        
+        # 2. EKOR-TO-AS RESONANCE (Ekor 6)
+        # Ekor 6 -> As berpotensi Indeks (1) atau Mistik Baru (2)
+        scores[ID.get(p1_d[3], '1')] += 35
+        scores[MB.get(p1_d[3], '2')] += 30
+        
+        # 3. TRANSIT DEBT (P2/P3)
         p2_res = all_res_data[0][1] if len(all_res_data[0]) > 1 else ""
         p3_res = all_res_data[0][2] if len(all_res_data[0]) > 2 else ""
-        transit_digits = set(p2_res + p3_res)
-        for d in transit_digits:
-            scores[ID.get(d, d)] += 35  
-            scores[d] += 20          
-            
-        # 2. ZERO-SLOT DETECTION (Update khusus result 3006)
-        # Jika result P1 kemarin mengandung angka kembar (7736), 
-        # maka vibrasi angka '0' naik drastis sebagai penetral.
-        if d0_p1[0] == d0_p1[1] or d0_p1[2] == d0_p1[3]:
-            scores['0'] += 50 # Angka 0 menjadi prioritas utama
-            scores['5'] += 30 # Indeks 0 ikut naik
-
-        # 3. EKOR-TO-AS RESONANCE 
-        e_lalu = d0_p1[3]
-        scores[ID.get(e_lalu, e_lalu)] += 30 
-        scores[MB.get(e_lalu, e_lalu)] += 25
+        for d in set(p2_res + p3_res):
+            scores[ID.get(d, d)] += 25
         
     elif market_name == 'MACAU':
         scores[str((int(d0_p1[3]) + 1) % 10)] += 15
@@ -891,6 +890,39 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
         elif market_name == 'CAMBODIA':
             asn = best_as[i % len(best_as)]
             if i < 3: kop = asn
+
+        # --- [ V17.0 HK-MONSTER: SHADOW & BRIDGE SHIFTING ] ---
+        elif market_name == 'HONGKONG LOTTO':
+            try:
+                as_l = last_p1[0] if len(last_p1) > 0 else '3'
+                kop_l = last_p1[1] if len(last_p1) > 1 else '0'
+                kep_l = last_p1[2] if len(last_p1) > 2 else '0'
+                ek_l = last_p1[3] if len(last_p1) > 3 else '6'
+
+                if i == 0:
+                    # POLA HK-BRIDGE (Kop lama jadi panduan As-Kop baru)
+                    asn = ID.get(kop_l, '5')
+                    kop = ML.get(kop_l, '1')
+                elif i == 1:
+                    # POLA SHADOW POSITION (Resonansi Ekor ke Depan)
+                    asn = ID.get(ek_l, '1')
+                    kop = TY.get(kep_l, '7')
+                elif i == 2:
+                    # ZERO-INJECTION (Memaksa angka 0 muncul di depan)
+                    asn = '0' if '0' in bbfs_list else best_as[0]
+                    kop = best_kop[i % len(best_kop)]
+                else:
+                    asn = best_as[i % len(best_as)]
+                    kop = best_kop[(i + 4) % len(best_kop)]
+
+                # Audit HK: Jika Kop=As, gunakan Mistik Lama untuk memecah
+                if asn == kop:
+                    kop = ML.get(asn, bbfs_list[(i+2)%len(bbfs_list)])
+
+                line3, line4 = f"{kop}{l2}", f"{asn}{kop}{l2}"
+                if line3 not in top3: top3.append(line3)
+                if line4 not in top4: top4.append(line4)
+            except: pass
 
         elif market_name == 'GREECE':
             try:
