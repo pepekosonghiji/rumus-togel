@@ -128,21 +128,16 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
             if n not in cold_check: scores[n] += 25
 
     elif market_name == 'BUSAN POOLS':
-        for i in range(len(d0_p1)-1):
-            if d0_p1[i] == d0_p1[i+1]:
-                twin_digit = d0_p1[i]
-                scores[ID.get(twin_digit)] += 35 # Indeks (4->9)
-                scores[ML.get(twin_digit)] += 25 # Mistik Lama (4->7)
-            if '0' in all_res_data[0][2]:
-                scores['0'] += 35
-        if len(all_res_data[0]) >= 2:
-            p2_digits = all_res_data[0][1]
-            for d in p2_digits:
-                scores[d] += 20
-                scores[TY.get(d, '0')] += 15 # Tyseen dari P2
-        for n in "0123456789":
-            if int(n) % 3 == 0 and n != '0':
-                scores[n] += 18
+        # Busan identik dengan angka "akar" (0, 3, 8)
+        for digit in d0_p1:
+            if digit in "038":
+                scores[digit] += 30
+        
+        # Tracking angka dari P2 ke P1 (Vibrasi Busan)
+        p2_last = all_res_data[0][1] if len(all_res_data[0]) > 1 else ""
+        for digit in p2_last:
+            if digit.isdigit():
+                scores[digit] += 20
     
     elif market_name == 'JEJU':
         p3_digits = all_res_data[0][2]
@@ -794,9 +789,30 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
         
         # --- [ MARKET SPECIFIC LOGIC ] ---
         
-        # 1. BUSAN POOLS Logic
-        if market_name == 'BUSAN POOLS' and i < 5:
-            kop = best_kop[0]
+        if market_name == 'BUSAN POOLS':
+            try:
+                # Busan sering menggunakan Kop yang kuat dari tarikan P1 sebelumnya
+                as_p1_lama = last_p1[0] if len(last_p1) > 0 else '8'
+                # Anchor Kop: Mistik Lama dari As P1
+                kop_anchor = ML.get(as_p1_lama, best_kop[0])
+                
+                if i < 5:
+                    kop = kop_anchor
+                    asn = best_as[i % len(best_as)]
+                else:
+                    # Pola Cross-Mirror untuk line sisa
+                    asn = ID.get(kop_anchor, best_as[i % len(best_as)])
+                    kop = best_kop[i % len(best_kop)]
+                
+                # Pola 2D Busan: Sering angka berjarak 3 (Contoh: 0-3, 6-9)
+                l2 = top2[i] if i < len(top2) else f"{bbfs_list[0]}{bbfs_list[1]}"
+                
+                line3, line4 = f"{kop}{l2}", f"{asn}{kop}{l2}"
+                
+                if line3 not in top3: top3.append(line3)
+                if line4 not in top4: top4.append(line4)
+            except:
+                continue
 
         # 2. SYDNEY LOTTO (Anti-Duplicate & Mirroring)
         # --- [ V16.9.2 SYDNEY DYNAMIC RADAR & BUTTERFLY ] ---
