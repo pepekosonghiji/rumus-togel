@@ -66,17 +66,20 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         for n in ['3', '8', '9', '4']: scores[n] = scores.get(n, 0) + 20
 
     elif market_name == 'SYDNEY LOTTO':
+        # Penajaman BBFS: Fokus pada Mirroring & Step
         for digit in d0_p1:
             if digit.isdigit():
                 val = int(digit)
+                # Bobot Tetangga (Neighbor)
                 scores[str((val + 1) % 10)] += 22 
                 scores[str((val - 1) % 10)] += 22
+                # Bobot Mistik & Indeks (Sangat Kuat di Sydney)
                 scores[MB.get(digit, '0')] += 25 
                 scores[ID.get(digit, '0')] += 30 
-        p1_short = "".join([res[0] for res in all_res_data[:5] if res])
-        for n in "0123456789":
-            if n not in p1_short: scores[n] += 30 
-            if n in "234567": scores[n] += 15
+        
+        # Injeksi Angka "Panas" Sydney (Berdasarkan Habit)
+        for n in "1836": 
+            scores[n] += 15
 
     elif market_name == 'WUHAN':
         # Wuhan sering menarik angka dari P2 (1208)
@@ -796,15 +799,57 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             kop = best_kop[0]
 
         # 2. SYDNEY LOTTO (Anti-Duplicate & Mirroring)
+        # --- [ V16.9.2 SYDNEY DYNAMIC RADAR & BUTTERFLY ] ---
         elif market_name == 'SYDNEY LOTTO':
             try:
-                as_p1_lama = last_p1[0] if len(last_p1) >= 1 else '5'
-                kop_p1_lama = last_p1[1] if len(last_p1) >= 2 else '2'
+                as_lama = last_p1[0] if len(last_p1) >= 1 else '8'
+                kop_lama = last_p1[1] if len(last_p1) >= 2 else '1'
                 
-                # Pola rotasi berbasis 'i' untuk mencegah duplikat
-                asn = ID.get(kop_p1_lama) if i % 2 == 0 else best_as[i % len(best_as)]
-                kop = ML.get(as_p1_lama) if i % 2 == 1 else best_kop[i % len(best_kop)]
-            except: pass
+                # 1. POSISI AS & KOP DINAMIS
+                if i == 0:
+                    # POLA BUTTERFLY (ABBA) - Belajar dari 8118
+                    asn = as_lama
+                    kop = ID.get(as_lama, '1')
+                elif i == 1:
+                    # POLA MIRROR TOTAL (Indeks dari P1)
+                    asn = ID.get(as_lama, '3')
+                    kop = ID.get(kop_lama, '6')
+                elif i == 2:
+                    # POLA TAYSEN SHIFTING
+                    asn = TY.get(as_lama, '2')
+                    kop = best_kop[i % len(best_kop)]
+                else:
+                    # ROTASI STANDAR BERDASARKAN SKOR TERKUAT
+                    asn = best_as[i % len(best_as)]
+                    kop = best_kop[(i + 1) % len(best_kop)]
+
+                # 2. POSISI 2D (EKOR) DINAMIS
+                if i == 0:
+                    # Menghasilkan pola ABBA jika i=0 (Contoh: 81-18)
+                    l2 = f"{kop}{asn}"
+                elif i % 3 == 0:
+                    # Paksa Pola Twin di baris tertentu
+                    twin_digit = bbfs_list[i % len(bbfs_list)]
+                    l2 = f"{twin_digit}{twin_digit}"
+                else:
+                    # Ambil dari Top 2D yang sudah disortir
+                    l2 = top2[i] if i < len(top2) else f"{bbfs_list[0]}{bbfs_list[1]}"
+
+                # SAFETY CHECK: Jika Kop sama dengan As, geser menggunakan BBFS
+                if kop == asn:
+                    kop = [x for x in bbfs_list if x != asn][0]
+
+                line3, line4 = f"{kop}{l2}", f"{asn}{kop}{l2}"
+                
+                # FILTER UNIK (Anti-Duplikat)
+                if line3 not in top3: top3.append(line3)
+                if line4 not in top4: top4.append(line4)
+
+            except Exception as e:
+                # Fallback jika terjadi error indexing
+                asn, kop = bbfs_list[0], bbfs_list[1]
+                top3.append(f"{kop}{top2[i]}")
+                top4.append(f"{asn}{kop}{top2[i]}")
 
         elif market_name == 'WUHAN':
             try:
