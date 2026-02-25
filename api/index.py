@@ -365,6 +365,28 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
             scores[MB.get(p1_d[1])] += 35 # 5 -> 4
             scores[ML.get(p1_d[2])] += 35 # 8 -> 3
 
+    elif market_name == 'OREGON 6':
+            # --- [V18.3 OREGON 6 - TWIN-MIRROR RESONANCE] ---
+            # Result: 3868
+            p1_d = d0_p1 if d0_p1 else "3868"
+            
+            # 1. TWIN DETECTION (8...8)
+            # Jika ada angka kembar di result, angka indeksnya (3) atau mistiknya (3/0)
+            # akan menjadi "Magnet Kuat" di putaran berikutnya.
+            scores['3'] += 50
+            scores['0'] += 40
+            
+            # 2. CENTER SHIFT (8-6)
+            # Kop 8 dan Kepala 6. Selisihnya (2) dan jumlahnya (14 -> 5)
+            # sering muncul sebagai angka ikut (AI).
+            scores['2'] += 45
+            scores['5'] += 45
+            
+            # 3. KOP DOMINATION
+            # Di Oregon 6, angka Kop yang baru keluar (8) sering "jatuh" ke posisi Ekor.
+            # Kita beri bobot pada angka 8 untuk tetap waspada.
+            scores['8'] += 30
+
     elif market_name == 'WASHINGMID':
         # --- [V16.11 WASHINGMID REBORN - SLIDE & MIRROR CAPTURE] ---
         
@@ -802,31 +824,88 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
 
         elif market_name == 'OREGON 3':
             try:
-                # Result: 7583 (As: 7, Kop: 5, Kep: 8, Ek: 3)
+                # Data Input (Result Terakhir: 4823)
                 as_l, kop_l, kep_l, ek_l = last_p1[0], last_p1[1], last_p1[2], last_p1[3]
 
-                if i == 0:
-                    # POLA VERTICAL (Kop lama jadi As baru)
-                    asn = kop_l # 5
-                    kop = ID.get(kep_l) # 8 -> 3
-                elif i == 1:
-                    # POLA MIRROR PINGGIR
-                    asn = ID.get(as_l) # 7 -> 2
-                    kop = ID.get(ek_l) # 3 -> 8
-                else:
-                    asn = best_as[i % len(best_as)]
-                    kop = best_kop[(i + 1) % len(best_kop)]
+                # --- PENENTUAN AS & KOP (V18.3 SHIFTING) ---
+                for i in range(15):  # Kita generate 15 line untuk 3D/4D
+                    if i == 0:
+                        # Pola Lawan Biji: Indeks dari 2D belakang jadi depan
+                        asn = ID.get(kep_l, '7') # 2 -> 7
+                        kop = ID.get(ek_l, '8')  # 3 -> 8
+                    elif i == 1:
+                        # Pola Mistik Lompat: Kop lama jadi As, Ekor lama jadi Kop
+                        asn = MB.get(kop_l, '0') # 8 -> 0
+                        kop = ML.get(as_l, '7')  # 4 -> 7
+                    elif i == 2:
+                        # Pola Anchor: Angka 5 dan 9 sebagai pengunci
+                        asn, kop = '5', '9'
+                    else:
+                        # Mengambil dari kandidat As & Kop terbaik hasil scoring
+                        asn = best_as[i % len(best_as)]
+                        kop = best_kop[(i + 1) % len(best_kop)]
 
-                # --- 2D PRECISION FILTER ---
-                # Oregon 3 sangat kuat di BIJI 1, 5, 7
-                if biji_f in [1, 5, 7]: score += 115
-                
-                # HEAD-POWER (Kepala Ganjil sering mendominasi)
-                if int(h) % 2 != 0: score += 50
+                    # --- FILTER 2D SNIPER V18.3 ---
+                    # 1. BIJI RESONANCE (Target Biji: 1, 5, 8)
+                    # Jika 2D belakang (Kepala+Ekor) berjumlah 1, 5, atau 8, skor naik.
+                    if biji_f in [1, 5, 8]: score += 130
+                    
+                    # 2. ODD DOMINATION (Setelah 4823, targetkan Ekor Ganjil)
+                    if int(t) % 2 != 0: score += 70
+                    
+                    # 3. ANTI-REPEAT (Ekor tidak boleh 3 lagi)
+                    if t == ek_l: score -= 200 
+                    
+                    # 4. CROSS-MISTIK (Kepala adalah Mistik dari Ekor sebelumnya)
+                    if h == ML.get(ek_l): score += 60 # 3 -> 8
 
-                line3, line4 = f"{kop}{l2}", f"{asn}{kop}{l2}"
-                if line3 not in top3: top3.append(line3)
-                if line4 not in top4: top4.append(line4)
+                    # Simpan hasil ke daftar Jitu
+                    l2 = f"{h}{t}"
+                    line3, line4 = f"{kop}{l2}", f"{asn}{kop}{l2}"
+                    
+                    if l2 not in top2: top2.append(l2)
+                    if line3 not in top3: top3.append(line3)
+                    if line4 not in top4: top4.append(line4)
+            except Exception as e:
+                print(f"Construction Error Oregon: {e}")
+
+        elif market_name == 'OREGON 6':
+            try:
+                # Result: 3868 (As: 3, Kop: 8, Kep: 6, Ek: 8)
+                as_l, kop_l, kep_l, ek_l = last_p1[0], last_p1[1], last_p1[2], last_p1[3]
+
+                for i in range(15):
+                    if i == 0:
+                        # POLA REVERSE INDEX (Ekor diindeks jadi As, Kepala diindeks jadi Kop)
+                        asn = ID.get(ek_l) # 8 -> 3
+                        kop = ID.get(kep_l) # 6 -> 1
+                    elif i == 1:
+                        # POLA STEP UP (As +1, Kop +1)
+                        asn = str((int(as_l) + 1) % 10) # 3 -> 4
+                        kop = str((int(kop_l) + 1) % 10) # 8 -> 9
+                    elif i == 2:
+                        # POLA MISTIK KOP (Kop lama dimistik baru jadi As)
+                        asn = MB.get(kop_l) # 8 -> 0
+                        kop = '5' # Angka pendamping kuat
+                    else:
+                        asn = best_as[i % len(best_as)]
+                        kop = best_kop[(i + 1) % len(best_kop)]
+
+                    # --- FILTER SNIPER OREGON 6 ---
+                    # 1. BIJI TARGET (Oregon 6 menyukai Biji 3, 6, 9 - Kelipatan 3)
+                    if biji_f in [3, 6, 9]: score += 125
+                    
+                    # 2. EKOR GANJIL PREFERENCE (Setelah dominasi genap 868)
+                    if int(t) % 2 != 0: score += 65
+                    
+                    # 3. ANTI-TWIN (Kecuali twin 33 atau 00 dari resonansi)
+                    if h == t and h not in "30": score -= 150
+
+                    l2 = f"{h}{t}"
+                    line3, line4 = f"{kop}{l2}", f"{asn}{kop}{l2}"
+                    if l2 not in top2: top2.append(l2)
+                    if line3 not in top3: top3.append(line3)
+                    if line4 not in top4: top4.append(line4)
             except: pass
 
         elif market_name == 'OSAKA':
