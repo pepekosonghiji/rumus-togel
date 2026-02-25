@@ -1035,7 +1035,22 @@ def get_comprehensive_logic(all_res_data, m_name):
 def fetch_results(market_code):
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
     try:
+        # --- [ MODE MANUAL INPUT KHUSUS MACAU ] ---
+        # Ditempatkan di awal agar tidak perlu menunggu koneksi httpx
+        if market_code == "MACAU":
+            print(f"\n[!] MODE MANUAL INPUT: {market_code}")
+            p1 = input("Masukkan Result P1 (4 atau 5 angka): ").strip()
+            p2 = input("Masukkan Result P2 (Opsional, Enter jika kosong): ").strip()
+            p3 = input("Masukkan Result P3 (Opsional, Enter jika kosong): ").strip()
+            
+            if len(p1) >= 4:
+                return [[p1, p2, p3]]
+            else:
+                print("Error: Format Result P1 Salah!")
+                return []
+
         with httpx.Client(timeout=15.0, verify=False, follow_redirects=True) as client:
+            # --- [ JALUR HK_SPECIAL / HK POOLS ] ---
             if market_code == "HK_SPECIAL":
                 url = "https://tabelsemalam.com/"
                 r = client.get(url, headers=headers)
@@ -1049,22 +1064,20 @@ def fetch_results(market_code):
                 
                 for row in tbody.find_all('tr'):
                     tds = row.find_all('td')
-                    if len(tds) >= 2: # Minimal ada kolom Market dan P1
+                    if len(tds) >= 2:
                         # Ambil P1 (Wajib)
                         p1 = re.sub(r'\D', '', tds[1].text.strip())
                         
-                        # Ambil P2 & P3 jika ada, jika tidak ada isi string kosong
-                        # Ini krusial agar data Prize 1 tetap terproses maksimal
+                        # Set P2 & P3 kosong sesuai instruksi untuk HK Pools
                         p2 = ''
                         p3 = ''
                         
                         if len(p1) == 4:
-                            # List tetap berisi 3 elemen agar index tidak out of range
                             res.append([p1, p2, p3])
                 
                 return res[:40]
 
-            # Jalur Umum (Tidak diubah sesuai instruksi)
+            # --- [ JALUR UMUM (Market Lain) ] ---
             url = f"https://nfx1avfcy8.salamtarget.com/history/result-mobile/{market_code}-pool-1"
             r = client.get(url, headers=headers)
             soup = BeautifulSoup(r.text, 'html.parser')
@@ -1086,6 +1099,7 @@ def fetch_results(market_code):
                         p3 = get_num(tds[5]) if len(tds) >= 6 else "0000"
                         results.append([p1, p2, p3])
             return results[:40]
+
     except Exception as e:
         print(f"Fetch Error: {e}")
         return []
