@@ -51,7 +51,7 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
             shadow = "".join(res[1:])
             for n in set(shadow): scores[n] += 5
 
-    elif market_name == 'CAMBODIA':
+    if market_name == 'CAMBODIA':
         # --- [V16.8 CAMBODIA DYNAMIC WEIGHT] ---
         # Ambil semua angka dari P1, P2, P3
         p_list = [res for res in all_res_data[0] if res] if all_res_data else []
