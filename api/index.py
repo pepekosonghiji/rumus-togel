@@ -497,16 +497,6 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
 
             # 5. ANTI-TWIN (Cambodia sering Twin Tengah, tapi jarang Twin Belakang)
             if h == t: score -= 40
-            if i < 3: # Untuk 3 baris teratas
-                asn = best_as[i % len(best_as)]
-                kop = asn # Paksa Twin Depan/Tengah
-            else:
-                asn = best_as[i % len(best_as)]
-                kop = best_kop[i % len(best_kop)]
-            
-            # Shifting jika angka tabrakan dengan 2D
-            if kop == l2[0]:
-                kop = bbfs_list[(bbfs_list.index(kop) + 1) % len(bbfs_list)]
 
         # --- [BUSAN POOLS SPECIFIC RACIKAN] ---
         elif market_name == 'BUSAN POOLS':
