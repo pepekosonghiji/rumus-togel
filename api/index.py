@@ -345,27 +345,25 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         scores['0'] += 20
         scores['1'] += 20
 
-    elif 'OREGON' in market_name:
-        # --- [V16.13 OREGON DOUBLE-WRAP & MISTIK JUMP] ---
-        
-        # 1. Mistik Baru Jump (As 8 -> Result 9)
-        # Menangkap perubahan As menjadi Mistik Baru yang sering jadi angka "Wrap" (As & Ekor)
-        as_last = d0_p1[0]
-        scores[MB.get(as_last, '0')] += 45 # Mengunci angka 9
-        
-        # 2. Kop-to-Kop Mirror (Kop 8 & Kepala 5 -> Result 2)
-        # Oregon menarik Mistik Lama dari angka tengah P1
-        scores[ML.get(d0_p1[2], '0')] += 35 # Mistik Lama 5 adalah 2
-        
-        # 3. Vertical Step-Up (Ekor 5 -> Result 6)
-        # Jika pola Vertical Shift gagal (5 jadi 5), biasanya lari ke Step-Up (+1)
-        eko_last = d0_p1[3]
-        scores[str((int(eko_last) + 1) % 10)] += 30 # Mengunci angka 6
-        
-        # 4. Oregon AI Stability (AI 16)
-        # Angka 6 sudah JP, kita jaga untuk periode berikutnya (Oregon 9)
-        scores['1'] += 25
-        scores['6'] += 25
+    elif market_name == 'OREGON 3':
+            # --- [V18.2 OREGON 3 - SINGLE PATH RESONANCE] ---
+            # Result: 7583
+            p1_d = d0_p1 if d0_p1 else "7583"
+            
+            # 1. POLA JUMLAH (7+5+8+3 = 23 -> 5)
+            # Oregon sering merespon jumlah total result sebelumnya
+            total_biji = sum(int(x) for x in p1_d) % 10
+            scores[str(total_biji)] += 45
+            
+            # 2. AS-EKOR JUMP (7 & 3)
+            # Indeks dari angka pinggir sering meledak di posisi tengah
+            scores[ID.get(p1_d[0])] += 40 # 7 -> 2
+            scores[ID.get(p1_d[3])] += 40 # 3 -> 8
+            
+            # 3. KOP-KEPALA SATURATION (5 & 8)
+            # Angka tengah yang jenuh akan berubah menjadi Mistik Baru/Lama
+            scores[MB.get(p1_d[1])] += 35 # 5 -> 4
+            scores[ML.get(p1_d[2])] += 35 # 8 -> 3
 
     elif market_name == 'WASHINGMID':
         # --- [V16.11 WASHINGMID REBORN - SLIDE & MIRROR CAPTURE] ---
@@ -802,6 +800,35 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
                     asn = ID.get(asn, bbfs_list[(i+4)%len(bbfs_list)])
             except: pass
 
+        elif market_name == 'OREGON 3':
+            try:
+                # Result: 7583 (As: 7, Kop: 5, Kep: 8, Ek: 3)
+                as_l, kop_l, kep_l, ek_l = last_p1[0], last_p1[1], last_p1[2], last_p1[3]
+
+                if i == 0:
+                    # POLA VERTICAL (Kop lama jadi As baru)
+                    asn = kop_l # 5
+                    kop = ID.get(kep_l) # 8 -> 3
+                elif i == 1:
+                    # POLA MIRROR PINGGIR
+                    asn = ID.get(as_l) # 7 -> 2
+                    kop = ID.get(ek_l) # 3 -> 8
+                else:
+                    asn = best_as[i % len(best_as)]
+                    kop = best_kop[(i + 1) % len(best_kop)]
+
+                # --- 2D PRECISION FILTER ---
+                # Oregon 3 sangat kuat di BIJI 1, 5, 7
+                if biji_f in [1, 5, 7]: score += 115
+                
+                # HEAD-POWER (Kepala Ganjil sering mendominasi)
+                if int(h) % 2 != 0: score += 50
+
+                line3, line4 = f"{kop}{l2}", f"{asn}{kop}{l2}"
+                if line3 not in top3: top3.append(line3)
+                if line4 not in top4: top4.append(line4)
+            except: pass
+
         elif market_name == 'OSAKA':
             try:
                 as_l = last_p1[0] # 0
@@ -1035,6 +1062,20 @@ def get_comprehensive_logic(all_res_data, m_name):
 def fetch_results(market_code):
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
     try:
+        # 1. CEK MODE MANUAL MACAU
+        if market_code == "MACAU":
+            print(f"\n[!] MODE MANUAL INPUT: {market_code}")
+            p1 = input("Masukkan Result P1 (4 atau 5 angka): ").strip()
+            p2 = input("Masukkan Result P2 (Kosongkan jika tidak ada): ").strip()
+            p3 = input("Masukkan Result P3 (Kosongkan jika tidak ada): ").strip()
+            
+            if len(p1) >= 4:
+                return [[p1, p2, p3]]
+            else:
+                print("Error: Angka P1 kurang dari 4 digit!")
+                return []
+
+        # 2. JIKA BUKAN MACAU, GUNAKAN HTTPX
         with httpx.Client(timeout=15.0, verify=False, follow_redirects=True) as client:
             if market_code == "HK_SPECIAL":
                 url = "https://tabelsemalam.com/"
@@ -1049,22 +1090,14 @@ def fetch_results(market_code):
                 
                 for row in tbody.find_all('tr'):
                     tds = row.find_all('td')
-                    if len(tds) >= 2: # Minimal ada kolom Market dan P1
-                        # Ambil P1 (Wajib)
+                    if len(tds) >= 2:
                         p1 = re.sub(r'\D', '', tds[1].text.strip())
-                        
-                        # Ambil P2 & P3 jika ada, jika tidak ada isi string kosong
-                        # Ini krusial agar data Prize 1 tetap terproses maksimal
-                        p2 = ''
-                        p3 = ''
-                        
+                        p2, p3 = '', '' # Paksa P1 Only
                         if len(p1) == 4:
-                            # List tetap berisi 3 elemen agar index tidak out of range
                             res.append([p1, p2, p3])
-                
                 return res[:40]
 
-            # Jalur Umum (Tidak diubah sesuai instruksi)
+            # 3. JALUR UMUM
             url = f"https://nfx1avfcy8.salamtarget.com/history/result-mobile/{market_code}-pool-1"
             r = client.get(url, headers=headers)
             soup = BeautifulSoup(r.text, 'html.parser')
@@ -1079,13 +1112,13 @@ def fetch_results(market_code):
                     def get_num(td_elem):
                         link = td_elem.find('a')
                         return re.sub(r'\D', '', link.text if link else td_elem.text)
-
                     p1 = get_num(tds[3])
                     if len(p1) == 4:
                         p2 = get_num(tds[4]) if len(tds) >= 5 else "0000"
                         p3 = get_num(tds[5]) if len(tds) >= 6 else "0000"
                         results.append([p1, p2, p3])
             return results[:40]
+
     except Exception as e:
         print(f"Fetch Error: {e}")
         return []
