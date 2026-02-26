@@ -532,29 +532,33 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             if t == MB.get(last_p1[3]): score += 30
 
         elif market_name == 'JEJU':
-            # --- [V18.9 JEJU - TWIN-BREAKER] ---
-            # Result: 3166 (Biji 7)
+            # --- [V19.0 JEJU - POLARITY COUNTER] ---
+            # Result: 7202 (Biji 2)
             
-            # 1. THE "66" REVENGE
-            # Angka 66 sering memicu kemunculan angka 9 (Mistik Baru) 
-            # atau angka 4 (Mistik Lama dari 9) di posisi Ekor.
-            if t in ['9', '4']:
-                score += 70
+            # 1. THE "02" AFTERMATH (Ekor 02)
+            # Jeju setelah 02 sangat kuat memunculkan angka 5 (Mistik) atau 9 (Indeks)
+            if t in ['5', '9', '4']:
+                score += 85
+            if h in ['5', '9', '4']:
+                score += 45
             
-            # 2. GAP FILLER (Angka 0 & 8)
-            # Jeju sering mengeluarkan angka "kosong" (0) atau angka "delapan" (8)
-            # setelah pola 1-6 muncul berdekatan.
-            if h in ['0', '8'] or t in ['0', '8']:
-                score += 55
+            # 2. BIJI TARGET (Fokus Biji 5, 8, dan 3)
+            # Menghindari pengulangan Biji 2 (7202) dan Biji 7 (3166)
+            if biji_f in [5, 8, 3]: 
+                score += 150 
+            elif biji_f in [2, 7]:
+                score -= 100 # Penalti biji mati
 
-            # 3. BIJI RESONANCE (Target Biji: 2, 4, 7)
-            # 3+1+6+6 = 16 -> Biji 7. Fokus pada Biji 2 (Lawan 7) dan Biji 4.
-            if biji_f in [2, 4, 7]: 
-                score += 125 
+            # 3. GANJIL DOMINANT (Pasca Double Genap)
+            # Karena 7202 dominan genap, kita cari Ekor Ganjil (1, 3, 5, 7, 9)
+            if int(t) % 2 != 0:
+                score += 65
+            else:
+                score -= 40
 
-            # 4. POSITION SHIFT
-            # Kop 1 biasanya akan turun menjadi Kepala atau Ekor.
-            if h == '1' or t == '1':
+            # 4. KUNCI KEPALA (1 & 3)
+            # Mengambil resonansi dari 3166 yang ditarik ke depan
+            if h in ['1', '3']:
                 score += 50
 
         elif market_name == 'SAPPORO':
@@ -1193,6 +1197,32 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
                 as_p2 = all_res_data[0][1][0] if len(all_res_data[0]) > 1 else '8'
                 asn = ID.get(as_p1, best_as[i % len(best_as)])
                 kop = ID.get(as_p2, best_kop[i % len(best_kop)])
+            except: pass
+
+        elif market_name == 'JEJU':
+            try:
+                # Pola penempatan berdasarkan pergerakan 7202
+                as_l, kop_l = last_p1[0], last_p1[1] # 7, 2
+                
+                for i in range(len(top2)):
+                    if i == 0:
+                        # Pola Oscillator Ganjil: Mistik Baru Kop -> As, Indeks As -> Kop
+                        # 2 -> 6 (As), 7 -> 2 (Kop) -> Kita paksa Ganjil: 5 & 9
+                        asn, kop = '5', '9'
+                    elif i == 1:
+                        # Pola Shadow: 13xx (Mengambil sisa 3166)
+                        asn, kop = '1', '3'
+                    elif i == 2:
+                        # Pola Inverse: 95xx
+                        asn, kop = '9', '5'
+                    else:
+                        asn = best_as[i % len(best_as)] if best_as else '3'
+                        kop = best_kop[(i + 1) % len(best_kop)] if best_kop else '7'
+                    
+                    l2 = top2[i]
+                    line3, line4 = f"{kop}{l2}", f"{asn}{kop}{l2}"
+                    if line3 not in top3: top3.append(line3)
+                    if line4 not in top4: top4.append(line4)
             except: pass
 
         # --- [ GLOBAL VERIFICATION & ANTI-DUPLICATE ] ---
