@@ -1027,31 +1027,43 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
                     kop = MB.get(asn, bbfs_list[i])
             except: pass
 
-        # --- [ V16.9.2 SYDNEY MONSTER ] ---
+        # --- [ V18.6 SYDNEY MONSTER REVENGE ] ---
         elif market_name == 'SYDNEY LOTTO':
             try:
-                # Result: 8118
-                as_l, kop_l, kep_l, ek_l = last_p1[0], last_p1[1], last_p1[2], last_p1[3]
-
+                # Result Terakhir: 8118
+                as_l = last_p1[0] if len(last_p1) >= 1 else '8'
+                kop_l = last_p1[1] if len(last_p1) >= 2 else '1'
+                kep_l = last_p1[2] if len(last_p1) >= 3 else '1'
+                ek_l = last_p1[3] if len(last_p1) >= 4 else '8'
+                
                 for i in range(20):
                     if i == 0:
-                        # Pola Oscillator: Indeks As lama jadi Kop, As baru dari Mistik Kop lama
+                        # OSCILLATOR PATTERN: Mistik Kop lama jadi As, Indeks As lama jadi Kop
                         asn = MB.get(kop_l, '0') # 1 -> 0
                         kop = ID.get(as_l, '3')  # 8 -> 3
                     elif i == 1:
-                        # Pola Shadow: Menggunakan angka 5 dan 9 sebagai pelindung
+                        # SHADOW PATTERN: Angka 5 dan 9 sebagai pelindung (Gap Filler)
                         asn, kop = '5', '9'
+                    elif i == 2:
+                        # REVERSE BUTTERFLY: Kebalikan dari 8118
+                        asn = ID.get(ek_l, '3')
+                        kop = MB.get(kep_l, '0')
+                    elif i % 5 == 0:
+                        # SMART TWIN: Hanya inject twin ganjil (sangat kuat di Sydney)
+                        twin = '5' if i % 2 == 0 else '9'
+                        l2 = f"{twin}{twin}"
                     else:
                         asn = best_as[i % len(best_as)]
                         kop = best_kop[(i + 1) % len(best_kop)]
 
-                    l2 = f"{h}{t}"
+                    # Pembuatan 3D & 4D Jitu
                     line3, line4 = f"{kop}{l2}", f"{asn}{kop}{l2}"
                     
                     if l2 not in top2: top2.append(l2)
                     if line3 not in top3: top3.append(line3)
                     if line4 not in top4: top4.append(line4)
-            except: pass
+            except Exception as e:
+                print(f"Error Sydney Construction: {e}")
 
         elif market_name == 'CAMBODIA':
             try:
