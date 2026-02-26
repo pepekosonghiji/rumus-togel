@@ -366,26 +366,25 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
             scores[ML.get(p1_d[2])] += 35 # 8 -> 3
 
     elif market_name == 'OREGON 6':
-            # --- [V18.3 OREGON 6 - TWIN-MIRROR RESONANCE] ---
-            # Result: 3868
-            p1_d = d0_p1 if d0_p1 else "3868"
+            # --- [V18.4 OREGON 6 - REVENGE MODE] ---
+            # Result: 8507
+            p1_d = "8507" 
             
-            # 1. TWIN DETECTION (8...8)
-            # Jika ada angka kembar di result, angka indeksnya (3) atau mistiknya (3/0)
-            # akan menjadi "Magnet Kuat" di putaran berikutnya.
-            scores['3'] += 50
-            scores['0'] += 40
+            # 1. THE "MISSING 9" THEORY
+            # Angka 9 sudah absen cukup lama di Oregon 6, 
+            # sementara result 8507 mengelilingi angka 9 secara mistik.
+            scores['9'] += 55
             
-            # 2. CENTER SHIFT (8-6)
-            # Kop 8 dan Kepala 6. Selisihnya (2) dan jumlahnya (14 -> 5)
-            # sering muncul sebagai angka ikut (AI).
-            scores['2'] += 45
-            scores['5'] += 45
+            # 2. ZERO RESONANCE
+            # Angka 0 di posisi Kepala sering memicu angka 1 atau 6 (Mistik/Indeks) 
+            # untuk muncul di posisi 2D belakang pada putaran selanjutnya.
+            scores['1'] += 45
+            scores['6'] += 40
             
-            # 3. KOP DOMINATION
-            # Di Oregon 6, angka Kop yang baru keluar (8) sering "jatuh" ke posisi Ekor.
-            # Kita beri bobot pada angka 8 untuk tetap waspada.
-            scores['8'] += 30
+            # 3. SUM-TO-BIPOLAR (8+5+0+7 = 20 -> Biji 2)
+            # Biji 2 akan kita jadikan patokan utama untuk BBFS.
+            scores['2'] += 50
+            scores['7'] += 35 # Proteksi angka 7 yang baru keluar (sering repeat)
 
     elif market_name == 'WASHINGMID':
         # --- [V16.11 WASHINGMID REBORN - SLIDE & MIRROR CAPTURE] ---
@@ -490,29 +489,39 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
                 score -= 70
 
         elif market_name == 'CAMBODIA':
-            # --- [V16.8 CAMBODIA MAXIMAL PRECISION] ---
-            # 1. BIJI KHUSUS (Update: Tambah Biji 9 & 6)
-            if biji_f in [1, 2, 4, 5, 7, 9, 6]: 
-                score += 85 
+            # --- [V18.4 CAMBODIA - TWIN KILLER LOGIC] ---
+            # Result Terakhir: 9199
             
-            # 2. TYSEEN TAIL (Safe Access)
-            t_p1 = last_p1[3] if len(last_p1) >= 4 else 'x'
-            if t == TY.get(t_p1, 'x'): score += 55 
+            # 1. BIJI RESONANCE (Target Biji: 1, 4, 7, 8)
+            # Hasil jumlah 9+1+9+9 = 28 -> Biji 1. Fokus pada Biji 1 dan Lawannya (7, 4).
+            if biji_f in [1, 4, 7, 8]: 
+                score += 125 
             
-            # 3. DELTA ANALYSIS (Safe Math)
-            if len(last_p1) >= 4 and last_p1[2].isdigit() and last_p1[3].isdigit():
-                delta_val = str(abs(int(last_p1[2]) - int(last_p1[3])))
-                if delta_val in line: score += 35
-            
-            # 4. TWIN STRATEGY (Belajar dari 99)
-            # Jika result P1 mengandung twin (seperti 99), bonus twin belakang aktif
-            if len(last_p1) >= 4 and (last_p1[2] == last_p1[3] or last_p1[0] == last_p1[1]):
-                if h == t: score += 70 # Bonus besar jika terdeteksi trend twin
-            else:
-                if h == t: score -= 40 # Anti-twin jika tidak ada trend
+            # 2. TWIN-9 REVENGE
+            # Angka 99 di belakang biasanya memicu angka Indeks (4) atau Mistik Baru (3)
+            # untuk meledak di posisi 2D (Kepala atau Ekor).
+            if h in ['4', '3'] or t in ['4', '3']:
+                score += 65
 
-            # 5. POSITION CHECK
-            if h in ['3', '1', '9']: score += 30
+            # 3. THE "1" GAP SHIFT
+            # Angka 1 (Kop) sering kali bergeser menjadi Kepala atau Ekor di Cambodia.
+            if h == '1' or t == '1':
+                score += 50
+                
+            # 4. POLARITY SHIFT (Ganjil -> Genap)
+            # Setelah dominasi angka ganjil (9199), Cambodia cenderung membalas dengan
+            # angka genap kuat (4, 6, 8).
+            if int(h) % 2 == 0 and int(t) % 2 == 0:
+                score += 45
+            elif (int(h) % 2 == 0 and int(t) % 2 != 0) or (int(h) % 2 != 0 and int(t) % 2 == 0):
+                score += 30
+
+            # 5. ANTI-TWIN & REPEAT PROTECTOR
+            # Penalti sangat keras jika angka 9 muncul lagi di ekor (Repeat).
+            if t == '9': 
+                score -= 150 
+            if h == t: 
+                score -= 70 # Menghindari twin belakang berurutan
 
         # --- [BUSAN POOLS SPECIFIC RACIKAN] ---
         elif market_name == 'BUSAN POOLS':
@@ -723,30 +732,69 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             # 5. ANTI-TWIN (Toronto tetap jarang twin belakang)
             if h == t: score -= 35
 
-        elif 'OREGON' in market_name:
-            # --- [V16.13 OREGON MAXIMAL PRECISION] ---
-            # 1. BIJI KHUSUS (Biji 3, 4, 6, 8, 9) -> Terbukti JP Biji 8 di 9269
-            if biji_f in [3, 4, 6, 8, 9]: 
-                score += 90 
+        elif market_name == 'OREGON 3':
+            # --- [V18.4 OREGON 3 - QUANTUM PRECISION] ---
+            # Result Terakhir: 4823
             
-            # 2. DOUBLE-WRAP VERIFICATION
-            # Bonus jika As dan Ekor menggunakan angka yang sama (Pola 9...9)
-            if line[0] == line[1]: 
+            # 1. BIJI RESONANCE (Target Biji: 1, 4, 5, 8)
+            # Fokus pada Biji 1 dan 5 sebagai pembalasan dari Biji 8 (4+8+2+3=17->8)
+            if biji_f in [1, 4, 5, 8]: 
+                score += 120 
+            
+            # 2. THE "23" REVERSAL DETECTION
+            # Angka 23 di ekor sering memicu munculnya angka Indeks/Mistik (7, 8, 5) 
+            # di posisi Kepala pada putaran berikutnya.
+            if h in ['7', '8', '5']:
+                score += 60
+
+            # 3. ODD-GAP FILLER (Target: 1, 9)
+            # Angka ganjil 1 dan 9 adalah "angka hutang" yang sangat kuat di Oregon 3
+            if t in ['1', '9'] or h in ['1', '9']:
+                score += 55
+                
+            # 4. VERTICAL POSITIONING (Kop 8 -> As/Kop Baru)
+            # Memberikan bonus jika angka 8 (Kop lama) muncul di depan atau 
+            # angka 4 (Mistik Baru dari 8) muncul di 2D.
+            if h == '4' or t == '4':
                 score += 45
+
+            # 5. ANTI-REPEAT & TRAP FILTER
+            # Penalti berat jika Ekor kembali 3 (Repeat) atau angka Genap Beruntun
+            if t == last_p1[3]: 
+                score -= 100 
+            if int(h) % 2 == 0 and int(t) % 2 == 0:
+                score -= 30 # Menghindari jebakan Genap-Genap setelah 482
+
+        elif 'OREGON 6' in market_name:
+            # --- [V18.4 OREGON QUANTUM REVENGE] ---
             
-            # 3. MISTIK-JUMP POSITION
-            # Bonus jika Kop/Kepala menggunakan Mistik Lama/Baru dari result sebelumnya
-            if h == ML.get(last_p1[2]) or line[1] == MB.get(last_p1[0]):
-                score += 40
+            # 1. BIJI RESONANCE (Target Biji: 1, 2, 5, 7, 9)
+            # Fokus pada Biji 2 (Hasil jumlah 8+5+0+7) dan Lawannya
+            if biji_f in [1, 2, 5, 7, 9]: 
+                score += 115 # Menaikkan bobot dari 90
+            
+            # 2. GAP-MISSING DETECTION (Angka 9 & 6)
+            # Memberikan bonus besar jika angka yang lama absen (9 & 6) muncul di 2D
+            if t in ['9', '6'] or h in ['9', '6']:
+                score += 55
+
+            # 3. MISTIK-JUMP POSITION (Refined)
+            # Bonus jika Kop/Kepala adalah Mistik Baru/Lama dari P1 sebelumnya
+            # Logic: Kop (5)->MB(4), Kep(0)->ML(1), Ek(7)->MB(1)
+            if h in [ML.get(last_p1[2]), MB.get(last_p1[1])] or t == ML.get(last_p1[3]):
+                score += 50
                 
-            # 4. STEP-UP DYNAMICS
-            # Memverifikasi angka yang naik 1 tingkat dari result lama
-            if t == str((int(last_p1[3]) + 1) % 10):
-                score += 35
+            # 4. BALANCED POLARITY (Odd-Even Check)
+            # Karena result 8507 didominasi angka ganjil di belakang, 
+            # kita beri skor pada kombinasi Ganjil-Genap atau sebaliknya.
+            if (int(h) % 2 == 0 and int(t) % 2 != 0) or (int(h) % 2 != 0 and int(t) % 2 == 0):
+                score += 45
                 
-            # 5. ANTI-TWIN BACK (Hanya untuk 2D Belakang)
+            # 5. ANTI-TWIN & REPEAT PROTECTOR
             if h == t: 
-                score -= 45
+                score -= 60 # Penalti lebih besar untuk twin belakang
+            if t == last_p1[3]: 
+                score -= 80 # Penalti sangat keras jika ekor repeat (7)
                 
         elif market_name == 'WASHINGMID':
             # --- [V16.11 WASHINGMID PRECISION FILTER] ---
@@ -869,40 +917,31 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             except Exception as e:
                 print(f"Construction Error Oregon: {e}")
 
-        elif market_name == 'OREGON 6':
+        elif 'OREGON 6' in market_name:
             try:
-                # Result: 3868 (As: 3, Kop: 8, Kep: 6, Ek: 8)
+                # Result: 8507
                 as_l, kop_l, kep_l, ek_l = last_p1[0], last_p1[1], last_p1[2], last_p1[3]
 
-                for i in range(15):
+                for i in range(20): # Generate 20 line untuk akurasi lebih tinggi
                     if i == 0:
-                        # POLA REVERSE INDEX (Ekor diindeks jadi As, Kepala diindeks jadi Kop)
-                        asn = ID.get(ek_l) # 8 -> 3
-                        kop = ID.get(kep_l) # 6 -> 1
+                        # Pola Quantum: As dari Indeks Ekor, Kop dari Mistik Kepala
+                        asn = ID.get(ek_l, '2') # 7 -> 2
+                        kop = ML.get(kep_l, '1') # 0 -> 1
                     elif i == 1:
-                        # POLA STEP UP (As +1, Kop +1)
-                        asn = str((int(as_l) + 1) % 10) # 3 -> 4
-                        kop = str((int(kop_l) + 1) % 10) # 8 -> 9
+                        # Pola Revenge: Mengincar angka 9 yang hilang
+                        asn = '9'
+                        kop = ID.get(as_l, '3') # 8 -> 3
                     elif i == 2:
-                        # POLA MISTIK KOP (Kop lama dimistik baru jadi As)
-                        asn = MB.get(kop_l) # 8 -> 0
-                        kop = '5' # Angka pendamping kuat
+                        # Pola Mirror: As tetap, Kop indeks
+                        asn = as_l 
+                        kop = ID.get(kop_l, '0') # 5 -> 0
                     else:
                         asn = best_as[i % len(best_as)]
                         kop = best_kop[(i + 1) % len(best_kop)]
 
-                    # --- FILTER SNIPER OREGON 6 ---
-                    # 1. BIJI TARGET (Oregon 6 menyukai Biji 3, 6, 9 - Kelipatan 3)
-                    if biji_f in [3, 6, 9]: score += 125
-                    
-                    # 2. EKOR GANJIL PREFERENCE (Setelah dominasi genap 868)
-                    if int(t) % 2 != 0: score += 65
-                    
-                    # 3. ANTI-TWIN (Kecuali twin 33 atau 00 dari resonansi)
-                    if h == t and h not in "30": score -= 150
-
-                    l2 = f"{h}{t}"
+                    l2 = f"{h}{t}" # Dari loop 2D
                     line3, line4 = f"{kop}{l2}", f"{asn}{kop}{l2}"
+                    
                     if l2 not in top2: top2.append(l2)
                     if line3 not in top3: top3.append(line3)
                     if line4 not in top4: top4.append(line4)
@@ -998,8 +1037,34 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             except: pass
 
         elif market_name == 'CAMBODIA':
-            asn = best_as[i % len(best_as)]
-            if i < 3: kop = asn
+            try:
+                # Result: 9199 (As: 9, Kop: 1, Kep: 9, Ek: 9)
+                as_l, kop_l, kep_l, ek_l = last_p1[0], last_p1[1], last_p1[2], last_p1[3]
+
+                for i in range(20):
+                    if i == 0:
+                        # Pola Shifting: Indeks Kop lama jadi As baru, Mistik Kepala jadi Kop
+                        asn = ID.get(kop_l, '6') # 1 -> 6
+                        kop = MB.get(kep_l, '3') # 9 -> 3
+                    elif i == 1:
+                        # Pola Lawan Twin: Gunakan angka 4 (Indeks 9) sebagai poros depan
+                        asn = '4'
+                        kop = ID.get(as_l, '4') # 9 -> 4
+                    elif i == 2:
+                        # Pola Mirror: As indeks, Kop tetap
+                        asn = ID.get(as_l, '4') 
+                        kop = kop_l # 1
+                    else:
+                        asn = best_as[i % len(best_as)]
+                        kop = best_kop[(i + 1) % len(best_kop)]
+
+                    l2 = f"{h}{t}"
+                    line3, line4 = f"{kop}{l2}", f"{asn}{kop}{l2}"
+                    
+                    if l2 not in top2: top2.append(l2)
+                    if line3 not in top3: top3.append(line3)
+                    if line4 not in top4: top4.append(line4)
+            except: pass
 
         # --- [ V17.0 HK-MONSTER: SHADOW & BRIDGE SHIFTING ] ---
         elif market_name == 'HONGKONG LOTTO':
