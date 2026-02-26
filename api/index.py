@@ -441,7 +441,7 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
         biji = (int(h) + int(t))
         biji_f = (biji if biji < 10 else biji % 9 or 9)
         
-        elif market_name == 'SYDNEY LOTTO':
+        if market_name == 'SYDNEY LOTTO':
             # 1. Hancurkan angka jenuh (1 & 8) dari result 8118
             if h in ['1', '8'] or t in ['1', '8']:
                 score -= 150 # Penalti sangat besar agar tidak masuk daftar JITU
