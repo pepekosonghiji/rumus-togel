@@ -441,24 +441,18 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
         biji = (int(h) + int(t))
         biji_f = (biji if biji < 10 else biji % 9 or 9)
         
-        # --- [SYDNEY SPECIFIC RACIKAN] ---
-        # --- [V18.6 SYDNEY LOTTO - TWIN OSCILLATOR FILTER] ---
-        if market_name == 'SYDNEY LOTTO':
-            # 1. BIJI RESONANCE (Target Biji: 2, 5, 9)
-            if biji_f in [2, 5, 9]: 
-                score += 130 
+        elif market_name == 'SYDNEY LOTTO':
+            # 1. Hancurkan angka jenuh (1 & 8) dari result 8118
+            if h in ['1', '8'] or t in ['1', '8']:
+                score -= 150 # Penalti sangat besar agar tidak masuk daftar JITU
             
-            # 2. THE "18" REVERSAL (Ekor 18 dari result 8118)
-            if h in ['5', '4', '0'] or t in ['5', '4', '0']:
-                score += 65
+            # 2. Angkat angka "Hantu" (0, 5, 9, 4)
+            if h in ['0', '5', '9', '4'] or t in ['0', '5', '9', '4']:
+                score += 80
 
-            # 3. GAP DETECTION (Angka Mati 8 & 1)
-            if h in ['8', '1'] or t in ['8', '1']:
-                score -= 100
-                
-            # 4. POLARITY SHIFT (Target: Kepala Ganjil - Ekor Genap)
-            if int(h) % 2 != 0 and int(t) % 2 == 0:
-                score += 55
+            # 3. Target Biji (2, 5, 9)
+            if biji_f in [2, 5, 9]:
+                score += 100
 
         elif market_name == 'HONGKONG LOTTO':
             # 1. BIJI SIKLUS HK (Ditambah Biji 6 sebagai Mistik dari Biji 9)
@@ -1019,30 +1013,24 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
                     kop = MB.get(asn, bbfs_list[i])
             except: pass
 
-        # --- [ V16.9.2 SYDNEY MONSTER ] ---
         elif market_name == 'SYDNEY LOTTO':
             try:
-                # Result: 8118
-                as_l = last_p1[0] 
-                kop_l = last_p1[1]
+                as_l = last_p1[0] # '8'
+                kop_l = last_p1[1] # '1'
                 
-                # Gunakan range untuk mengisi top3 dan top4 secara presisi
+                # Kita looping berdasarkan hasil 2D Jitu (top2) yang sudah lolos filter
                 for i in range(len(top2)):
                     if i == 0:
-                        # OSCILLATOR: 1 -> MB -> 0 (As), 8 -> ID -> 3 (Kop)
-                        asn = MB.get(kop_l, '0') 
-                        kop = ID.get(as_l, '3')
+                        # Pola Oscillator: As=0, Kop=3 (Mistik/Indeks dari 81)
+                        asn, kop = MB.get(kop_l, '0'), ID.get(as_l, '3')
                     elif i == 1:
-                        # SHADOW: Angka 5 dan 9 sebagai pelindung
+                        # Pola Shadow: 59xx
                         asn, kop = '5', '9'
-                    elif i % 5 == 0:
-                        # SMART TWIN: Injeksi twin 55 atau 99
-                        asn = '5' if i % 2 == 0 else '9'
-                        kop = asn
                     else:
-                        asn = best_as[i % len(best_as)]
-                        kop = best_kop[(i + 1) % len(best_kop)]
-
+                        # Pola acak dari As/Kop terbaik
+                        asn = best_as[i % len(best_as)] if best_as else '0'
+                        kop = best_kop[(i + 1) % len(best_kop)] if best_kop else '5'
+                    
                     l2 = top2[i]
                     line3, line4 = f"{kop}{l2}", f"{asn}{kop}{l2}"
                     if line3 not in top3: top3.append(line3)
