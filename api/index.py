@@ -532,15 +532,30 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             if t == MB.get(last_p1[3]): score += 30
 
         elif market_name == 'JEJU':
-            # Jeju dominan di Biji 1, 5, 8
-            if biji_f in [1, 5, 8]: score += 65
+            # --- [V18.9 JEJU - TWIN-BREAKER] ---
+            # Result: 3166 (Biji 7)
             
-            # Pattern Bridge: Jika ekor adalah Mistik/Indeks dari Kepala P3 (3905 -> 3)
-            # Kepala P3 adalah 3, maka ekor jitu adalah 8 (ID) atau 6 (TY)
-            if t in [ID.get(last_p1[2]), TY.get(last_p1[2])]: score += 40
+            # 1. THE "66" REVENGE
+            # Angka 66 sering memicu kemunculan angka 9 (Mistik Baru) 
+            # atau angka 4 (Mistik Lama dari 9) di posisi Ekor.
+            if t in ['9', '4']:
+                score += 70
             
-            # Anti-Clutter: Jeju jarang mengeluarkan angka berurutan (12, 23, dll)
-            if abs(int(h) - int(t)) == 1: score -= 15
+            # 2. GAP FILLER (Angka 0 & 8)
+            # Jeju sering mengeluarkan angka "kosong" (0) atau angka "delapan" (8)
+            # setelah pola 1-6 muncul berdekatan.
+            if h in ['0', '8'] or t in ['0', '8']:
+                score += 55
+
+            # 3. BIJI RESONANCE (Target Biji: 2, 4, 7)
+            # 3+1+6+6 = 16 -> Biji 7. Fokus pada Biji 2 (Lawan 7) dan Biji 4.
+            if biji_f in [2, 4, 7]: 
+                score += 125 
+
+            # 4. POSITION SHIFT
+            # Kop 1 biasanya akan turun menjadi Kepala atau Ekor.
+            if h == '1' or t == '1':
+                score += 50
 
         elif market_name == 'SAPPORO':
             # Sapporo sangat kuat di Biji 3, 4, 9
