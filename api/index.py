@@ -591,15 +591,28 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             if h in ['1', '3']:
                 score += 50
 
-        elif market_name == 'SAPPORO':
-            # Sapporo sangat kuat di Biji 3, 4, 9
-            if biji_f in [3, 4, 9]: score += 65
+        elif market_name == 'WUHAN':
+            # --- [V19.2 WUHAN - LADDER REVENGE] ---
+            # Result: 4726 (Biji 1)
             
-            # Khusus Sapporo: Cek jika angka adalah Mistik dari Ekor P1 (5 -> 2)
-            if t == ML.get(last_p1[3]): score += 45
+            # 1. THE "26" AFTERMATH
+            # Setelah ekor 26, Wuhan sering menarik angka 3 (Mistik 6) atau 9 (Indeks 4)
+            if t in ['3', '9', '5']:
+                score += 85
+            if h in ['3', '9', '5']:
+                score += 45
             
-            # Anti-Twin di posisi 2D Belakang
-            if h == t: score -= 30
+            # 2. BIJI TARGET (Fokus Biji 4, 6, 8)
+            # Pasca Biji 1, Wuhan cenderung lari ke Biji Genap yang lebih stabil.
+            if biji_f in [4, 6, 8]: 
+                score += 150 
+            elif biji_f == 1:
+                score -= 100 # Anti-repeat biji
+
+            # 3. KEPALA DINGIN (0 & 5)
+            # Angka 0 dan 5 sangat kuat untuk muncul di Kepala setelah result 47xx
+            if h in ['0', '5']:
+                score += 65
 
         elif market_name == 'OSAKA':
             # --- [V17.1 OSAKA MAXIMAL PRECISION] ---
@@ -647,29 +660,6 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             if h == t: 
                 score -= 60
                 
-        elif market_name == 'WUHAN':
-            # --- [V18.8 WUHAN THERMAL LOGIC] ---
-            # Result: 2280 (Biji 3)
-            
-            # 1. THE "0" AFTERMATH (Ekor 0)
-            # Ekor 0 di Wuhan sering memicu angka Mistik (1) atau Indeks (5).
-            if h in ['1', '5'] or t in ['1', '5']:
-                score += 65
-            
-            # 2. TWIN 22 REVENGE
-            # Setelah twin depan 22, angka selisih (0) atau angka jumlah (4) 
-            # sering muncul di posisi Kepala.
-            if h in ['0', '4']:
-                score += 55
-
-            # 3. BIJI RESONANCE (Target Biji: 3, 6, 8)
-            # 2+2+8+0 = 12 -> Biji 3. Fokus pada kelipatan Biji 3.
-            if biji_f in [3, 6, 9]: 
-                score += 120 
-
-            # 4. ANTI-REPEAT TWIN DEPAN
-            if h == '2' and t == '2':
-                score -= 150 # Jangan pasang twin 22 lagi di 2D
 
         elif market_name == 'PHUKET':
             # --- [V16.21 PHUKET MAXIMAL PRECISION] ---
@@ -883,6 +873,34 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
 
             # 5. ANTI-TWIN & ODD-EVEN BALANCING
             if h == t: score -= 40
+
+        elif market_name == 'SAPPORO':
+            # --- [V19.3 SAPPORO MONSTER - TRI-FORCE] ---
+            # Result: 1969 (Biji 7)
+            
+            # 1. THE "969" ERADICATION
+            # Angka 6 dan 9 sudah overload. Kita paksa pindah ke angka 0, 4, dan 5.
+            if h in ['6', '9'] or t in ['6', '9']:
+                score -= 140 
+            if h in ['0', '4', '5'] or t in ['0', '4', '5']:
+                score += 95
+            
+            # 2. SHADOW OF 19 (Angka Depan)
+            # Result 19xx sering diikuti oleh kemunculan angka 3 atau 8 (Mistik 1 & 9)
+            if h in ['3', '8']:
+                score += 65
+
+            # 3. BIJI QUANTUM (Target Biji: 2, 5, 8)
+            # 1+9+6+9 = 25 (Biji 7). Target lompatan Biji adalah +1, +4, atau -2.
+            if biji_f in [2, 5, 8]: 
+                score += 155 
+            elif biji_f == 7:
+                score -= 110
+
+            # 4. POLARITY SHIFT
+            # Target: Kepala Ganjil (3, 5) - Ekor Genap (0, 4, 8)
+            if int(h) % 2 != 0 and int(t) % 2 == 0:
+                score += 60
                 
         # --- [GENERAL MARKETS] ---
         else:
@@ -932,6 +950,7 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
                 if abs(int(asn) - int(kop)) == 1:
                     asn = ID.get(asn, bbfs_list[(i+4)%len(bbfs_list)])
             except: pass
+
 
         elif market_name == 'TORONTOMID':
             try:
@@ -1093,19 +1112,27 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
         # --- [ V17.0 WUHAN MONSTER ] ---
         elif market_name == 'WUHAN':
             try:
-                p1_l = last_p1
-                p2_l = all_res_data[0][1] if len(all_res_data[0]) > 1 else "1208"
+                as_l, kop_l = last_p1[0], last_p1[1] # 4, 7
                 
-                if i == 0:
-                    asn, kop = p2_l[0], p2_l[1] # Estafet P2
-                elif i == 1:
-                    asn = kop = l2[0] # Twin Depan (Radar 2280)
-                elif i == 2:
-                    asn = ID.get(p1_l[3], bbfs_list[0]) # Mirror Ekor P1
-                    kop = ID.get(p1_l[2], bbfs_list[1])
-                
-                if i < 3 and asn == kop:
-                    kop = MB.get(asn, bbfs_list[i])
+                for i in range(len(top2)):
+                    if i == 0:
+                        # Pola Cross: Indeks As -> Kop, Mistik Kop -> As
+                        # 4 -> 9 (Kop), 7 -> 4 (As)
+                        asn, kop = '4', '9'
+                    elif i == 1:
+                        # Pola Thermal: 03xx (Kepala 0, target Biji)
+                        asn, kop = '0', '3'
+                    elif i == 2:
+                        # Pola Mirror: 51xx
+                        asn, kop = '5', '1'
+                    else:
+                        asn = best_as[i % len(best_as)] if best_as else '8'
+                        kop = best_kop[(i + 1) % len(best_kop)] if best_kop else '2'
+                    
+                    l2 = top2[i]
+                    line3, line4 = f"{kop}{l2}", f"{asn}{kop}{l2}"
+                    if line3 not in top3: top3.append(line3)
+                    if line4 not in top4: top4.append(line4)
             except: pass
 
         elif market_name == 'SYDNEY LOTTO':
@@ -1273,6 +1300,31 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
                     else:
                         asn = best_as[i % len(best_as)] if best_as else '3'
                         kop = best_kop[(i + 1) % len(best_kop)] if best_kop else '7'
+                    
+                    l2 = top2[i]
+                    line3, line4 = f"{kop}{l2}", f"{asn}{kop}{l2}"
+                    if line3 not in top3: top3.append(line3)
+                    if line4 not in top4: top4.append(line4)
+            except: pass
+
+        elif market_name == 'SAPPORO':
+            try:
+                # Result 1969 -> Kita gunakan Mistik Baru dan Indeks untuk posisi depan
+                as_l, kop_l = last_p1[0], last_p1[1] # 1, 9
+                
+                for i in range(len(top2)):
+                    if i == 0:
+                        # Pola Monster 1: As=7 (MB 1), Kop=4 (ID 9)
+                        asn, kop = MB.get(as_l, '7'), ID.get(kop_l, '4')
+                    elif i == 1:
+                        # Pola Monster 2: As=0 (ML 1), Kop=3 (ML 9)
+                        asn, kop = ML.get(as_l, '0'), ML.get(kop_l, '3')
+                    elif i == 2:
+                        # Pola Inverse: As=4, Kop=7
+                        asn, kop = '4', '7'
+                    else:
+                        asn = best_as[i % len(best_as)] if best_as else '5'
+                        kop = best_kop[(i + 1) % len(best_kop)] if best_kop else '0'
                     
                     l2 = top2[i]
                     line3, line4 = f"{kop}{l2}", f"{asn}{kop}{l2}"
