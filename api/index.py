@@ -170,13 +170,33 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         scores[str(delta_as)] += 25
 
     elif market_name == 'SAPPORO':
-        scores['9'] += 35 # Indeks 4
-        scores['7'] += 25 # Mistik 4
-        p2_digits = all_res_data[0][1]
-        scores[p2_digits[1]] += 22 # Angka 3
-        scores[p2_digits[2]] += 22 # Angka 1
+        # --- [V19.3 SAPPORO MONSTER BBFS TUNING] ---
+        # Result P1: 1969 | P2: (Ambil dari data)
+        
+        # 1. ERADICATION PHASE (Penalti Angka Jenuh 6 & 9)
+        # Kita kurangi skor dasar agar mereka tidak masuk Top 6 BBFS
+        scores['9'] -= 50 
+        scores['6'] -= 50
+        
+        # 2. INJECTION PHASE (Angka Baru: 0, 3, 4, 7, 8)
+        scores['0'] += 45 # Pelarian dari 1 & 6
+        scores['4'] += 40 # Indeks dari 9
+        scores['7'] += 38 # MB dari 1
+        scores['3'] += 35 # Pivot Selisih 9-6
+        scores['8'] += 30 # Mistik dari 3
+        scores['5'] += 25 # Pelarian Shio
+        
+        # 3. P2 RESONANCE (JEBAK BANDOT)
+        # Mengambil angka dari Prize 2 untuk akurasi tambahan
+        try:
+            p2_digits = all_res_data[0][1] # Ambil result P2 terbaru
+            for d in p2_digits:
+                if d not in ['6', '9']: # Hanya ambil jika bukan 6 atau 9
+                    scores[d] += 20
+        except: pass
+
+        # 4. RANDOMNESS PROTECTION (Angka 2)
         scores['2'] += 15
-        scores['6'] += 15
         
     elif market_name == 'OSAKA':
         # --- [V17.1 OSAKA MONSTER - UPDATED] ---
