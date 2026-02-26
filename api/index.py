@@ -66,20 +66,20 @@ def get_weighted_bbfs_v14_1(all_res_data, market_name):
         for n in ['3', '8', '9', '4']: scores[n] = scores.get(n, 0) + 20
 
     elif market_name == 'SYDNEY LOTTO':
-        # Penajaman BBFS: Fokus pada Mirroring & Step
+        # --- [V18.6 BBFS TARGETING] ---
+        # Fokus pada angka "Hantu" (0, 5, 9) yang sering muncul setelah Twin 8118
+        for n in "0594": 
+            scores[n] += 60 # Booster angka target
+            
         for digit in d0_p1:
             if digit.isdigit():
-                val = int(digit)
-                # Bobot Tetangga (Neighbor)
-                scores[str((val + 1) % 10)] += 22 
-                scores[str((val - 1) % 10)] += 22
-                # Bobot Mistik & Indeks (Sangat Kuat di Sydney)
-                scores[MB.get(digit, '0')] += 25 
-                scores[ID.get(digit, '0')] += 30 
+                # Bobot Mistik & Indeks dari result 8118
+                scores[MB.get(digit, '0')] += 30 
+                scores[ID.get(digit, '0')] += 35 
         
-        # Injeksi Angka "Panas" Sydney (Berdasarkan Habit)
-        for n in "1836": 
-            scores[n] += 15
+        # Penalti angka yang baru keluar agar tidak dominan di BBFS
+        for n in "18":
+            scores[n] -= 20
 
     elif market_name == 'WUHAN':
         # Wuhan sering menarik angka dari P2 (1208)
@@ -442,24 +442,23 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
         biji_f = (biji if biji < 10 else biji % 9 or 9)
         
         # --- [SYDNEY SPECIFIC RACIKAN] ---
+        # --- [V18.6 SYDNEY LOTTO - TWIN OSCILLATOR FILTER] ---
         if market_name == 'SYDNEY LOTTO':
-            # 1. BIJI HARMONY (2, 5, 8) + Biji Cadangan (Sydney Style)
-            if biji_f in [2, 5, 8]: 
-                score += 75
-            elif biji_f in [1, 4, 7]: # Indeks dari 2, 5, 8
-                score += 35
+            # 1. BIJI RESONANCE (Target Biji: 2, 5, 9)
+            if biji_f in [2, 5, 9]: 
+                score += 130 
+            
+            # 2. THE "18" REVERSAL (Ekor 18 dari result 8118)
+            if h in ['5', '4', '0'] or t in ['5', '4', '0']:
+                score += 65
+
+            # 3. GAP DETECTION (Angka Mati 8 & 1)
+            if h in ['8', '1'] or t in ['8', '1']:
+                score -= 100
                 
-            # 2. SEQUENTIAL BONUS (Angka Berurutan: 23, 45, 87, dll)
-            if abs(int(h) - int(t)) == 1: 
-                score += 50
-            
-            # 3. MIRROR BALANCE (H & T Pasangan Indeks: 27, 38, 05, dll)
-            if ID.get(h) == t: 
-                score += 45
-            
-            # 4. ANTI-TWIN (Sydney jarang sekali twin belakang kecuali setelah pola ganjil)
-            if h == t:
-                score -= 60
+            # 4. POLARITY SHIFT (Target: Kepala Ganjil - Ekor Genap)
+            if int(h) % 2 != 0 and int(t) % 2 == 0:
+                score += 55
 
         elif market_name == 'HONGKONG LOTTO':
             # 1. BIJI SIKLUS HK (Ditambah Biji 6 sebagai Mistik dari Biji 9)
@@ -1023,17 +1022,31 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
         # --- [ V16.9.2 SYDNEY MONSTER ] ---
         elif market_name == 'SYDNEY LOTTO':
             try:
-                as_lama = last_p1[0] if len(last_p1) >= 1 else '8'
-                kop_lama = last_p1[1] if len(last_p1) >= 2 else '1'
+                # Result: 8118
+                as_l = last_p1[0] 
+                kop_l = last_p1[1]
                 
-                if i == 0:
-                    asn, kop = as_lama, ID.get(as_lama, '1') # Butterfly 8118
-                    l2 = f"{kop}{asn}"
-                elif i % 3 == 0:
-                    twin = bbfs_list[i % len(bbfs_list)]
-                    l2 = f"{twin}{twin}" # Twin Injection
-                elif i == 1:
-                    asn, kop = ID.get(as_lama), ID.get(kop_lama)
+                # Gunakan range untuk mengisi top3 dan top4 secara presisi
+                for i in range(len(top2)):
+                    if i == 0:
+                        # OSCILLATOR: 1 -> MB -> 0 (As), 8 -> ID -> 3 (Kop)
+                        asn = MB.get(kop_l, '0') 
+                        kop = ID.get(as_l, '3')
+                    elif i == 1:
+                        # SHADOW: Angka 5 dan 9 sebagai pelindung
+                        asn, kop = '5', '9'
+                    elif i % 5 == 0:
+                        # SMART TWIN: Injeksi twin 55 atau 99
+                        asn = '5' if i % 2 == 0 else '9'
+                        kop = asn
+                    else:
+                        asn = best_as[i % len(best_as)]
+                        kop = best_kop[(i + 1) % len(best_kop)]
+
+                    l2 = top2[i]
+                    line3, line4 = f"{kop}{l2}", f"{asn}{kop}{l2}"
+                    if line3 not in top3: top3.append(line3)
+                    if line4 not in top4: top4.append(line4)
             except: pass
 
         elif market_name == 'CAMBODIA':
