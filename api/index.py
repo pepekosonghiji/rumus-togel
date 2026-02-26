@@ -442,17 +442,23 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
         biji_f = (biji if biji < 10 else biji % 9 or 9)
         
         if market_name == 'SYDNEY LOTTO':
-            # 1. Hancurkan angka jenuh (1 & 8) dari result 8118
-            if h in ['1', '8'] or t in ['1', '8']:
-                score -= 150 # Penalti sangat besar agar tidak masuk daftar JITU
+            # 1. BIJI RESONANCE (Tetap Biji 9 sebagai poros, tambah Biji 1 & 4)
+            if biji_f in [1, 4, 9]: 
+                score += 140 
             
-            # 2. Angkat angka "Hantu" (0, 5, 9, 4)
-            if h in ['0', '5', '9', '4'] or t in ['0', '5', '9', '4']:
-                score += 80
+            # 2. REPEAT DETECTION (Angka 8)
+            # Karena 8 muncul beruntun, berikan skor normal (jangan dipenalti dulu)
+            if h == '8' or t == '8':
+                score += 40 
 
-            # 3. Target Biji (2, 5, 9)
-            if biji_f in [2, 5, 9]:
-                score += 100
+            # 3. THE "86" AFTERMATH
+            # Setelah ekor 86, Sydney sering lari ke angka 2 (Mistik 5) atau 7 (Indeks 2)
+            if h in ['2', '7'] or t in ['2', '7']:
+                score += 75
+                
+            # 4. ANTI-TWIN 88
+            if h == '8' and t == '8':
+                score -= 150 # Menghindari Twin 88 di 2D
 
         elif market_name == 'HONGKONG LOTTO':
             # 1. BIJI SIKLUS HK (Ditambah Biji 6 sebagai Mistik dari Biji 9)
@@ -593,13 +599,28 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
                 score -= 60
                 
         elif market_name == 'WUHAN':
-            # 1. BIJI KELIPATAN 3 (3, 6, 9)
-            if biji_f in [3, 6, 9]: score += 60
+            # --- [V18.8 WUHAN THERMAL LOGIC] ---
+            # Result: 2280 (Biji 3)
             
-            # 2. GANJIL-GENAP MIX (Wuhan jarang 2D genap-genap)
-            h_int = int(h)
-            t_int = int(t)
-            if (h_int % 2 != t_int % 2): score += 35
+            # 1. THE "0" AFTERMATH (Ekor 0)
+            # Ekor 0 di Wuhan sering memicu angka Mistik (1) atau Indeks (5).
+            if h in ['1', '5'] or t in ['1', '5']:
+                score += 65
+            
+            # 2. TWIN 22 REVENGE
+            # Setelah twin depan 22, angka selisih (0) atau angka jumlah (4) 
+            # sering muncul di posisi Kepala.
+            if h in ['0', '4']:
+                score += 55
+
+            # 3. BIJI RESONANCE (Target Biji: 3, 6, 8)
+            # 2+2+8+0 = 12 -> Biji 3. Fokus pada kelipatan Biji 3.
+            if biji_f in [3, 6, 9]: 
+                score += 120 
+
+            # 4. ANTI-REPEAT TWIN DEPAN
+            if h == '2' and t == '2':
+                score -= 150 # Jangan pasang twin 22 lagi di 2D
 
         elif market_name == 'PHUKET':
             # --- [V16.21 PHUKET MAXIMAL PRECISION] ---
