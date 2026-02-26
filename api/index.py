@@ -460,6 +460,36 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
             if h == '8' and t == '8':
                 score -= 150 # Menghindari Twin 88 di 2D
 
+        elif market_name == 'TORONTOMID':
+            # --- [V19.1 TORONTO MID BUSTER] ---
+            # Result: 5452 (Biji 7)
+            
+            # 1. THE "5-5" CLASH
+            # Angka 5 muncul dua kali, biasanya akan MATI TOTAL atau berubah jadi 0 (Mistik)
+            if h == '5' or t == '5':
+                score -= 120
+            if h == '0' or t == '0':
+                score += 85 # 0 adalah pelarian dari 5
+            
+            # 2. THE "7-8" MAGNET
+            # Toronto Mid sering mengeluarkan 7 atau 8 setelah pola genap 4-2
+            if t in ['7', '8']:
+                score += 90
+            if h in ['7', '8']:
+                score += 50
+
+            # 3. BIJI RESONANCE (Target Biji: 1, 4, 6)
+            # 5+4+5+2 = 16 (Biji 7). Cari lawan Biji 7, yaitu 1 atau 4.
+            if biji_f in [1, 4, 6]: 
+                score += 145 
+            elif biji_f == 7:
+                score -= 100
+
+            # 4. POLARITY REVERSAL
+            # Cari Kepala Genap - Ekor Ganjil (Contoh: 87, 47, 07)
+            if int(h) % 2 == 0 and int(t) % 2 != 0:
+                score += 60
+
         elif market_name == 'HONGKONG LOTTO':
             # 1. BIJI SIKLUS HK (Ditambah Biji 6 sebagai Mistik dari Biji 9)
             # Fokus Biji: 1, 4, 6, 7, 9
@@ -901,6 +931,31 @@ def generate_titanium_lines_v14(bbfs_list, last_p1, market_name, scores, all_res
 
                 if abs(int(asn) - int(kop)) == 1:
                     asn = ID.get(asn, bbfs_list[(i+4)%len(bbfs_list)])
+            except: pass
+
+        elif market_name == 'TORONTOMID':
+            try:
+                # Pola 5452 -> Target As/Kop Dingin (7 & 0)
+                as_l, kop_l = last_p1[0], last_p1[1] 
+                
+                for i in range(len(top2)):
+                    if i == 0:
+                        # Pola Ghost: As=7, Kop=0 (Target Utama)
+                        asn, kop = '7', '0'
+                    elif i == 1:
+                        # Pola Mistik: As=8 (ML 5), Kop=1 (ML 4)
+                        asn, kop = '8', '1'
+                    elif i == 2:
+                        # Pola Mirror: As=0, Kop=7
+                        asn, kop = '0', '7'
+                    else:
+                        asn = best_as[i % len(best_as)] if best_as else '9'
+                        kop = best_kop[(i + 1) % len(best_kop)] if best_kop else '4'
+                    
+                    l2 = top2[i]
+                    line3, line4 = f"{kop}{l2}", f"{asn}{kop}{l2}"
+                    if line3 not in top3: top3.append(line3)
+                    if line4 not in top4: top4.append(line4)
             except: pass
 
         elif market_name == 'OREGON 3':
