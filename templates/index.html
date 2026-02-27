@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MAMANG V.24.8 - OMNI INTELLIGENCE</title>
+    <title>MAMANG V.24.8 - [GOD MODE] OMNI INTELLIGENCE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Rajdhani:wght@500;700&family=JetBrains+Mono:wght@800&display=swap" rel="stylesheet">
@@ -16,6 +16,8 @@
             margin: 0; padding: 10px;
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            image-rendering: -webkit-optimize-contrast; /* Menajamkan gambar untuk Chrome */
         }
         .font-orbitron { font-family: 'Orbitron', sans-serif; }
         .font-angka { font-family: 'JetBrains Mono', monospace; letter-spacing: -1px; }
@@ -23,74 +25,74 @@
         /* Penyesuaian Kontainer agar Rapih di Android & Desktop */
         .main-container { width: 100%; max-width: 500px; margin: 0 auto; }
 
-        /* WATERMARK OVERLAY */
+        /* WATERMARK OVERLAY - GOD MODE TUNING */
         .watermark-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             display: flex; flex-wrap: wrap;
             justify-content: center; align-content: center;
-            gap: 40px; transform: rotate(-25deg) scale(1.5);
-            pointer-events: none; z-index: 1; opacity: 0.03;
+            gap: 60px; transform: rotate(-25deg) scale(2);
+            pointer-events: none; z-index: 1; opacity: 0.04;
         }
         .watermark-text {
             font-family: 'Orbitron', sans-serif;
-            font-weight: 800; font-size: 14px; color: white;
+            font-weight: 800; font-size: 12px; color: white;
             white-space: nowrap; text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
         }
 
         #capture-area::before {
             content: " ";
             position: absolute; top: 0; left: 0; right: 0; bottom: 0;
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%), 
-                        linear-gradient(90deg, rgba(255, 0, 0, 0.05), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.05));
+                        linear-gradient(90deg, rgba(0, 242, 255, 0.03), rgba(0, 0, 0, 0), rgba(0, 242, 255, 0.03));
             z-index: 5; background-size: 100% 4px, 4px 100%; pointer-events: none;
-            opacity: 0.6;
+            opacity: 0.4;
         }
 
         #capture-area { 
-            background: radial-gradient(circle at 50% 0%, #101e2c 0%, #050608 100%); 
+            background: radial-gradient(circle at 50% 0%, #0d1a29 0%, #020406 100%); 
             border-radius: 40px; 
-            padding: 25px 20px; /* Padding disesuaikan untuk mobile */
+            padding: 25px 20px;
             width: 100%;
             box-sizing: border-box;
-            border: 2px solid rgba(0, 242, 255, 0.15);
+            border: 2px solid rgba(0, 242, 255, 0.2);
             position: relative;
             overflow: hidden;
-            box-shadow: 0 0 80px rgba(0, 0, 0, 1), inset 0 0 40px rgba(0, 242, 255, 0.05);
+            box-shadow: 0 0 100px rgba(0, 0, 0, 1), inset 0 0 60px rgba(0, 242, 255, 0.07);
         }
 
-        .badge-omni {
-            background: linear-gradient(90deg, #00c6ff 0%, #0072ff 100%);
-            color: white; font-size: 10px; padding: 4px 14px;
+        .badge-god {
+            background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+            color: black; font-size: 10px; padding: 4px 14px;
             border-radius: 8px; font-weight: 900; letter-spacing: 2.5px;
-            box-shadow: 0 0 25px rgba(0, 198, 255, 0.4);
-            text-shadow: 0 0 5px rgba(255,255,255,0.5);
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+            text-transform: uppercase;
         }
 
         .num-card {
-            background: rgba(13, 17, 23, 0.6);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(0, 242, 255, 0.1);
+            background: rgba(13, 17, 23, 0.8);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(0, 242, 255, 0.15);
             border-radius: 24px;
             padding: 18px 12px;
             position: relative;
             z-index: 10;
         }
 
-        .glow-text { text-shadow: 0 0 20px rgba(0, 242, 255, 0.8); }
-        .glow-gold { text-shadow: 0 0 20px rgba(245, 158, 11, 0.6); }
+        .glow-text { text-shadow: 0 0 15px rgba(0, 242, 255, 0.9), 0 0 30px rgba(0, 242, 255, 0.4); }
+        .glow-gold { text-shadow: 0 0 15px rgba(245, 158, 11, 0.8); }
 
         .verif-bar {
-            height: 2px;
-            background: linear-gradient(90deg, var(--neon), transparent);
+            height: 3px;
+            background: linear-gradient(90deg, var(--neon), var(--gold), transparent);
             width: 100%; margin-top: 8px;
-            box-shadow: 0 0 10px var(--neon);
+            box-shadow: 0 0 15px var(--neon);
         }
 
         .glass-panel {
-            background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
-            border: 1px solid rgba(255,255,255,0.05);
+            background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%);
+            border: 1px solid rgba(255,255,255,0.08);
             border-radius: 24px;
             position: relative; z-index: 10;
         }
@@ -103,35 +105,35 @@
         }
         @media (max-width: 400px) {
             .grid-sniper { gap: 5px; }
-            .num-2d { font-size: 1.25rem !important; padding: 10px 4px !important; }
+            .num-2d { font-size: 1.1rem !important; padding: 10px 2px !important; }
         }
     </style>
 </head>
 <body>
 
 <div class="main-container">
-    <div class="bg-[#0a0d12] p-7 rounded-[40px] mb-8 border border-white/5 shadow-2xl relative overflow-hidden">
+    <div class="bg-[#0a0d12] p-7 rounded-[40px] mb-8 border border-white/10 shadow-2xl relative overflow-hidden">
         <div class="absolute top-0 right-0 p-4 opacity-10">
             <svg width="60" height="60" viewBox="0 0 24 24" fill="white"><path d="M12 2L4.5 20.29L5.21 21L12 18L18.79 21L19.5 20.29L12 2Z"/></svg>
         </div>
         <div class="flex items-center gap-4 mb-6">
             <div class="relative">
-                <div class="w-3 h-3 bg-cyan-500 rounded-full animate-ping absolute"></div>
-                <div class="w-3 h-3 bg-cyan-500 rounded-full relative"></div>
+                <div class="w-3 h-3 bg-amber-500 rounded-full animate-ping absolute"></div>
+                <div class="w-3 h-3 bg-amber-500 rounded-full relative"></div>
             </div>
-            <h1 class="text-xl font-orbitron font-black tracking-[4px] text-white">CORE <span class="text-cyan-500">V.24.8</span></h1>
+            <h1 class="text-xl font-orbitron font-black tracking-[4px] text-white uppercase">Engine <span class="text-amber-500">GOD MODE</span></h1>
         </div>
         <form method="POST" class="space-y-5">
             <div class="relative">
-                <select name="market" class="w-full bg-black/80 text-white p-5 rounded-2xl border border-white/10 outline-none font-bold uppercase text-sm tracking-[2px] focus:border-cyan-500 transition-all appearance-none cursor-pointer">
+                <select name="market" class="w-full bg-black/80 text-white p-5 rounded-2xl border border-white/10 outline-none font-bold uppercase text-sm tracking-[2px] focus:border-amber-500 transition-all appearance-none cursor-pointer">
                     {% for m in markets %}
                     <option value="{{ m }}" {% if selected == m %}selected{% endif %}>{{ m }}</option>
                     {% endfor %}
                 </select>
                 <div class="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none opacity-50">▼</div>
             </div>
-            <button type="submit" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white p-5 rounded-2xl font-black uppercase text-[11px] tracking-[5px] shadow-[0_10px_30px_rgba(0,114,255,0.3)] hover:scale-[1.02] transition-transform active:scale-[0.98]">
-                INITIALIZE OMNI DECRYPTOR
+            <button type="submit" class="w-full bg-gradient-to-r from-amber-500 to-orange-700 text-white p-5 rounded-2xl font-black uppercase text-[11px] tracking-[5px] shadow-[0_10px_30px_rgba(245,158,11,0.3)] hover:scale-[1.02] transition-transform active:scale-[0.98]">
+                ACTIVATE GOD DECRYPTOR
             </button>
         </form>
     </div>
@@ -139,22 +141,22 @@
     {% if analysis %}
     <div id="capture-area">
         <div class="watermark-overlay">
-            {% for i in range(20) %}
-            <div class="watermark-text">MAMANG OMNI INTELLIGENT ANALYS</div>
+            {% for i in range(15) %}
+            <div class="watermark-text">MAMANG GOD MODE OMNI</div>
             {% endfor %}
         </div>
 
         <div class="flex justify-between items-start mb-12 relative z-10">
             <div class="max-w-[65%]">
-                <div class="badge-omni mb-4 inline-block uppercase">Omni-Intelligence</div>
+                <div class="badge-god mb-4 inline-block">GOD MODE ACTIVE</div>
                 <h2 class="text-4xl sm:text-5xl font-orbitron font-black text-white leading-none tracking-tighter uppercase mb-2">{{ selected }}</h2>
-                <div id="date-now" class="text-[10px] text-cyan-400 font-bold uppercase tracking-[4px]"></div>
+                <div id="date-now" class="text-[10px] text-amber-400 font-bold uppercase tracking-[4px]"></div>
                 <div class="verif-bar"></div>
             </div>
             <div class="text-right">
-                <div class="text-[9px] text-cyan-500/50 uppercase font-black mb-1 tracking-widest text-right">Master Result</div>
+                <div class="text-[9px] text-amber-500/50 uppercase font-black mb-1 tracking-widest text-right">Master Result</div>
                 <div class="text-4xl sm:text-5xl font-angka font-black text-white glow-text">{{ analysis.last_res }}</div>
-                <div class="flex gap-2 justify-end mt-2 opacity-40 font-angka text-[9px] font-bold text-white">
+                <div class="flex gap-2 justify-end mt-2 opacity-60 font-angka text-[10px] font-bold text-cyan-400">
                     <span>P2:{{ analysis.p2_last }}</span>
                     <span>P3:{{ analysis.p3_last }}</span>
                 </div>
@@ -163,48 +165,48 @@
 
         <div class="grid grid-cols-2 gap-4 mb-10 relative z-10">
             <div class="num-card">
-                <div class="text-[9px] text-cyan-500 font-black uppercase mb-4 tracking-[3px] border-b border-cyan-500/10 pb-2 italic text-center">ELITE AM</div>
+                <div class="text-[9px] text-cyan-400 font-black uppercase mb-4 tracking-[3px] border-b border-cyan-500/20 pb-2 italic text-center">DIVINE AM</div>
                 <div class="flex justify-around items-center px-1">
                     {% for char in analysis.am %}
-                    <span class="text-2xl sm:text-3xl font-angka font-black text-white">{{ char }}</span>
+                    <span class="text-3xl font-angka font-black text-white">{{ char }}</span>
                     {% endfor %}
                 </div>
             </div>
             <div class="num-card">
-                <div class="text-[9px] text-amber-500 font-black uppercase mb-4 tracking-[3px] border-b border-amber-500/10 pb-2 italic text-center">TARGET AI</div>
+                <div class="text-[9px] text-amber-500 font-black uppercase mb-4 tracking-[3px] border-b border-amber-500/20 pb-2 italic text-center">TARGET AI</div>
                 <div class="flex justify-around items-center px-1">
                     {% for char in analysis.ai %}
-                    <span class="text-2xl sm:text-3xl font-angka font-black text-amber-500 glow-gold">{{ char }}</span>
+                    <span class="text-3xl font-angka font-black text-amber-500 glow-gold">{{ char }}</span>
                     {% endfor %}
                 </div>
             </div>
         </div>
 
-        <div class="num-card bg-gradient-to-b from-[#0d1721] to-black p-8 mb-10 border-2 border-cyan-500/20 relative z-10 overflow-hidden shadow-2xl text-center">
-            <div class="absolute right-2 top-2 opacity-5 font-black text-6xl italic">OMNI</div>
-            <span class="text-[10px] font-black text-cyan-400 tracking-[8px] uppercase block mb-6">DECRYPTED BBFS</span>
+        <div class="num-card bg-gradient-to-b from-[#0d1721] to-black p-8 mb-10 border-2 border-amber-500/30 relative z-10 overflow-hidden shadow-2xl text-center">
+            <div class="absolute right-2 top-2 opacity-5 font-black text-6xl italic">GOD</div>
+            <span class="text-[10px] font-black text-amber-400 tracking-[8px] uppercase block mb-6">DECRYPTED BBFS</span>
             <div class="text-5xl sm:text-6xl font-angka font-black text-white tracking-[8px] sm:tracking-[12px] glow-text relative z-10">
                 {{ analysis.bbfs }}
             </div>
             <div class="mt-6 flex justify-center gap-4">
-                <span class="text-[8px] px-3 py-1 bg-cyan-500/10 rounded text-cyan-400 font-bold uppercase tracking-widest">Statistic: Pass</span>
-                <span class="text-[8px] px-3 py-1 bg-cyan-500/10 rounded text-cyan-400 font-bold uppercase tracking-widest">Shadow: Pass</span>
+                <span class="text-[8px] px-3 py-1 bg-amber-500/10 rounded text-amber-400 font-bold uppercase tracking-widest">Statistical Power: 99%</span>
+                <span class="text-[8px] px-3 py-1 bg-amber-500/10 rounded text-amber-400 font-bold uppercase tracking-widest">Holy Verification: Pass</span>
             </div>
         </div>
 
         <div class="space-y-8 relative z-10">
-            <div class="glass-panel p-5 border-l-4 border-cyan-500">
+            <div class="glass-panel p-5 border-l-4 border-amber-500">
                 <div class="flex items-center gap-3 mb-5">
-                    <span class="bg-cyan-500 text-black text-[10px] font-black px-3 py-1 rounded-sm uppercase">2D Sniper</span>
-                    <span class="text-[9px] text-cyan-500/60 font-bold tracking-[3px] uppercase">Omni-Verified</span>
+                    <span class="bg-amber-500 text-black text-[10px] font-black px-3 py-1 rounded-sm uppercase">2D Sniper GOD</span>
+                    <span class="text-[9px] text-amber-500/60 font-bold tracking-[3px] uppercase">Elite-Funneling</span>
                 </div>
                 <div class="grid-sniper">
                     {% for n in analysis.top2 %}
                     <div class="num-2d bg-white/5 p-3 rounded-xl text-center font-angka text-xl sm:text-2xl font-black border transition-all
                         {% if loop.index <= 5 %} 
-                            border-amber-500/40 shadow-[0_0_20px_rgba(245,158,11,0.2)] text-amber-400 glow-gold
+                            border-amber-500 shadow-[0_0_25px_rgba(245,158,11,0.3)] text-amber-400 glow-gold
                         {% else %}
-                            border-white/5 text-white/80
+                            border-white/10 text-white/90
                         {% endif %}">
                         {{ n }}
                     </div>
@@ -213,22 +215,22 @@
             </div>
 
             <div class="grid grid-cols-2 gap-4">
-                <div class="glass-panel p-5 border-l-4 border-blue-600">
-                    <div class="text-[10px] font-black text-blue-500 mb-4 tracking-[3px] uppercase italic">3D Matrix</div>
+                <div class="glass-panel p-5 border-l-4 border-cyan-500">
+                    <div class="text-[10px] font-black text-cyan-400 mb-4 tracking-[3px] uppercase italic">3D Matrix</div>
                     <div class="space-y-3">
-                        {% for n in analysis.top3[:10] %}
-                        <div class="text-xl sm:text-2xl font-angka font-black text-blue-100 tracking-[1px] border-b border-blue-500/10 pb-1 italic flex justify-between">
-                            <span class="text-blue-500/50 text-[10px] mt-2">#{{ loop.index }}</span> {{ n }}
+                        {% for n in analysis.top3 %}
+                        <div class="text-xl sm:text-2xl font-angka font-black text-blue-100 tracking-[1px] border-b border-cyan-500/10 pb-1 italic flex justify-between">
+                            <span class="text-cyan-500/50 text-[10px] mt-2">#{{ loop.index }}</span> {{ n }}
                         </div>
                         {% endfor %}
                     </div>
                 </div>
-                <div class="glass-panel p-5 border-l-4 border-amber-600">
+                <div class="glass-panel p-5 border-l-4 border-amber-500">
                     <div class="text-[10px] font-black text-amber-500 mb-4 tracking-[3px] uppercase italic">4D Master</div>
                     <div class="space-y-3">
-                        {% for n in analysis.top4[:10] %}
-                        <div class="text-xl sm:text-2xl font-angka font-black text-amber-500 glow-gold tracking-tight border-b border-amber-500/10 pb-1 italic flex justify-between">
-                            <span class="text-amber-500/30 text-[10px] mt-2">FIX</span> {{ n }}
+                        {% for n in analysis.top4 %}
+                        <div class="text-xl sm:text-2xl font-angka font-black text-amber-500 glow-gold tracking-tight border-b border-amber-500/20 pb-1 italic flex justify-between">
+                            <span class="text-amber-500/40 text-[10px] mt-2">GOD</span> {{ n }}
                         </div>
                         {% endfor %}
                     </div>
@@ -239,7 +241,7 @@
         <div class="mt-12 pt-8 border-t border-white/10 flex justify-between items-end relative z-10">
             <div>
                 <div class="text-[9px] text-gray-500 uppercase font-black tracking-widest mb-2">Primary Shio</div>
-                <div class="text-2xl font-orbitron font-black text-white tracking-tighter">{{ analysis.shio }}</div>
+                <div class="text-2xl font-orbitron font-black text-amber-500 tracking-tighter uppercase">{{ analysis.shio }}</div>
             </div>
             <div class="text-right">
                 <div class="text-[9px] text-gray-500 uppercase font-black tracking-widest mb-2 text-right">Colok Macau</div>
@@ -247,27 +249,27 @@
             </div>
         </div>
         
-        <div class="mt-10 text-center opacity-20 relative z-10">
-            <div class="text-[7px] text-white font-bold tracking-[15px] uppercase">Neural-Network Layer V24.8.2</div>
+        <div class="mt-10 text-center opacity-30 relative z-10">
+            <div class="text-[8px] text-white font-bold tracking-[15px] uppercase">GOD-LAYER DECRYPTOR V24.8.2</div>
         </div>
     </div>
 
     <div class="mt-10 grid grid-cols-2 gap-6 pb-24 px-2">
         <button onclick="copyAnalysis()" class="group relative bg-[#0f1419] p-5 rounded-[24px] border border-white/10 transition-all hover:bg-black">
-            <span class="relative z-10 font-black uppercase text-[10px] tracking-[3px] text-cyan-500/70">Copy Signal</span>
-            <div class="absolute inset-0 rounded-[24px] bg-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <span class="relative z-10 font-black uppercase text-[10px] tracking-[3px] text-amber-500/80">Copy Signal</span>
+            <div class="absolute inset-0 rounded-[24px] bg-amber-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
         </button>
-        <button id="ss-btn" onclick="takeScreenshot()" class="bg-gradient-to-r from-cyan-600 to-blue-700 text-white p-5 rounded-[24px] font-black uppercase text-[10px] tracking-[3px] shadow-[0_20px_40px_rgba(0,114,255,0.25)] hover:brightness-110 active:scale-95 transition-all">
-            Export PNG
+        <button id="ss-btn" onclick="takeScreenshot()" class="bg-gradient-to-r from-amber-600 to-orange-700 text-white p-5 rounded-[24px] font-black uppercase text-[10px] tracking-[3px] shadow-[0_20px_40px_rgba(245,158,11,0.25)] hover:brightness-110 active:scale-95 transition-all">
+            Export PNG Ultra HD
         </button>
     </div>
 
     <textarea id="copyTarget" class="hidden">
-🚀 *MAMANG ENGINE V.24.8* 🚀
+🚀 *MAMANG ENGINE V.24.8 [GOD MODE]* 🚀
 *OMNI-INTELLIGENCE SIGNAL*
 ---------------------------------------
 🎯 *MARKET:* {{ selected | upper }}
-📅 *VER:* {{ analysis.version }}
+📅 *VER:* V24.8 [GOD-LAYER]
 ---------------------------------------
 🎰 *LAST RESULT:* {{ analysis.last_res }}
 ---------------------------------------
@@ -275,7 +277,7 @@
 ✅ *AI:* {{ analysis.ai | join(' ') }}
 🔥 *BBFS:* [ {{ analysis.bbfs }} ]
 ---------------------------------------
-🐯 *SHIO:* {{ analysis.shio }}
+🐯 *SHIO:* {{ analysis.shio | upper }}
 💎 *MACAU:* {{ analysis.macau }}
 ---------------------------------------
 📌 *TOP 2D SNIPER:*
@@ -288,7 +290,7 @@
 `{{ analysis.top4 | join(' - ') }}`
 ---------------------------------------
 ⚠️ *Pesan:* Utamakan Prediksi Sendiri.
-Sistem: Omni-Source Verification Layer.
+Sistem: Holy Verification Layer (GOD MODE).
 ---------------------------------------
     </textarea>
     {% endif %} 
@@ -309,7 +311,7 @@ Sistem: Omni-Source Verification Layer.
         copyText.select();
         document.execCommand("copy");
         copyText.classList.add('hidden');
-        alert("✅ SIGNAL COPIED!\nOmni-Intelligence siap dibagikan.");
+        alert("✅ GOD MODE SIGNAL COPIED!\nSiap guncang bandot.");
     }
 
     async function takeScreenshot() {
@@ -317,28 +319,33 @@ Sistem: Omni-Source Verification Layer.
         const btn = document.getElementById('ss-btn');
         if(!area) return;
         
+        // Ambil nama market dari elemen H2 atau kirim dari server
+        const marketName = document.querySelector('h2').innerText || "ANALYSIS";
+        
         window.scrollTo(0,0);
-        btn.innerText = "DECRYPTING...";
+        btn.innerText = "RENDERING ULTRA HD...";
         btn.disabled = true;
 
         try {
             const canvas = await html2canvas(area, {
                 backgroundColor: '#020406',
-                scale: 3,
+                scale: 4, 
                 logging: false,
                 useCORS: true,
                 allowTaint: true,
-                borderRadius: 40
+                imageTimeout: 0
             });
 
             const link = document.createElement('a');
-            link.download = `OMNI_SNIPER_${Date.now()}.png`;
+            // Gunakan variabel marketName yang sudah didefinisikan di atas
+            link.download = `GOD_MODE_${marketName}_${Date.now()}.png`;
             link.href = canvas.toDataURL("image/png", 1.0);
             link.click();
         } catch (err) {
+            console.error(err);
             alert("Capture Failed: " + err);
         } finally {
-            btn.innerText = "Export PNG";
+            btn.innerText = "Export PNG Ultra HD";
             btn.disabled = false;
         }
     }
