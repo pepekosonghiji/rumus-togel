@@ -16,16 +16,12 @@
             margin: 0; padding: 10px;
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            image-rendering: -webkit-optimize-contrast; /* Menajamkan gambar untuk Chrome */
         }
         .font-orbitron { font-family: 'Orbitron', sans-serif; }
         .font-angka { font-family: 'JetBrains Mono', monospace; letter-spacing: -1px; }
 
-        /* Penyesuaian Kontainer agar Rapih di Android & Desktop */
         .main-container { width: 100%; max-width: 500px; margin: 0 auto; }
 
-        /* WATERMARK OVERLAY - GOD MODE TUNING */
         .watermark-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -97,7 +93,6 @@
             position: relative; z-index: 10;
         }
 
-        /* Grid Responsive Fix for Mobile */
         .grid-sniper {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
@@ -132,7 +127,7 @@
                 </select>
                 <div class="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none opacity-50">▼</div>
             </div>
-            <button type="submit" class="w-full bg-gradient-to-r from-amber-500 to-orange-700 text-white p-5 rounded-2xl font-black uppercase text-[11px] tracking-[5px] shadow-[0_10px_30px_rgba(245,158,11,0.3)] hover:scale-[1.02] transition-transform active:scale-[0.98]">
+            <button type="submit" class="w-full bg-gradient-to-r from-amber-500 to-orange-700 text-white p-5 rounded-2xl font-black uppercase text-[11px] tracking-[5px] shadow-[0_10px_30_rgba(245,158,11,0.3)] hover:scale-[1.02] transition-transform active:scale-[0.98]">
                 ACTIVATE GOD DECRYPTOR
             </button>
         </form>
@@ -146,7 +141,7 @@
             {% endfor %}
         </div>
 
-        <div class="flex justify-between items-start mb-12 relative z-10">
+        <div class="flex justify-between items-start mb-10 relative z-10">
             <div class="max-w-[65%]">
                 <div class="badge-god mb-4 inline-block">GOD MODE ACTIVE</div>
                 <h2 class="text-4xl sm:text-5xl font-orbitron font-black text-white leading-none tracking-tighter uppercase mb-2">{{ selected }}</h2>
@@ -163,7 +158,7 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-4 mb-10 relative z-10">
+        <div class="grid grid-cols-2 gap-4 mb-8 relative z-10">
             <div class="num-card">
                 <div class="text-[9px] text-cyan-400 font-black uppercase mb-4 tracking-[3px] border-b border-cyan-500/20 pb-2 italic text-center">DIVINE AM</div>
                 <div class="flex justify-around items-center px-1">
@@ -182,29 +177,25 @@
             </div>
         </div>
 
-        <div class="num-card bg-gradient-to-b from-[#0d1721] to-black p-8 mb-10 border-2 border-amber-500/30 relative z-10 overflow-hidden shadow-2xl text-center">
+        <div class="num-card bg-gradient-to-b from-[#0d1721] to-black p-6 mb-8 border-2 border-amber-500/30 relative z-10 overflow-hidden shadow-2xl text-center">
             <div class="absolute right-2 top-2 opacity-5 font-black text-6xl italic">GOD</div>
-            <span class="text-[10px] font-black text-amber-400 tracking-[8px] uppercase block mb-6">DECRYPTED BBFS</span>
+            <span class="text-[10px] font-black text-amber-400 tracking-[8px] uppercase block mb-4">DECRYPTED BBFS</span>
             <div class="text-5xl sm:text-6xl font-angka font-black text-white tracking-[8px] sm:tracking-[12px] glow-text relative z-10">
                 {{ analysis.bbfs }}
             </div>
-            <div class="mt-6 flex justify-center gap-4">
-                <span class="text-[8px] px-3 py-1 bg-amber-500/10 rounded text-amber-400 font-bold uppercase tracking-widest">Statistical Power: 99%</span>
-                <span class="text-[8px] px-3 py-1 bg-amber-500/10 rounded text-amber-400 font-bold uppercase tracking-widest">Holy Verification: Pass</span>
-            </div>
         </div>
 
-        <div class="space-y-8 relative z-10">
+        <div class="space-y-6 relative z-10">
             <div class="glass-panel p-5 border-l-4 border-amber-500">
                 <div class="flex items-center gap-3 mb-5">
-                    <span class="bg-amber-500 text-black text-[10px] font-black px-3 py-1 rounded-sm uppercase">2D Sniper GOD</span>
-                    <span class="text-[9px] text-amber-500/60 font-bold tracking-[3px] uppercase">Elite-Funneling</span>
+                    <span class="bg-amber-500 text-black text-[10px] font-black px-3 py-1 rounded-sm uppercase">2D Sniper</span>
+                    <span class="text-[9px] text-amber-500/60 font-bold tracking-[3px] uppercase italic">Verified</span>
                 </div>
                 <div class="grid-sniper">
                     {% for n in analysis.top2 %}
                     <div class="num-2d bg-white/5 p-3 rounded-xl text-center font-angka text-xl sm:text-2xl font-black border transition-all
                         {% if loop.index <= 5 %} 
-                            border-amber-500 shadow-[0_0_25px_rgba(245,158,11,0.3)] text-amber-400 glow-gold
+                            border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.2)] text-amber-400 glow-gold
                         {% else %}
                             border-white/10 text-white/90
                         {% endif %}">
@@ -214,42 +205,37 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
-                <div class="glass-panel p-5 border-l-4 border-cyan-500">
-                    <div class="text-[10px] font-black text-cyan-400 mb-4 tracking-[3px] uppercase italic">3D Matrix</div>
-                    <div class="space-y-3">
-                        {% for n in analysis.top3 %}
-                        <div class="text-xl sm:text-2xl font-angka font-black text-blue-100 tracking-[1px] border-b border-cyan-500/10 pb-1 italic flex justify-between">
-                            <span class="text-cyan-500/50 text-[10px] mt-2">#{{ loop.index }}</span> {{ n }}
-                        </div>
-                        {% endfor %}
+            <div class="glass-panel p-5 border-l-4 border-cyan-500 shadow-[0_0_30px_rgba(0,242,255,0.03)]">
+                <div class="flex justify-between items-center mb-5">
+                    <div class="flex items-center gap-3">
+                        <span class="bg-cyan-500 text-black text-[10px] font-black px-3 py-1 rounded-sm uppercase">4D Master Analysis</span>
+                        <span class="text-[9px] text-cyan-400/60 font-bold tracking-[3px] uppercase italic">Omni-Layer</span>
                     </div>
                 </div>
-                <div class="glass-panel p-5 border-l-4 border-amber-500">
-                    <div class="text-[10px] font-black text-amber-500 mb-4 tracking-[3px] uppercase italic">4D Master</div>
-                    <div class="space-y-3">
-                        {% for n in analysis.top4 %}
-                        <div class="text-xl sm:text-2xl font-angka font-black text-amber-500 glow-gold tracking-tight border-b border-amber-500/20 pb-1 italic flex justify-between">
-                            <span class="text-amber-500/40 text-[10px] mt-2">GOD</span> {{ n }}
-                        </div>
-                        {% endfor %}
+                
+                <div class="grid grid-cols-2 gap-x-12 gap-y-3">
+                    {% for n in analysis.top4 %}
+                    <div class="text-2xl sm:text-3xl font-angka font-black text-white tracking-tighter border-b border-cyan-500/10 pb-2 italic flex justify-between items-center">
+                        <span class="text-cyan-500/40 text-[10px] font-orbitron not-italic">#{{ loop.index }}</span>
+                        <span class="text-amber-500 glow-gold">{{ n }}</span>
                     </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
 
-        <div class="mt-12 pt-8 border-t border-white/10 flex justify-between items-end relative z-10">
+        <div class="mt-10 pt-6 border-t border-white/10 flex justify-between items-end relative z-10">
             <div>
-                <div class="text-[9px] text-gray-500 uppercase font-black tracking-widest mb-2">Primary Shio</div>
+                <div class="text-[9px] text-gray-500 uppercase font-black tracking-widest mb-1">Primary Shio</div>
                 <div class="text-2xl font-orbitron font-black text-amber-500 tracking-tighter uppercase">{{ analysis.shio }}</div>
             </div>
             <div class="text-right">
-                <div class="text-[9px] text-gray-500 uppercase font-black tracking-widest mb-2 text-right">Colok Macau</div>
+                <div class="text-[9px] text-gray-500 uppercase font-black tracking-widest mb-1 text-right">Colok Macau</div>
                 <div class="text-2xl font-angka font-black text-cyan-400 glow-text">{{ analysis.macau }}</div>
             </div>
         </div>
         
-        <div class="mt-10 text-center opacity-30 relative z-10">
+        <div class="mt-8 text-center opacity-30 relative z-10">
             <div class="text-[8px] text-white font-bold tracking-[15px] uppercase">GOD-LAYER DECRYPTOR V24.8.2</div>
         </div>
     </div>
@@ -282,9 +268,6 @@
 ---------------------------------------
 📌 *TOP 2D SNIPER:*
 `{{ analysis.top2 | join(' - ') }}`
-
-📌 *TOP 3D LURUS:*
-`{{ analysis.top3 | join(' - ') }}`
 
 📌 *TOP 4D MASTER:*
 `{{ analysis.top4 | join(' - ') }}`
@@ -319,7 +302,6 @@ Sistem: Holy Verification Layer (GOD MODE).
         const btn = document.getElementById('ss-btn');
         if(!area) return;
         
-        // Ambil nama market dari elemen H2 atau kirim dari server
         const marketName = document.querySelector('h2').innerText || "ANALYSIS";
         
         window.scrollTo(0,0);
@@ -337,7 +319,6 @@ Sistem: Holy Verification Layer (GOD MODE).
             });
 
             const link = document.createElement('a');
-            // Gunakan variabel marketName yang sudah didefinisikan di atas
             link.download = `GOD_MODE_${marketName}_${Date.now()}.png`;
             link.href = canvas.toDataURL("image/png", 1.0);
             link.click();
