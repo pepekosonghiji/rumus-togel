@@ -3,231 +3,264 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MAMANG V.18 - QUANTUM EDITION</title>
+    <title>MAMANG V.24.8 - OMNI INTELLIGENCE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;900&family=Rajdhani:wght@500;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Rajdhani:wght@500;700&family=JetBrains+Mono:wght@800&display=swap" rel="stylesheet">
     <style>
-        :root { --neon: #ff003c; --bg: #050608; --cyan: #00f2ff; }
+        :root { --neon: #00f2ff; --bg: #020406; --gold: #f59e0b; --crimson: #ff003c; --matrix: #00ff41; }
         body { 
             background: var(--bg); 
             color: #e2e8f0; 
             font-family: 'Rajdhani', sans-serif;
             margin: 0; padding: 10px;
+            overflow-x: hidden;
         }
         .font-orbitron { font-family: 'Orbitron', sans-serif; }
-        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .font-angka { font-family: 'JetBrains Mono', monospace; letter-spacing: -1px; }
+
         .main-container { max-width: 500px; margin: 0 auto; }
 
-        #capture-area { 
-            background: radial-gradient(circle at top right, #1a0b0b, #0d1117);
-            border-radius: 28px; 
-            padding: 24px;
-            width: 100%;
-            box-sizing: border-box;
-            border: 2px solid rgba(255, 0, 60, 0.1);
-            position: relative;
-            overflow: hidden;
+        /* UPGRADED SCANLINE & HUD EFFECT */
+        #capture-area::before {
+            content: " ";
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.05), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.05));
+            z-index: 5; background-size: 100% 4px, 4px 100%; pointer-events: none;
+            opacity: 0.6;
         }
 
-        .bbfs-card {
-            background: rgba(255, 0, 60, 0.05);
-            border: 1px solid rgba(255, 0, 60, 0.2);
-            box-shadow: inset 0 0 20px rgba(255, 0, 60, 0.1);
+        #capture-area { 
+            background: radial-gradient(circle at 50% 0%, #101e2c 0%, #050608 100%); 
+            border-radius: 40px; 
+            padding: 35px;
+            width: 100%;
+            box-sizing: border-box;
+            border: 2px solid rgba(0, 242, 255, 0.15);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 80px rgba(0, 0, 0, 1), inset 0 0 40px rgba(0, 242, 255, 0.05);
+        }
+
+        .badge-omni {
+            background: linear-gradient(90deg, #00c6ff 0%, #0072ff 100%);
+            color: white; font-size: 10px; padding: 4px 14px;
+            border-radius: 8px; font-weight: 900; letter-spacing: 2.5px;
+            box-shadow: 0 0 25px rgba(0, 198, 255, 0.4);
+            text-shadow: 0 0 5px rgba(255,255,255,0.5);
         }
 
         .num-card {
-            background: rgba(0, 0, 0, 0.6);
-            border-bottom: 2px solid var(--neon);
-            border-radius: 12px;
-            padding: 12px 5px;
-            text-align: center;
+            background: rgba(13, 17, 23, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 242, 255, 0.1);
+            border-radius: 24px;
+            padding: 18px 12px;
+            position: relative;
         }
 
-        .shadow-badge {
-            background: linear-gradient(90deg, #450a0a, #000);
-            border: 1px solid var(--neon);
-            color: #ff4d79;
-            font-size: 8px;
-            padding: 2px 10px;
-            border-radius: 4px;
-            text-transform: uppercase;
-            font-weight: 900;
-        }
-        
-        .glow-text-red { text-shadow: 0 0 15px rgba(255, 0, 60, 0.6); }
-        .glow-text-cyan { text-shadow: 0 0 15px rgba(0, 242, 255, 0.6); }
+        .glow-text { text-shadow: 0 0 20px rgba(0, 242, 255, 0.8); }
+        .glow-gold { text-shadow: 0 0 20px rgba(245, 158, 11, 0.6); }
 
-        .btn-quantum {
-            background: linear-gradient(135deg, #ff003c 0%, #990024 100%);
-            box-shadow: 0 4px 15px rgba(255, 0, 60, 0.3);
-            transition: all 0.2s ease;
+        .verif-bar {
+            height: 2px;
+            background: linear-gradient(90deg, var(--neon), transparent);
+            width: 100%; margin-top: 8px;
+            box-shadow: 0 0 10px var(--neon);
         }
-        .btn-quantum:active { transform: scale(0.95); box-shadow: 0 2px 5px rgba(255, 0, 60, 0.5); }
+
+        .glass-panel {
+            background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 24px;
+        }
     </style>
 </head>
 <body>
 
 <div class="main-container">
-    
-    <div class="bg-gray-900/60 p-5 rounded-3xl mb-4 border border-white/5 backdrop-blur-md shadow-2xl">
-        <form method="POST" class="space-y-4">
+    <div class="bg-[#0a0d12] p-7 rounded-[40px] mb-8 border border-white/5 shadow-2xl relative overflow-hidden">
+        <div class="absolute top-0 right-0 p-4 opacity-10">
+            <svg width="60" height="60" viewBox="0 0 24 24" fill="white"><path d="M12 2L4.5 20.29L5.21 21L12 18L18.79 21L19.5 20.29L12 2Z"/></svg>
+        </div>
+        <div class="flex items-center gap-4 mb-6">
             <div class="relative">
-                <select name="market" class="w-full bg-black/80 text-white p-4 rounded-2xl border border-gray-700 outline-none font-bold uppercase text-base tracking-widest appearance-none">
+                <div class="w-3 h-3 bg-cyan-500 rounded-full animate-ping absolute"></div>
+                <div class="w-3 h-3 bg-cyan-500 rounded-full relative"></div>
+            </div>
+            <h1 class="text-xl font-orbitron font-black tracking-[4px] text-white">CORE <span class="text-cyan-500">V.24.8</span></h1>
+        </div>
+        <form method="POST" class="space-y-5">
+            <div class="relative">
+                <select name="market" class="w-full bg-black/80 text-white p-5 rounded-2xl border border-white/10 outline-none font-bold uppercase text-sm tracking-[2px] focus:border-cyan-500 transition-all appearance-none cursor-pointer">
                     {% for m in markets %}
                     <option value="{{ m }}" {% if selected == m %}selected{% endif %}>{{ m }}</option>
                     {% endfor %}
                 </select>
-                <div class="absolute right-4 top-1/2 -translate-y-1/2 text-neon text-[10px]">▼</div>
+                <div class="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none opacity-50">▼</div>
             </div>
-            <button type="submit" class="btn-quantum w-full text-white p-5 rounded-2xl font-black uppercase text-xs tracking-[3px]">
-                Initiate Quantum V18.2
+            <button type="submit" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white p-5 rounded-2xl font-black uppercase text-[11px] tracking-[5px] shadow-[0_10px_30px_rgba(0,114,255,0.3)] hover:scale-[1.02] transition-transform active:scale-[0.98]">
+                INITIALIZE OMNI DECRYPTOR
             </button>
         </form>
     </div>
 
-    {% if analysis == "error" %}
-    <div class="p-4 bg-red-950/40 border-2 border-red-500 rounded-2xl text-center text-red-400 font-bold uppercase text-xs animate-pulse">
-        System Malfunction: Data Insufficient
-    </div>
-    {% elif analysis %}
-
+    {% if analysis %}
     <div id="capture-area">
-        <div class="absolute -bottom-10 -left-10 opacity-5 pointer-events-none">
-            <h1 class="text-9xl font-black font-orbitron text-white">V18</h1>
-        </div>
-
-        <div class="flex justify-between items-end border-b-2 border-gray-800/50 pb-6 mb-6">
-            <div>
-                <div class="flex items-center gap-2 mb-3">
-                    <div class="shadow-badge">QUANTUM CORE</div>
-                    <div class="text-[9px] text-gray-500 font-bold tracking-[2px] uppercase">Encrypted Analysis</div>
-                </div>
-                <h2 class="text-4xl font-orbitron font-black text-white uppercase tracking-tight glow-text-red leading-none">{{ selected }}</h2>
-                <div id="date-now" class="text-[10px] text-neon mt-2 font-bold uppercase tracking-widest opacity-80"></div>
+        <div class="flex justify-between items-start mb-12 relative z-10">
+            <div class="max-w-[65%]">
+                <div class="badge-omni mb-4 inline-block uppercase">Omni-Intelligence</div>
+                <h2 class="text-5xl font-orbitron font-black text-white leading-none tracking-tighter uppercase mb-2">{{ selected }}</h2>
+                <div id="date-now" class="text-[10px] text-cyan-400 font-bold uppercase tracking-[4px]"></div>
+                <div class="verif-bar"></div>
             </div>
             <div class="text-right">
-                <div class="text-[10px] text-gray-500 uppercase font-black mb-1">Prize 1 Result</div>
-                <div class="text-3xl font-bold text-white font-mono tracking-tighter glow-text-cyan">{{ analysis.last_res }}</div>
-                <div class="text-[8px] text-gray-600 font-bold uppercase mt-1">
-                    {% if analysis.p2_last %} P2: {{ analysis.p2_last }} | P3: {{ analysis.p3_last }} {% else %} MODE: DEEP EXTRACTION P1 {% endif %}
+                <div class="text-[9px] text-cyan-500/50 uppercase font-black mb-1 tracking-widest">Master Result</div>
+                <div class="text-5xl font-angka font-black text-white glow-text">{{ analysis.last_res }}</div>
+                <div class="flex gap-2 justify-end mt-2 opacity-40 font-angka text-[9px] font-bold text-white">
+                    <span>P2:{{ analysis.p2_last }}</span>
+                    <span>P3:{{ analysis.p3_last }}</span>
                 </div>
             </div>
         </div>
 
-        <div class="grid grid-cols-3 gap-4 mb-6">
+        <div class="grid grid-cols-2 gap-5 mb-10 relative z-10">
             <div class="num-card">
-                <div class="text-[9px] text-gray-500 font-bold mb-2 uppercase tracking-tighter">A.Main</div>
-                <div class="text-2xl font-black text-white tracking-widest">{{ analysis.am }}</div>
+                <div class="text-[9px] text-cyan-500 font-black uppercase mb-4 tracking-[3px] border-b border-cyan-500/10 pb-2 italic">ELITE AM</div>
+                <div class="flex justify-around items-center">
+                    {% for char in analysis.am %}
+                    <span class="text-3xl font-angka font-black text-white">{{ char }}</span>
+                    {% endfor %}
+                </div>
             </div>
-            <div class="num-card" style="border-color: #00f2ff;">
-                <div class="text-[9px] text-cyan-600 font-bold mb-2 uppercase tracking-tighter">A.Ikut</div>
-                <div class="text-2xl font-black text-white tracking-widest">{{ analysis.ai }}</div>
-            </div>
-            <div class="num-card" style="border-color: #ff003c;">
-                <div class="text-[9px] text-neon font-bold mb-2 uppercase tracking-tighter">Biji</div>
-                <div class="text-2xl font-black text-neon">09</div>
+            <div class="num-card">
+                <div class="text-[9px] text-amber-500 font-black uppercase mb-4 tracking-[3px] border-b border-amber-500/10 pb-2 italic">TARGET AI</div>
+                <div class="flex justify-around items-center">
+                    {% for char in analysis.ai %}
+                    <span class="text-3xl font-angka font-black text-amber-500 glow-gold">{{ char }}</span>
+                    {% endfor %}
+                </div>
             </div>
         </div>
 
-        <div class="bbfs-card p-6 rounded-3xl mb-8 relative overflow-hidden">
-            <div class="flex justify-between items-center mb-4 relative z-10">
-                <div class="text-[10px] text-gray-400 font-black tracking-[4px]">BBFS QUANTUM 6D</div>
-                <div class="h-1.5 w-1.5 bg-neon rounded-full animate-ping"></div>
-            </div>
-            <div class="text-6xl font-black text-white tracking-[8px] font-mono text-center glow-text-red relative z-10">
+        <div class="num-card bg-gradient-to-b from-[#0d1721] to-black p-8 mb-10 border-2 border-cyan-500/20 relative z-10 overflow-hidden shadow-2xl text-center">
+            <div class="absolute right-2 top-2 opacity-5 font-black text-6xl italic">OMNI</div>
+            <span class="text-[10px] font-black text-cyan-400 tracking-[8px] uppercase block mb-6">DECRYPTED BBFS</span>
+            <div class="text-6xl font-angka font-black text-white tracking-[12px] glow-text relative z-10 ml-3">
                 {{ analysis.bbfs }}
             </div>
-        </div>
-
-        <div class="grid grid-cols-3 gap-4 mb-8">
-            <div class="bg-gray-900/40 p-3 rounded-xl border border-gray-800 text-center">
-                <div class="text-[8px] text-gray-500 font-bold uppercase mb-1">SHIO</div>
-                <div class="text-xs font-black text-white uppercase italic">{{ analysis.shio }}</div>
-            </div>
-            <div class="bg-gray-900/40 p-3 rounded-xl border border-gray-800 text-center">
-                <div class="text-[8px] text-gray-500 font-bold uppercase mb-1">MACAU</div>
-                <div class="text-xs font-black text-cyan-400">{{ analysis.macau }}</div>
-            </div>
-            <div class="bg-gray-900/40 p-3 rounded-xl border border-gray-800 text-center">
-                <div class="text-[8px] text-gray-500 font-bold uppercase mb-1">TWIN</div>
-                <div class="text-xs font-black text-neon">{{ analysis.twin }}</div>
+            <div class="mt-6 flex justify-center gap-4">
+                <span class="text-[8px] px-3 py-1 bg-cyan-500/10 rounded text-cyan-400 font-bold uppercase tracking-widest">Statistic: Pass</span>
+                <span class="text-[8px] px-3 py-1 bg-cyan-500/10 rounded text-cyan-400 font-bold uppercase tracking-widest">Shadow: Pass</span>
             </div>
         </div>
 
-        <div class="space-y-8">
-            <div>
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="h-[1px] flex-1 bg-gradient-to-r from-transparent to-gray-800"></div>
-                    <div class="text-[10px] text-neon font-black uppercase tracking-[3px]">2D Jitu Sniper</div>
-                    <div class="h-[1px] flex-1 bg-gradient-to-l from-transparent to-gray-800"></div>
+        <div class="space-y-8 relative z-10">
+            <div class="glass-panel p-6 border-l-4 border-cyan-500">
+                <div class="flex items-center gap-3 mb-5">
+                    <span class="bg-cyan-500 text-black text-[10px] font-black px-3 py-1 rounded-sm uppercase">2D Sniper</span>
+                    <span class="text-[9px] text-cyan-500/60 font-bold tracking-[3px] uppercase">Omni-Verified</span>
                 </div>
-                <div class="grid grid-cols-5 gap-2">
-                    {% for n in analysis.top2d %}
-                    <div class="bg-black/80 py-3 rounded-lg text-center font-mono text-sm text-white border border-gray-800 font-bold hover:border-neon transition-colors">{{ n }}</div>
+                <div class="grid grid-cols-5 gap-3">
+                    {% for n in analysis.top2 %}
+                    <div class="bg-white/5 p-3.5 rounded-xl text-center font-angka text-2xl font-black border transition-all
+                        {% if loop.index <= 5 %} 
+                            border-amber-500/40 shadow-[0_0_20px_rgba(245,158,11,0.2)] text-amber-400 glow-gold
+                        {% else %}
+                            border-white/5 text-white/80
+                        {% endif %}">
+                        {{ n }}
+                    </div>
                     {% endfor %}
                 </div>
             </div>
 
             <div class="grid grid-cols-2 gap-6">
-                <div>
-                    <div class="text-[9px] text-gray-500 font-black uppercase mb-3 tracking-widest">3D Quantum</div>
-                    <div class="space-y-2">
-                        {% for n in analysis.top3d %}
-                        <div class="bg-gray-900/50 p-2 rounded-lg text-center font-mono text-xs text-cyan-200 border border-cyan-900/20 font-bold">{{ n }}</div>
+                <div class="glass-panel p-6 border-l-4 border-blue-600">
+                    <div class="text-[10px] font-black text-blue-500 mb-4 tracking-[3px] uppercase italic">3D Matrix</div>
+                    <div class="space-y-3">
+                        {% for n in analysis.top3[:10] %}
+                        <div class="text-2xl font-angka font-black text-blue-100 tracking-[3px] border-b border-blue-500/10 pb-1 italic flex justify-between">
+                            <span class="text-blue-500/50 text-[10px] mt-2">#{{ loop.index }}</span> {{ n }}
+                        </div>
                         {% endfor %}
                     </div>
                 </div>
-                <div>
-                    <div class="text-[9px] text-gray-500 font-black uppercase mb-3 tracking-widest">4D Titanium</div>
-                    <div class="space-y-2">
-                        {% for n in analysis.top4d %}
-                        <div class="bg-gray-900/50 p-2 rounded-lg text-center font-mono text-xs text-neon border border-neon/10 font-bold">{{ n }}</div>
+                <div class="glass-panel p-6 border-l-4 border-amber-600">
+                    <div class="text-[10px] font-black text-amber-500 mb-4 tracking-[3px] uppercase italic">4D Master</div>
+                    <div class="space-y-3">
+                        {% for n in analysis.top4[:10] %}
+                        <div class="text-2xl font-angka font-black text-amber-500 glow-gold tracking-tight border-b border-amber-500/10 pb-1 italic flex justify-between">
+                            <span class="text-amber-500/30 text-[10px] mt-2">FIX</span> {{ n }}
+                        </div>
                         {% endfor %}
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="mt-10 pt-4 border-t border-gray-800/40 text-center">
-            <div class="text-[8px] text-gray-700 uppercase tracking-[8px] font-black">Quantum Edition V18.2 Secured by Titanium</div>
+        <div class="mt-12 pt-8 border-t border-white/10 flex justify-between items-end relative z-10">
+            <div>
+                <div class="text-[9px] text-gray-500 uppercase font-black tracking-widest mb-2">Primary Shio</div>
+                <div class="text-2xl font-orbitron font-black text-white tracking-tighter">{{ analysis.shio }}</div>
+            </div>
+            <div class="text-right">
+                <div class="text-[9px] text-gray-500 uppercase font-black tracking-widest mb-2">Colok Macau</div>
+                <div class="text-2xl font-angka font-black text-cyan-400 glow-text">{{ analysis.macau }}</div>
+            </div>
+        </div>
+        
+        <div class="mt-10 text-center opacity-20 relative z-10">
+            <div class="text-[7px] text-white font-bold tracking-[15px] uppercase">Neural-Network Layer V24.8.2</div>
         </div>
     </div>
 
-    <div class="mt-8 flex flex-col gap-4 pb-16 px-2">
-        <button id="ss-btn" onclick="takeScreenshot()" class="btn-quantum w-full p-6 text-white rounded-3xl font-black uppercase text-sm tracking-[4px]">
-            SAVE ULTRA HD IMAGE
+    <div class="mt-10 grid grid-cols-2 gap-6 pb-24 px-2">
+        <button onclick="copyAnalysis()" class="group relative bg-[#0f1419] p-5 rounded-[24px] border border-white/10 transition-all hover:bg-black">
+            <span class="relative z-10 font-black uppercase text-[10px] tracking-[3px] text-cyan-500/70">Copy Signal</span>
+            <div class="absolute inset-0 rounded-[24px] bg-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
         </button>
-        <button onclick="copyAnalysis()" class="w-full p-4 bg-transparent text-gray-500 rounded-2xl border border-gray-800 font-bold uppercase text-[9px] tracking-widest hover:bg-white/5">
-            Copy Raw Data
+        <button id="ss-btn" onclick="takeScreenshot()" class="bg-gradient-to-r from-cyan-600 to-blue-700 text-white p-5 rounded-[24px] font-black uppercase text-[10px] tracking-[3px] shadow-[0_20px_40px_rgba(0,114,255,0.25)] hover:brightness-110 active:scale-95 transition-all">
+            Export PNG
         </button>
     </div>
 
     <textarea id="copyTarget" class="hidden">
-📊 QUANTUM ANALYSIS V18.2 [{{ selected }}]
-------------------------------------
-Result P1: {{ analysis.last_res }}
-------------------------------------
-AM: {{ analysis.am }} | AI: {{ analysis.ai }}
-BBFS: {{ analysis.bbfs }} (FIX 6D)
-SHIO: {{ analysis.shio }} | MACAU: {{ analysis.macau }}
-------------------------------------
-2D JITU: {{ analysis.top2d | join(', ') }}
-3D JITU: {{ analysis.top3d | join(', ') }}
-4D JITU: {{ analysis.top4d | join(', ') }}
-------------------------------------
-Quantum Penembak Jitu Secured
+🚀 *MAMANG ENGINE V.24.8* 🚀
+*OMNI-INTELLIGENCE SIGNAL*
+---------------------------------------
+🎯 *MARKET:* {{ selected | upper }}
+📅 *VER:* {{ analysis.version }}
+---------------------------------------
+🎰 *LAST RESULT:* {{ analysis.last_res }}
+---------------------------------------
+✅ *AM:* {{ analysis.am | join(' ') }}
+✅ *AI:* {{ analysis.ai | join(' ') }}
+🔥 *BBFS:* [ {{ analysis.bbfs }} ]
+---------------------------------------
+🐯 *SHIO:* {{ analysis.shio }}
+💎 *MACAU:* {{ analysis.macau }}
+---------------------------------------
+📌 *TOP 2D SNIPER:*
+`{{ analysis.top2 | join(' - ') }}`
+
+📌 *TOP 3D LURUS:*
+`{{ analysis.top3 | join(' - ') }}`
+
+📌 *TOP 4D MASTER:*
+`{{ analysis.top4 | join(' - ') }}`
+---------------------------------------
+⚠️ *Pesan:* Utamakan Prediksi Sendiri.
+Sistem: Omni-Source Verification Layer.
+---------------------------------------
     </textarea>
-    {% endif %}
-
-</div>
-
-<script>
+    {% endif %} </div> <script>
     function updateClock() {
         const d = new Date();
-        const options = { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+        const options = { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' };
         const el = document.getElementById('date-now');
-        if(el) el.innerText = d.toLocaleString('id-ID', options).replace('pukul ', '');
+        if(el) el.innerText = d.toLocaleString('id-ID', options);
     }
     updateClock();
 
@@ -237,34 +270,36 @@ Quantum Penembak Jitu Secured
         copyText.select();
         document.execCommand("copy");
         copyText.classList.add('hidden');
-        alert("QUANTUM Data Copied!");
+        alert("✅ SIGNAL COPIED!\nOmni-Intelligence siap dibagikan.");
     }
 
     async function takeScreenshot() {
         const area = document.getElementById('capture-area');
         const btn = document.getElementById('ss-btn');
+        if(!area) return;
+        
         window.scrollTo(0,0);
-        btn.innerText = "ENCODING QUANTUM HD...";
+        btn.innerText = "DECRYPTING...";
         btn.disabled = true;
 
         try {
             const canvas = await html2canvas(area, {
-                backgroundColor: '#050608',
+                backgroundColor: '#020406',
                 scale: 3,
                 logging: false,
                 useCORS: true,
                 allowTaint: true,
-                removeContainer: true
+                borderRadius: 40
             });
 
             const link = document.createElement('a');
-            link.download = `Quantum_V18_${Date.now()}.png`;
+            link.download = `OMNI_SNIPER_${Date.now()}.png`;
             link.href = canvas.toDataURL("image/png", 1.0);
             link.click();
         } catch (err) {
-            alert("Error Rendering: " + err);
+            alert("Capture Failed: " + err);
         } finally {
-            btn.innerText = "SAVE ULTRA HD IMAGE";
+            btn.innerText = "Export PNG";
             btn.disabled = false;
         }
     }
