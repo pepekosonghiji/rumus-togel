@@ -109,178 +109,162 @@ def fetch_results(market_code, max_pages=3):
         print(f"Deep Fetch Error: {e}")
         return results
 
-def get_comprehensive_logic(all_res_data, market_name):
+def get_comprehensive_logic_god(all_res_data, market_name):
     """
-    QUANTUM HYPER-DIMENSION V24.8 [OMNI-INTELLIGENCE]
-    Sistem Verifikasi Berlapis: Shadow, Omni-BBFS, & Positioning Matrix.
+    🚀 MAMANG ENGINE V.24.8 [GOD MODE] 🚀
+    QUANTUM HYPER-DIMENSION - OMNI-INTELLIGENCE
+    Sistem Verifikasi Berlapis: Divine Selection, God Analysis, & Holy Verification.
     """
     if not all_res_data:
         return {"error": "No data available"}
 
-    # --- [INISIALISASI DATA] ---
-    last_p1 = all_res_data[0][0]  
-    p1_list = [d[0] for d in all_res_data] 
-
+    # --- [ DATA INITIALIZATION ] ---
+    last_p1 = all_res_data[0][0]  # Result terakhir P1
+    p1_list = [d[0] for d in all_res_data] # List histori P1
+    
+    # Mengambil data Prize 2 dan Prize 3 jika tersedia
     p2_raw = all_res_data[0][1] if len(all_res_data[0]) > 1 else "0000"
     p3_raw = all_res_data[0][2] if len(all_res_data[0]) > 2 else "0000"
-
     p2_last = p2_raw if p2_raw != "0000" else (all_res_data[1][0] if len(all_res_data) > 1 else "0000")
     p3_last = p3_raw if p3_raw != "0000" else (all_res_data[2][0] if len(all_res_data) > 2 else "0000")
 
-    # --- [A. ANALISA SHIO MATI] ---
-    shio_off_id = (int(last_p1[2:]) % 12) or 12
+    # --- [ PHASE 1: THE DIVINE SELECTION ] ---
+    # Mencari 20 kandidat terkuat dengan metode terbaik di muka bumi.
+    divine_pool = []
+    
+    # 1. Frequency Analysis (30 hari terakhir)
+    all_30d = "".join(p1_list[:30])
+    freq_map = Counter(all_30d)
+    
+    # 2. Shadow Target Elements (Mistik, Taysen, Indeks dari Result Terakhir)
+    shadow_elements = {
+        ML.get(last_p1[2]), ML.get(last_p1[3]), 
+        TY.get(last_p1[2]), TY.get(last_p1[3]), 
+        ID.get(last_p1[2]), ID.get(last_p1[3]),
+        MB.get(last_p1[2]), MB.get(last_p1[3])
+    }
 
-    # --- [B. INTERVAL GAP ANALYSIS] ---
+    # 3. Gap Analysis Scoring
     gap_scores = {str(i): 0 for i in range(10)}
-    for pos in [0, 3]: 
+    for pos in [2, 3]: # Fokus pada ekor 2D
         for digit in range(10):
             gap_count = 0
             for res in p1_list:
                 if res[pos] == str(digit): break
                 gap_count += 1
-            if gap_count > 10:
-                gap_scores[str(digit)] += 180
+            if gap_count > 10: gap_scores[str(digit)] += 150
 
-    # --- [C. NEURAL & CLUSTER SCORING] ---
-    all_30d = "".join(p1_list[:30])
-    freq_map = Counter(all_30d)
-    cold_digits = [d for d in "0123456789" if freq_map[d] < (len(all_30d)/10)]
-    all_p_data = last_p1 + p2_last + p3_last
-    cluster_map = Counter(all_p_data)
-    hot_clusters = [num for num, count in cluster_map.items() if count >= 2]
-    
-    scores = {str(i): 0 for i in range(10)}
-    for d in scores:
-        if d in hot_clusters: scores[d] += 220 
-        if d in [ID.get(x) for x in (p2_last + p3_last)]: scores[d] += 85
-        if d in cold_digits: scores[d] += 150 
-        scores[d] += gap_scores[d] 
-
-        for pos in range(4):
-            if len(all_res_data) > 2:
-                if d == all_res_data[1][0][pos] == all_res_data[2][0][pos]:
-                    scores[d] += 120
-
-    # Mengambil 9 digit terkuat (Layer 1)
-    top_digits = "".join([x[0] for x in sorted(scores.items(), key=lambda x: x[1], reverse=True)[:9]])
-
-    # --- [D. BIJI TARGETING] ---
-    biji_p1 = (int(last_p1[2]) + int(last_p1[3])) % 9 or 9
-    biji_p2 = (int(p2_last[2]) + int(p2_last[3])) % 9 or 9
-    biji_off = {biji_p1, biji_p2}
-    biji_target = [b for b in range(1, 10) if b not in biji_off]
-
-    # --- [E. LAYER 1: OMNI-CANDIDATES GENERATION] ---
-    raw_2d = [''.join(p) for p in itertools.product("0123456789", repeat=2)]
-    candidates_pool = []
-    seen = set()
-
-    # Omni-Shadow Targets (Mistik, Taysen, Indeks dari Result Terakhir)
-    shadow_targets = [
-        ML.get(last_p1[2]), ML.get(last_p1[3]),
-        TY.get(last_p1[2]), TY.get(last_p1[3]),
-        ID.get(last_p1[2]), ID.get(last_p1[3]),
-        MB.get(last_p1[2]), MB.get(last_p1[3])
-    ]
-
-    for line in raw_2d:
-        if line in seen: continue
+    # Kalkulasi skor awal untuk seluruh kombinasi 00-99
+    for i in range(100):
+        line = f"{i:02d}"
         h, t = line[0], line[1]
-        b_line = (int(h) + int(t)) % 9 or 9
         
-        score_cand = 0
-        # Statistik Score
-        if h in top_digits: score_cand += 200
-        if t in top_digits: score_cand += 200
-        # Omni-Shadow Score (Bonus jika masuk jalur Mistik/Taysen/Indeks)
-        if h in shadow_targets: score_cand += 150
-        if t in shadow_targets: score_cand += 150
-        # Cluster Bonus
-        if (h in cold_digits and t in hot_clusters) or (t in cold_digits and h in hot_clusters): score_cand += 300
+        # Base Score dari Frekuensi & Gap
+        score = (freq_map[h] * 20) + (freq_map[t] * 20)
+        score += (gap_scores[h] + gap_scores[t])
         
-        # Anti-Repeat History
-        if line in [res[2:] for res in p1_list[:2]]: score_cand -= 500
+        # Shadow Bonus (Metafisika Digital)
+        if h in shadow_elements: score += 200
+        if t in shadow_elements: score += 200
+        
+        # Cluster Bonus (Kaitan dengan P2/P3)
+        if h in (p2_last + p3_last): score += 100
+        if t in (p2_last + p3_last): score += 100
 
-        candidates_pool.append((line, score_cand, b_line))
-        seen.add(line)
+        divine_pool.append((line, score))
 
-    pre_top_50 = sorted(candidates_pool, key=lambda x: x[1], reverse=True)[:50]
+    # FILTER: Ambil "The Elite 20" (Kandidat Terkuat di Muka Bumi)
+    elite_20 = sorted(divine_pool, key=lambda x: x[1], reverse=True)[:20]
 
-    # --- [F. LAYER 2: OMNI-VERIFICATION & FINAL FILTER] ---
+    # --- [ PHASE 2: THE GOD ANALYSIS ] ---
+    # Membedah kembali 20 kandidat dengan analisa sumbu posisi.
+    analyzed_20 = []
+    for line, score in elite_20:
+        god_score = score
+        h, t = line[0], line[1]
+        
+        # Biji Analysis (Sum of Digits)
+        biji_val = (int(h) + int(t)) % 9 or 9
+        
+        # Pola Psikologis Angka (Small/Big, Odd/Even)
+        # Memberikan bobot pada keseimbangan distribusi
+        if int(line) >= 50: god_score += 50 # Bonus Big
+        if int(t) % 2 != 0: god_score += 50 # Bonus Odd Tail
+        
+        # Pinalti jika angka terlalu sering muncul di histori (Anti-Saturation)
+        if line in [res[2:] for res in p1_list[:3]]:
+            god_score -= 1000 # Sangat berat untuk angka repeat
+            
+        analyzed_20.append((line, god_score, biji_val))
+
+    # --- [ PHASE 3: THE HOLY VERIFICATION ] ---
+    # Penyaringan akhir dengan metode verifikasi paling ketat.
     final_jitu_2d = []
-    tail_counts = Counter() 
-
-    for line, base_score, b_val in pre_top_50:
-        shio_check = (int(line) % 12) or 12
-        final_v_score = base_score
-        
-        # 1. Verifikasi Biji (Wajib)
-        if b_val not in biji_target: continue
-        # 2. Verifikasi Shio Mati
-        if shio_check == shio_off_id: final_v_score -= 1000
-        # 3. Verifikasi Histori P2/P3
-        if line in [p2_last[2:], p3_last[2:]]: final_v_score -= 600
-        # 4. Filter Balance Sum
-        if int(line) < 5 or int(line) > 95: final_v_score -= 400
-        # 5. Tail Distribution
-        if tail_counts[line[1]] >= 3: final_v_score -= 500
-        # 6. Twin Verification
-        if line[0] == line[1]:
-            if not (last_p1[0] == last_p1[1] or last_p1[2] == last_p1[3]):
-                final_v_score -= 500
-
-        if final_v_score > 400: # Threshold Verifikasi Omni
-            final_jitu_2d.append((line, final_v_score))
-            tail_counts[line[1]] += 1
-
-    final_sorted_data = sorted(final_jitu_2d, key=lambda x: x[1], reverse=True)
-    top2 = [x[0] for x in final_sorted_data]
-
-    # --- [G. OMNI-BBFS GENERATION (Independent Logic)] ---
-    bbfs_sources = list(top_digits[:5]) # Jalur Statistik
-    bbfs_sources.extend([d for d in shadow_targets if d is not None]) # Jalur Shadow
-    # Analisis Gap untuk BBFS
-    for digit in "0123456789":
-        if gap_scores[digit] > 150: bbfs_sources.append(digit)
+    shio_off_id = (int(last_p1[2:]) % 12) or 12
+    biji_off = (int(last_p1[2]) + int(last_p1[3])) % 9 or 9
     
-    # Ambil 6-7 digit paling dominan dari semua metode
-    refined_bbfs_list = [x[0] for x in Counter(bbfs_sources).most_common(7)]
-    refined_bbfs = "".join(sorted(refined_bbfs_list[:6]))
+    # Tail distribution guard untuk mencegah angka dengan ekor yang sama terlalu banyak
+    tail_guard = Counter()
 
-    # --- [H. 3D & 4D POSITIONING MATRIX] ---
+    for line, score, biji in sorted(analyzed_20, key=lambda x: x[1], reverse=True):
+        shio_val = (int(line) % 12) or 12
+        
+        # 1. ABSOLUTE FILTER: Shio Mati & Biji Mati
+        if shio_val == shio_off_id: continue
+        if biji == biji_off: continue
+        
+        # 2. ABSOLUTE FILTER: History Check P2/P3
+        if line in [p2_last[2:], p3_last[2:]]: continue
+        
+        # 3. DISTRIBUTION FILTER: Maksimal 3 angka dengan ekor yang sama
+        if tail_guard[line[1]] >= 3: continue
+        
+        # 4. TWIN VERIFICATION: Hanya lolos jika skor sangat tinggi
+        if line[0] == line[1] and score < 800: continue
+
+        final_jitu_2d.append((line, score))
+        tail_guard[line[1]] += 1
+
+    # HASIL FINAL 2D (The Chosen Ones)
+    top2 = [x[0] for x in sorted(final_jitu_2d, key=lambda x: x[1], reverse=True)]
+
+    # --- [ 4D & 3D POSITIONING MATRIX GOD - FULL SYNC ] ---
     top3, top4 = [], []
-    pos_candidates = [x[0] for x in sorted(scores.items(), key=lambda x: x[1], reverse=True)]
+    
+    # Ambil urutan digit terkuat untuk posisi depan
+    verified_digits = "".join([d[0] for d in Counter("".join(top2)).most_common()])
+    if len(verified_digits) < 6: verified_digits += "0123456789"
 
+    # LOOPING DINAMIS: Mengikuti jumlah top2 yang lolos verifikasi
     for i, l2 in enumerate(top2):
-        try:
-            # Kop & As menggunakan Matrix Positioning (Mencari angka paling efisien)
-            kop = TY.get(p3_last[i % 4], pos_candidates[(i+1) % 10])
-            as_val = MB.get(p2_last[i % 4], pos_candidates[(i+2) % 10])
-            
-            # Anti-Clash
-            if kop == l2[0]: kop = ID.get(kop, pos_candidates[(i+3) % 10])
-            
-            top3.append(f"{kop}{l2}")
-            top4.append(f"{as_val}{kop}{l2}")
-        except:
-            top3.append(f"0{l2}")
-            top4.append(f"00{l2}")
+        # Ambil Kop dan As berdasarkan index urutan
+        kop = verified_digits[(i + 1) % len(verified_digits)]
+        as_val = verified_digits[(i + 2) % len(verified_digits)]
+        
+        # Anti-Clash: Jika angka depan 2D sama dengan Kop, geser index
+        if kop == l2[0]:
+            kop = verified_digits[(i + 3) % len(verified_digits)]
+        
+        top3.append(f"{kop}{l2}")
+        top4.append(f"{as_val}{kop}{l2}")
 
+    # --- [ FINAL OUTPUT ASSEMBLY ] ---
     return {
-        'version': 'V24.8 [OMNI-INTELLIGENCE]',
+        'version': 'V24.8 [GOD MODE]',
         'market': market_name,
         'last_res': last_p1,
         'p2_last': p2_last,
         'p3_last': p3_last,
-        'am': top_digits[:4], 
-        'ai': top_digits[4:7],
-        'bbfs': refined_bbfs,
+        'am': verified_digits[:4],
+        'ai': verified_digits[4:7],
+        'bbfs': "".join(sorted(list(set(verified_digits[:6])))),
         'top2': top2,
-        'top3': top3, 
+        'top3': top3,
         'top4': top4,
         'shio': SHIO_MAP.get((int(last_p1[2:]) % 12) or 12, "N/A"),
         'shio_off': SHIO_MAP.get(shio_off_id, "N/A"),
-        'macau': f"{top2[0]} - {top2[1]}" if len(top2) > 1 else (top2[0] if top2 else "-")
+        'macau': f"{top2[0]} - {top2[1]}" if len(top2) > 1 else (top2[0] if top2 else "-"),
+        'verification_status': 'STRICT_GOD_MODE_ACTIVE'
     }
 
 @app.route('/', methods=['GET', 'POST'])
@@ -296,7 +280,7 @@ def index():
             market_code = ALL_POOLS[selected]
             res_data = fetch_results(market_code, max_pages=3)
             if res_data and len(res_data) >= 8:
-                analysis = get_comprehensive_logic(res_data, selected)
+                analysis = get_comprehensive_logic_god(res_data, selected)
             else:
                 analysis = "ERROR: Data tidak ditemukan atau koneksi gagal."
     return render_template('index.html', markets=markets, analysis=analysis, selected=selected)
