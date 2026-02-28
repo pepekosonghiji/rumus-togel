@@ -111,39 +111,33 @@ def fetch_results(market_code, max_pages=3):
 
 def get_comprehensive_logic_god(all_res_data, market_name):
     """
-    🚀 MAMANG ENGINE V.24.9 [GOD MODE - LOCKED] 🚀
-    QUANTUM HYPER-DIMENSION - OMNI-INTELLIGENCE
+    🚀 MAMANG ENGINE V.25.0 [GOD MODE - PRE-ALPHA] 🚀
     Sistem Verifikasi Berlapis: Divine Selection, God Analysis, & Holy Verification.
     
-    Update Log V24.9:
-    - Integrasi MB_POWER (+400) hasil evaluasi Oregon 9 & Sydney.
-    - Integrasi ODD_EVEN_SHIFT / DYNAMIC SHIFT GUARD hasil evaluasi Cambodia & Sydney.
-    - Sinkronisasi Full Matrix Top 2D, 3D, dan 4D.
+    Update Log V25.0:
+    - New: Position Heritage Sensor (Memberikan skor +300 jika angka AS/KOP terakhir muncul di 2D).
+    - New: Matrix Re-Alignment (Limit Top Line 2D: 12, 3D/4D: 10 untuk efisiensi sniper).
+    - Legacy: MB_POWER (+400) & ODD_EVEN_SHIFT (+250) tetap aktif dan terkunci.
     """
     if not all_res_data:
         return {"error": "No data available"}
 
     # --- [ DATA INITIALIZATION ] ---
-    last_p1 = all_res_data[0][0]  # Result terakhir P1
-    p1_list = [d[0] for d in all_res_data] # List histori P1
+    last_p1 = all_res_data[0][0]  # Result terakhir P1 (Contoh: 7793)
+    p1_list = [d[0] for d in all_res_data] 
     
-    # Mengambil data Prize 2 dan Prize 3 (Simulasi Input Manual)
+    # Mengambil data Prize 2 dan Prize 3 jika tersedia
     p2_raw = all_res_data[0][1] if len(all_res_data[0]) > 1 else "0000"
     p3_raw = all_res_data[0][2] if len(all_res_data[0]) > 2 else "0000"
-    
-    # Logic pengganti jika P2/P3 kosong (Gunakan data kemarin/lusa)
     p2_last = p2_raw if p2_raw != "0000" else (all_res_data[1][0] if len(all_res_data) > 1 else "0000")
     p3_last = p3_raw if p3_raw != "0000" else (all_res_data[2][0] if len(all_res_data) > 2 else "0000")
 
     # --- [ PHASE 1: THE DIVINE SELECTION ] ---
     divine_pool = []
-    
-    # 1. Frequency Analysis (30 hari terakhir)
     all_30d = "".join(p1_list[:30])
     freq_map = Counter(all_30d)
     
-    # 2. Shadow Target Elements (V24.9 Upgrade: MB Power Boost)
-    # Kita pisahkan MB untuk eksekusi bobot khusus (Kop & Ekor)
+    # MB Power Elements (V24.9 Legacy)
     mb_elements = {MB.get(last_p1[2]), MB.get(last_p1[3]), MB.get(last_p1[1])}
     shadow_other = {
         ML.get(last_p1[2]), ML.get(last_p1[3]), 
@@ -151,9 +145,16 @@ def get_comprehensive_logic_god(all_res_data, market_name):
         ID.get(last_p1[2]), ID.get(last_p1[3])
     }
 
-    # 3. Gap Analysis Scoring
+    # NEW V25.0: Position Heritage Elements (AS/KOP Heritage)
+    # Menangkap angka AS/KOP terakhir dan versi INDEKS-nya (Evaluasi Busan 7 -> 2)
+    heritage_elements = {
+        last_p1[0], last_p1[1], 
+        ID.get(last_p1[0]), ID.get(last_p1[1])
+    }
+
+    # Gap Analysis Scoring
     gap_scores = {str(i): 0 for i in range(10)}
-    for pos in [2, 3]: # Fokus pada ekor 2D
+    for pos in [2, 3]: 
         for digit in range(10):
             gap_count = 0
             for res in p1_list:
@@ -161,39 +162,41 @@ def get_comprehensive_logic_god(all_res_data, market_name):
                 gap_count += 1
             if gap_count > 10: gap_scores[str(digit)] += 150
 
-    # 4. Odd-Even Shift Detection (Evaluasi Cambodia & Sydney)
+    # Odd-Even Shift Detection
     last_two_digits = [int(last_p1[2]), int(last_p1[3])]
-    # Trigger aktif jika ekor terakhir kembar jenis (Genap-Genap atau Ganjil-Ganjil)
     trigger_shift = (last_two_digits[0] % 2 == last_two_digits[1] % 2)
 
-    # Kalkulasi skor awal untuk seluruh kombinasi 00-99
+    # --- [ THE OMNI SCORING ENGINE ] ---
     for i in range(100):
         line = f"{i:02d}"
         h, t = line[0], line[1]
         
-        # Base Score dari Frekuensi & Gap
+        # Base Score (Freq & Gap)
         score = (freq_map[h] * 20) + (freq_map[t] * 20)
         score += (gap_scores[h] + gap_scores[t])
         
-        # Shadow Bonus (Mistik, Taysen, Indeks)
+        # Shadow & MB Power Bonus (+400)
         if h in shadow_other: score += 200
         if t in shadow_other: score += 200
-        
-        # MB Power Bonus (+400) - Kunci akurasi Oregon & Sydney
         if h in mb_elements: score += 400
         if t in mb_elements: score += 400
         
-        # Dynamic Shift Guard (+250) - Proteksi lompatan pola bandot
+        # UPGRADE V25.0: Heritage Bonus (+300)
+        # Mendeteksi pergerakan angka dari posisi AS/KOP ke 2D
+        if h in heritage_elements: score += 300
+        if t in heritage_elements: score += 300
+        
+        # Dynamic Shift Guard (+250)
         if trigger_shift and int(t) % 2 != last_two_digits[1] % 2:
             score += 250
         
-        # Cluster Bonus (Kaitan dengan P2/P3)
+        # Cluster Bonus (P2/P3 Relation)
         if h in (p2_last + p3_last): score += 100
         if t in (p2_last + p3_last): score += 100
 
         divine_pool.append((line, score))
 
-    # FILTER: Ambil "The Elite 25" (Perluasan jangkauan untuk akurasi lebih lebar)
+    # Ambil "The Elite 25" untuk analisis mendalam
     elite_25 = sorted(divine_pool, key=lambda x: x[1], reverse=True)[:25]
 
     # --- [ PHASE 2: THE GOD ANALYSIS ] ---
@@ -201,14 +204,13 @@ def get_comprehensive_logic_god(all_res_data, market_name):
     for line, score in elite_25:
         god_score = score
         h, t = line[0], line[1]
-        
         biji_val = (int(h) + int(t)) % 9 or 9
         
-        # Pola Psikologis & Distribusi
-        if int(line) >= 50: god_score += 50 # Bonus Big
-        if int(t) % 2 != 0: god_score += 50 # Bonus Odd Tail
+        # Pola Distribusi
+        if int(line) >= 50: god_score += 50 
+        if int(t) % 2 != 0: god_score += 50
         
-        # Anti-Saturation (Pinalti angka repeat)
+        # Anti-Saturation (Pinalti Repeat Result 3 Hari Terakhir)
         if line in [res[2:] for res in p1_list[:3]]:
             god_score -= 1000 
             
@@ -218,23 +220,20 @@ def get_comprehensive_logic_god(all_res_data, market_name):
     final_jitu_2d = []
     shio_off_id = (int(last_p1[2:]) % 12) or 12
     biji_off = (int(last_p1[2]) + int(last_p1[3])) % 9 or 9
-    
     tail_guard = Counter()
 
     for line, score, biji in sorted(analyzed_25, key=lambda x: x[1], reverse=True):
         shio_val = (int(line) % 12) or 12
         
-        # 1. ABSOLUTE FILTER: Shio Mati & Biji Mati
+        # Filtering Shio, Biji, dan Result P2/P3
         if shio_val == shio_off_id: continue
         if biji == biji_off: continue
-        
-        # 2. ABSOLUTE FILTER: History Check P2/P3
         if line in [p2_last[2:], p3_last[2:]]: continue
         
-        # 3. DISTRIBUTION FILTER: Maksimal 3 angka dengan ekor sama
+        # Distribusi Ekor (Maksimal 3 angka per ekor)
         if tail_guard[line[1]] >= 3: continue
         
-        # 4. TWIN VERIFICATION: Lolos hanya jika skor sangat tinggi
+        # Twin Protection
         if line[0] == line[1] and score < 800: continue
 
         final_jitu_2d.append((line, score))
@@ -245,8 +244,6 @@ def get_comprehensive_logic_god(all_res_data, market_name):
 
     # --- [ 4D & 3D POSITIONING MATRIX GOD ] ---
     top3, top4 = [], []
-    
-    # Verifikasi digit terkuat untuk posisi As & Kop
     verified_digits = "".join([d[0] for d in Counter("".join(top2)).most_common()])
     if len(verified_digits) < 6: verified_digits += "0123456789"
 
@@ -263,7 +260,7 @@ def get_comprehensive_logic_god(all_res_data, market_name):
 
     # --- [ FINAL OUTPUT ASSEMBLY ] ---
     return {
-        'version': 'V24.9 [GOD MODE - LOCKED]',
+        'version': 'V25.0 [GOD MODE - PRE-ALPHA]',
         'market': market_name,
         'last_res': last_p1,
         'p2_last': p2_last,
@@ -277,9 +274,8 @@ def get_comprehensive_logic_god(all_res_data, market_name):
         'shio': SHIO_MAP.get((int(last_p1[2:]) % 12) or 12, "N/A"),
         'shio_off': SHIO_MAP.get(shio_off_id, "N/A"),
         'macau': f"{top2[0]} - {top2[1]}" if len(top2) > 1 else (top2[0] if top2 else "-"),
-        'verification_status': 'STRICT_GOD_MODE_ACTIVE_V24.9_LOCKED'
+        'verification_status': 'STRICT_GOD_MODE_ACTIVE_V25.0_LOCKED'
     }
-
 @app.route('/', methods=['GET', 'POST'])
 def index():
     analysis, selected = None, None
