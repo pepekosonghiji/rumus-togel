@@ -111,19 +111,20 @@ def fetch_results(market_code, max_pages=3):
 
 def get_comprehensive_logic_god(all_res_data, market_name):
     """
-    🚀 MAMANG ENGINE V.25.2 [GOD MODE - ELITE SNIPER] 🚀
+    🚀 MAMANG ENGINE V.25.4 [OMNI-SYNC DNA] 🚀
     Sistem Verifikasi Berlapis: Divine Selection, God Analysis, & Holy Verification.
     
-    Update Log V25.2:
-    - New: Vertical Alignment Logic (Penyusunan 3D/4D presisi, bukan comot BBFS).
-    - New: Biji-Sum Filter (Menyaring line 3D/4D berdasarkan total jumlah digit).
-    - Legacy: Long-Gap Recovery, AS-Indeks Rebound, MB_POWER, & Heritage tetap ON.
+    Update Log V25.4:
+    - New: Dynamic Line Mirroring (Jumlah 3D/4D mengikuti jumlah 2D hasil verifikasi).
+    - New: Positional DNA Tracking (Sinkronisasi AS-KOP terhadap 2D belakang).
+    - New: Dynamic Gap Re-Scoring (Analisis angka mati di posisi AS/KOP).
+    - Legacy: Long-Gap Recovery, AS-Indeks Rebound, MB_POWER, Biji-Sum Filter ON.
     """
     if not all_res_data:
         return {"error": "No data available"}
 
     # --- [ DATA INITIALIZATION ] ---
-    last_p1 = all_res_data[0][0]  # Result terakhir P1
+    last_p1 = all_res_data[0][0]  
     p1_list = [d[0] for d in all_res_data] 
     
     p2_raw = all_res_data[0][1] if len(all_res_data[0]) > 1 else "0000"
@@ -136,10 +137,8 @@ def get_comprehensive_logic_god(all_res_data, market_name):
     all_30d = "".join(p1_list[:30])
     freq_map = Counter(all_30d)
     
-    # MB Power Elements
+    # Elemen Mistik & Power (TIDAK DISENTUH)
     mb_elements = {MB.get(last_p1[2]), MB.get(last_p1[3]), MB.get(last_p1[1])}
-    
-    # Shadow & Heritage Elements
     shadow_other = {
         ML.get(last_p1[2]), ML.get(last_p1[3]), 
         TY.get(last_p1[2]), TY.get(last_p1[3]), 
@@ -150,18 +149,26 @@ def get_comprehensive_logic_god(all_res_data, market_name):
         ID.get(last_p1[0]), ID.get(last_p1[1])
     }
 
-    # Gap Analysis Scoring
+    # Positional Gap Analysis (TIDAK DISENTUH - DITAMBAH AS/KOP GAP)
     gap_scores = {str(i): 0 for i in range(10)}
-    for pos in [2, 3]: 
-        for digit in range(10):
-            gap_count = 0
+    as_kop_gap = {str(i): 0 for i in range(10)}
+    
+    for digit in range(10):
+        for pos in [2, 3]:
+            g_count = 0
             for res in p1_list:
                 if res[pos] == str(digit): break
-                gap_count += 1
-            if gap_count > 10: gap_scores[str(digit)] += 150
-            if gap_count > 20: gap_scores[str(digit)] += 350
+                g_count += 1
+            if g_count > 10: gap_scores[str(digit)] += 150
+            if g_count > 20: gap_scores[str(digit)] += 350
+        
+        for pos in [0, 1]:
+            ak_count = 0
+            for res in p1_list:
+                if res[pos] == str(digit): break
+                ak_count += 1
+            if ak_count > 15: as_kop_gap[str(digit)] += 200
 
-    # Odd-Even Shift Detection
     last_two_digits = [int(last_p1[2]), int(last_p1[3])]
     trigger_shift = (last_two_digits[0] % 2 == last_two_digits[1] % 2)
 
@@ -180,7 +187,6 @@ def get_comprehensive_logic_god(all_res_data, market_name):
         if trigger_shift and int(t) % 2 != last_two_digits[1] % 2: score += 250
         if h in (p2_last + p3_last): score += 100
         if t in (p2_last + p3_last): score += 100
-
         divine_pool.append((line, score))
 
     # --- [ PHASE 2: ELITE VERIFICATION ] ---
@@ -188,7 +194,7 @@ def get_comprehensive_logic_god(all_res_data, market_name):
     shio_off_id = (int(last_p1[2:]) % 12) or 12
     biji_off = (int(last_p1[2]) + int(last_p1[3])) % 9 or 9
     
-    for line, score in sorted(divine_pool, key=lambda x: x[1], reverse=True)[:35]:
+    for line, score in sorted(divine_pool, key=lambda x: x[1], reverse=True)[:40]:
         h, t = line[0], line[1]
         biji_val = (int(h) + int(t)) % 9 or 9
         shio_val = (int(line) % 12) or 12
@@ -196,58 +202,59 @@ def get_comprehensive_logic_god(all_res_data, market_name):
         if shio_val == shio_off_id or biji_val == biji_off: continue
         if line in [res[2:] for res in p1_list[:3]]: continue
         
-        analyzed_pool.append((line, score))
+        if score > 500: # Threshold jitu
+            analyzed_pool.append((line, score))
 
-    # --- [ PHASE 3: SNIPER POSITIONING MATRIX ] ---
-    top2_final = [x[0] for x in sorted(analyzed_pool, key=lambda x: x[1], reverse=True)[:12]]
-    
-    # Penentuan Digit AS & KOP Strategis (Vertical Alignment)
-    # Diambil dari statistik frekuensi tapi di-filter agar tidak bentrok dengan 2D
-    as_candidates = [d for d, c in freq_map.most_common() if d not in "".join(top2_final[:2])]
-    kop_candidates = [ID.get(d) for d in as_candidates] 
+    # Hasil 2D Dinamis
+    top2_final = [x[0] for x in sorted(analyzed_pool, key=lambda x: x[1], reverse=True)]
+
+    # --- [ PHASE 3: SNIPER POSITIONING DNA MATRIX ] ---
+    potential_front = sorted(as_kop_gap.keys(), key=lambda x: (freq_map[x] * 10) + as_kop_gap[x], reverse=True)
+    as_candidates = [d for d in potential_front if d not in "".join(top2_final[:1])]
+    kop_candidates = [ID.get(d) if i % 2 == 0 else ML.get(d) for i, d in enumerate(as_candidates)]
 
     top3, top4 = [], []
     for i, l2 in enumerate(top2_final):
-        # 1. Pilih Kop & As dari kandidat terbaik
-        kop = kop_candidates[i % len(kop_candidates)]
-        as_val = as_candidates[(i + 1) % len(as_candidates)]
+        kop = str(kop_candidates[i % len(kop_candidates)])
+        as_val = str(as_candidates[(i + 1) % len(as_candidates)])
         
-        # 2. BIJI-SUM FILTER (Verifikasi total digit agar tidak amsyong)
-        # Jika biji 3D (Kop+Kep+Ek) sama dengan biji mati, geser digit Kop
+        # BIJI-SUM FILTER 3D
         sum_3d = (int(kop) + int(l2[0]) + int(l2[1])) % 9 or 9
         if sum_3d == biji_off:
             kop = str((int(kop) + 1) % 10)
             
-        # 3. ANTI-CLASH P2/P3 (Jangan pasang line yang kemarin keluar di prize 2/3)
+        # AS-KOP DNA CHECK 4D
+        sum_4d = (int(as_val) + int(kop) + int(l2[0]) + int(l2[1])) % 9 or 9
+        if sum_4d == (biji_off + 1) % 9:
+            as_val = str((int(as_val) + 1) % 10)
+
+        # ANTI-CLASH P2/P3
         line4d = f"{as_val}{kop}{l2}"
         if line4d == p2_last or line4d == p3_last:
-            as_val = str((int(as_val) + 1) % 10)
+            as_val = str((int(as_val) + 2) % 10)
             line4d = f"{as_val}{kop}{l2}"
             
         top3.append(f"{kop}{l2}")
         top4.append(line4d)
 
-    # Re-build Verified Digits untuk BBFS (Hasil dari Sniper terkuat)
-    all_sniped_digits = "".join(top4[:5])
+    all_sniped_digits = "".join(top4[:6])
     verified_digits = "".join([d[0] for d in Counter(all_sniped_digits).most_common()])
     if len(verified_digits) < 6: verified_digits += "0123456789"
 
     return {
-        'version': 'V25.2 [GOD MODE - ELITE SNIPER]',
+        'version': 'V25.4 [OMNI-SYNC DNA]',
         'market': market_name,
         'last_res': last_p1,
-        'p2_last': p2_last,
-        'p3_last': p3_last,
         'am': verified_digits[:4],
         'ai': verified_digits[4:7],
         'bbfs': "".join(sorted(list(set(verified_digits[:6])))),
         'top2': top2_final,
-        'top3': top3[:10],
-        'top4': top4[:10],
+        'top3': top3,
+        'top4': top4,
         'shio': SHIO_MAP.get((int(last_p1[2:]) % 12) or 12, "N/A"),
         'shio_off': SHIO_MAP.get(shio_off_id, "N/A"),
-        'macau': f"{top2_final[0]} - {top2_final[1]}",
-        'verification_status': 'ELITE_SNIPER_POSITION_LOCKED'
+        'macau': f"{top2_final[0]} - {top2_final[1]}" if len(top2_final) > 1 else "-",
+        'verification_status': 'DYNAMIC_SYNC_MIRRORING_ACTIVE'
     }
 
     
