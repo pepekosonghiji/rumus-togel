@@ -111,22 +111,21 @@ def fetch_results(market_code, max_pages=3):
 
 def get_comprehensive_logic_god(all_res_data, market_name):
     """
-    🚀 MAMANG ENGINE V.25.0 [GOD MODE - PRE-ALPHA] 🚀
+    🚀 MAMANG ENGINE V.25.2 [GOD MODE - ELITE SNIPER] 🚀
     Sistem Verifikasi Berlapis: Divine Selection, God Analysis, & Holy Verification.
     
-    Update Log V25.0:
-    - New: Position Heritage Sensor (Memberikan skor +300 jika angka AS/KOP terakhir muncul di 2D).
-    - New: Matrix Re-Alignment (Limit Top Line 2D: 12, 3D/4D: 10 untuk efisiensi sniper).
-    - Legacy: MB_POWER (+400) & ODD_EVEN_SHIFT (+250) tetap aktif dan terkunci.
+    Update Log V25.2:
+    - New: Vertical Alignment Logic (Penyusunan 3D/4D presisi, bukan comot BBFS).
+    - New: Biji-Sum Filter (Menyaring line 3D/4D berdasarkan total jumlah digit).
+    - Legacy: Long-Gap Recovery, AS-Indeks Rebound, MB_POWER, & Heritage tetap ON.
     """
     if not all_res_data:
         return {"error": "No data available"}
 
     # --- [ DATA INITIALIZATION ] ---
-    last_p1 = all_res_data[0][0]  # Result terakhir P1 (Contoh: 7793)
+    last_p1 = all_res_data[0][0]  # Result terakhir P1
     p1_list = [d[0] for d in all_res_data] 
     
-    # Mengambil data Prize 2 dan Prize 3 jika tersedia
     p2_raw = all_res_data[0][1] if len(all_res_data[0]) > 1 else "0000"
     p3_raw = all_res_data[0][2] if len(all_res_data[0]) > 2 else "0000"
     p2_last = p2_raw if p2_raw != "0000" else (all_res_data[1][0] if len(all_res_data) > 1 else "0000")
@@ -137,16 +136,15 @@ def get_comprehensive_logic_god(all_res_data, market_name):
     all_30d = "".join(p1_list[:30])
     freq_map = Counter(all_30d)
     
-    # MB Power Elements (V24.9 Legacy)
+    # MB Power Elements
     mb_elements = {MB.get(last_p1[2]), MB.get(last_p1[3]), MB.get(last_p1[1])}
+    
+    # Shadow & Heritage Elements
     shadow_other = {
         ML.get(last_p1[2]), ML.get(last_p1[3]), 
         TY.get(last_p1[2]), TY.get(last_p1[3]), 
         ID.get(last_p1[2]), ID.get(last_p1[3])
     }
-
-    # NEW V25.0: Position Heritage Elements (AS/KOP Heritage)
-    # Menangkap angka AS/KOP terakhir dan versi INDEKS-nya (Evaluasi Busan 7 -> 2)
     heritage_elements = {
         last_p1[0], last_p1[1], 
         ID.get(last_p1[0]), ID.get(last_p1[1])
@@ -161,6 +159,7 @@ def get_comprehensive_logic_god(all_res_data, market_name):
                 if res[pos] == str(digit): break
                 gap_count += 1
             if gap_count > 10: gap_scores[str(digit)] += 150
+            if gap_count > 20: gap_scores[str(digit)] += 350
 
     # Odd-Even Shift Detection
     last_two_digits = [int(last_p1[2]), int(last_p1[3])]
@@ -170,97 +169,71 @@ def get_comprehensive_logic_god(all_res_data, market_name):
     for i in range(100):
         line = f"{i:02d}"
         h, t = line[0], line[1]
+        score = (freq_map[h] * 20) + (freq_map[t] * 20) + (gap_scores[h] + gap_scores[t])
         
-        # Base Score (Freq & Gap)
-        score = (freq_map[h] * 20) + (freq_map[t] * 20)
-        score += (gap_scores[h] + gap_scores[t])
-        
-        # Shadow & MB Power Bonus (+400)
         if h in shadow_other: score += 200
         if t in shadow_other: score += 200
         if h in mb_elements: score += 400
         if t in mb_elements: score += 400
-        
-        # UPGRADE V25.0: Heritage Bonus (+300)
-        # Mendeteksi pergerakan angka dari posisi AS/KOP ke 2D
         if h in heritage_elements: score += 300
         if t in heritage_elements: score += 300
-        
-        # Dynamic Shift Guard (+250)
-        if trigger_shift and int(t) % 2 != last_two_digits[1] % 2:
-            score += 250
-        
-        # Cluster Bonus (P2/P3 Relation)
+        if trigger_shift and int(t) % 2 != last_two_digits[1] % 2: score += 250
         if h in (p2_last + p3_last): score += 100
         if t in (p2_last + p3_last): score += 100
 
         divine_pool.append((line, score))
 
-    # Ambil "The Elite 25" untuk analisis mendalam
-    elite_25 = sorted(divine_pool, key=lambda x: x[1], reverse=True)[:25]
-
-    # --- [ PHASE 2: THE GOD ANALYSIS ] ---
-    analyzed_25 = []
-    for line, score in elite_25:
-        god_score = score
-        h, t = line[0], line[1]
-        biji_val = (int(h) + int(t)) % 9 or 9
-        
-        # Pola Distribusi
-        if int(line) >= 50: god_score += 50 
-        if int(t) % 2 != 0: god_score += 50
-        
-        # Anti-Saturation (Pinalti Repeat Result 3 Hari Terakhir)
-        if line in [res[2:] for res in p1_list[:3]]:
-            god_score -= 1000 
-            
-        analyzed_25.append((line, god_score, biji_val))
-
-    # --- [ PHASE 3: THE HOLY VERIFICATION ] ---
-    final_jitu_2d = []
+    # --- [ PHASE 2: ELITE VERIFICATION ] ---
+    analyzed_pool = []
     shio_off_id = (int(last_p1[2:]) % 12) or 12
     biji_off = (int(last_p1[2]) + int(last_p1[3])) % 9 or 9
-    tail_guard = Counter()
-
-    for line, score, biji in sorted(analyzed_25, key=lambda x: x[1], reverse=True):
+    
+    for line, score in sorted(divine_pool, key=lambda x: x[1], reverse=True)[:35]:
+        h, t = line[0], line[1]
+        biji_val = (int(h) + int(t)) % 9 or 9
         shio_val = (int(line) % 12) or 12
         
-        # Filtering Shio, Biji, dan Result P2/P3
-        if shio_val == shio_off_id: continue
-        if biji == biji_off: continue
-        if line in [p2_last[2:], p3_last[2:]]: continue
+        if shio_val == shio_off_id or biji_val == biji_off: continue
+        if line in [res[2:] for res in p1_list[:3]]: continue
         
-        # Distribusi Ekor (Maksimal 3 angka per ekor)
-        if tail_guard[line[1]] >= 3: continue
-        
-        # Twin Protection
-        if line[0] == line[1] and score < 800: continue
+        analyzed_pool.append((line, score))
 
-        final_jitu_2d.append((line, score))
-        tail_guard[line[1]] += 1
+    # --- [ PHASE 3: SNIPER POSITIONING MATRIX ] ---
+    top2_final = [x[0] for x in sorted(analyzed_pool, key=lambda x: x[1], reverse=True)[:12]]
+    
+    # Penentuan Digit AS & KOP Strategis (Vertical Alignment)
+    # Diambil dari statistik frekuensi tapi di-filter agar tidak bentrok dengan 2D
+    as_candidates = [d for d, c in freq_map.most_common() if d not in "".join(top2_final[:2])]
+    kop_candidates = [ID.get(d) for d in as_candidates] 
 
-    # HASIL FINAL 2D
-    top2 = [x[0] for x in sorted(final_jitu_2d, key=lambda x: x[1], reverse=True)]
-
-    # --- [ 4D & 3D POSITIONING MATRIX GOD ] ---
     top3, top4 = [], []
-    verified_digits = "".join([d[0] for d in Counter("".join(top2)).most_common()])
+    for i, l2 in enumerate(top2_final):
+        # 1. Pilih Kop & As dari kandidat terbaik
+        kop = kop_candidates[i % len(kop_candidates)]
+        as_val = as_candidates[(i + 1) % len(as_candidates)]
+        
+        # 2. BIJI-SUM FILTER (Verifikasi total digit agar tidak amsyong)
+        # Jika biji 3D (Kop+Kep+Ek) sama dengan biji mati, geser digit Kop
+        sum_3d = (int(kop) + int(l2[0]) + int(l2[1])) % 9 or 9
+        if sum_3d == biji_off:
+            kop = str((int(kop) + 1) % 10)
+            
+        # 3. ANTI-CLASH P2/P3 (Jangan pasang line yang kemarin keluar di prize 2/3)
+        line4d = f"{as_val}{kop}{l2}"
+        if line4d == p2_last or line4d == p3_last:
+            as_val = str((int(as_val) + 1) % 10)
+            line4d = f"{as_val}{kop}{l2}"
+            
+        top3.append(f"{kop}{l2}")
+        top4.append(line4d)
+
+    # Re-build Verified Digits untuk BBFS (Hasil dari Sniper terkuat)
+    all_sniped_digits = "".join(top4[:5])
+    verified_digits = "".join([d[0] for d in Counter(all_sniped_digits).most_common()])
     if len(verified_digits) < 6: verified_digits += "0123456789"
 
-    for i, l2 in enumerate(top2):
-        kop = verified_digits[(i + 1) % len(verified_digits)]
-        as_val = verified_digits[(i + 2) % len(verified_digits)]
-        
-        # Anti-Clash Logic
-        if kop == l2[0]:
-            kop = verified_digits[(i + 3) % len(verified_digits)]
-        
-        top3.append(f"{kop}{l2}")
-        top4.append(f"{as_val}{kop}{l2}")
-
-    # --- [ FINAL OUTPUT ASSEMBLY ] ---
     return {
-        'version': 'V25.0 [GOD MODE - PRE-ALPHA]',
+        'version': 'V25.2 [GOD MODE - ELITE SNIPER]',
         'market': market_name,
         'last_res': last_p1,
         'p2_last': p2_last,
@@ -268,14 +241,16 @@ def get_comprehensive_logic_god(all_res_data, market_name):
         'am': verified_digits[:4],
         'ai': verified_digits[4:7],
         'bbfs': "".join(sorted(list(set(verified_digits[:6])))),
-        'top2': top2[:12],
+        'top2': top2_final,
         'top3': top3[:10],
         'top4': top4[:10],
         'shio': SHIO_MAP.get((int(last_p1[2:]) % 12) or 12, "N/A"),
         'shio_off': SHIO_MAP.get(shio_off_id, "N/A"),
-        'macau': f"{top2[0]} - {top2[1]}" if len(top2) > 1 else (top2[0] if top2 else "-"),
-        'verification_status': 'STRICT_GOD_MODE_ACTIVE_V25.0_LOCKED'
+        'macau': f"{top2_final[0]} - {top2_final[1]}",
+        'verification_status': 'ELITE_SNIPER_POSITION_LOCKED'
     }
+
+    
 @app.route('/', methods=['GET', 'POST'])
 def index():
     analysis, selected = None, None
