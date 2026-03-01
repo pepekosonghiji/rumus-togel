@@ -109,15 +109,22 @@ def fetch_results(market_code, max_pages=3):
         print(f"Deep Fetch Error: {e}")
         return results
 
-def get_comprehensive_logic(all_res_data, market_name):
+from collections import Counter
+import itertools
+
+def get_comprehensive_logic_god(all_res_data, market_name):
     """
-    QUANTUM HYPER-DIMENSION V24.7 [ULTIMATE-SNIPER]
-    Pembaruan: Triple-Layer Verification (Shadow Logic, Balance Sum, Tail Control).
+    🚀 QUANTUM HYPER-DIMENSION V25.0 [ELITE-VERIFIER] 🚀
+    Pembaruan Terakhir:
+    - AS Priority: Strict AI Only (Berdasarkan pola Sydney/Wuhan).
+    - KOP Flex: Campuran AM + AI.
+    - Tier-3 Verification: Delta-Sum, Shadow Alignment, & Biji Sniper.
+    - AM/AI Logic: LOCKED (Tidak disentuh sesuai instruksi).
     """
     if not all_res_data:
         return {"error": "No data available"}
 
-    # --- [INISIALISASI DATA] ---
+    # --- [INISIALISASI DATA - KUNCI MATI] ---
     last_p1 = all_res_data[0][0]  
     p1_list = [d[0] for d in all_res_data] 
 
@@ -141,7 +148,7 @@ def get_comprehensive_logic(all_res_data, market_name):
             if gap_count > 10:
                 gap_scores[str(digit)] += 180
 
-    # --- [C. NEURAL & CLUSTER SCORING] ---
+    # --- [C. NEURAL & CLUSTER SCORING - KUNCI AM/AI] ---
     all_30d = "".join(p1_list[:30])
     freq_map = Counter(all_30d)
     cold_digits = [d for d in "0123456789" if freq_map[d] < (len(all_30d)/10)]
@@ -161,8 +168,10 @@ def get_comprehensive_logic(all_res_data, market_name):
                 if d == all_res_data[1][0][pos] == all_res_data[2][0][pos]:
                     scores[d] += 120
 
-    # Mengambil 9 digit terkuat (Layer 1)
+    # Mengambil 9 digit terkuat (KUNCI AM/AI)
     top_digits = "".join([x[0] for x in sorted(scores.items(), key=lambda x: x[1], reverse=True)[:9]])
+    am_final = top_digits[:4]
+    ai_final = top_digits[4:7]
 
     # --- [D. BIJI TARGETING] ---
     biji_p1 = (int(last_p1[2]) + int(last_p1[3])) % 9 or 9
@@ -170,8 +179,9 @@ def get_comprehensive_logic(all_res_data, market_name):
     biji_off = {biji_p1, biji_p2}
     biji_target = [b for b in range(1, 10) if b not in biji_off]
 
-    # --- [E. LAYER 1: GENERASI 30 KANDIDAT AWAL] ---
-    raw_2d = [''.join(p) for p in itertools.product(top_digits, repeat=2)]
+    # --- [E. LAYER 1: GENERASI KANDIDAT (STRICT AM/AI)] ---
+    strict_pool = am_final + ai_final
+    raw_2d = [''.join(p) for p in itertools.product(strict_pool, repeat=2)]
     candidates_pool = []
     seen = set()
 
@@ -183,11 +193,13 @@ def get_comprehensive_logic(all_res_data, market_name):
         b_line = (int(h) + int(t)) % 9 or 9
         
         score_cand = 0
+        # Bonus Persilangan AM & AI
+        if (h in am_final and t in ai_final) or (h in ai_final and t in am_final):
+            score_cand += 600
+        
         if (h in cold_digits and t in hot_clusters) or (t in cold_digits and h in hot_clusters): score_cand += 500
         if (int(h) % 2) != (int(t) % 2): score_cand += 120
-        
         if h in shadow_targets or t in shadow_targets: score_cand += 150
-        
         if line in [res[2:] for res in p1_list[:2]]: score_cand -= 300
 
         candidates_pool.append((line, score_cand, b_line))
@@ -195,7 +207,7 @@ def get_comprehensive_logic(all_res_data, market_name):
 
     pre_top_30 = sorted(candidates_pool, key=lambda x: x[1], reverse=True)[:30]
 
-    # --- [F. LAYER 2: VERIFIKASI FINAL & ELIMINASI SAMPAH DINAMIS] ---
+    # --- [F. LAYER 2: VERIFIKASI FINAL & FILTER SAMPAH] ---
     final_jitu_2d = []
     tail_counts = Counter() 
 
@@ -203,59 +215,53 @@ def get_comprehensive_logic(all_res_data, market_name):
         shio_check = (int(line) % 12) or 12
         final_v_score = base_score
         
-        # 1. Verifikasi Biji (Wajib)
         if b_val not in biji_target: continue
-        
-        # 2. Verifikasi Shio Mati (Hukuman sangat berat -1000)
         if shio_check == shio_off_id: final_v_score -= 1000
-        
-        # 3. Verifikasi Histori P2/P3 (Anti-Zonk)
         if line in [p2_last[2:], p3_last[2:]]: final_v_score -= 600
-        
-        # 4. Filter Balance Sum (Buang angka terlalu kecil/besar)
-        if int(line) < 7 or int(line) > 93: final_v_score -= 400
-        
-        # 5. Tail Distribution (Maksimal 3 angka per ekor)
+        if int(line) < 5 or int(line) > 95: final_v_score -= 400
         if tail_counts[line[1]] >= 3: final_v_score -= 500
         
-        # 6. Verifikasi Twin (Hanya jika ada indikasi twin sebelumnya)
         if line[0] == line[1]:
             if not (last_p1[0] == last_p1[1] or last_p1[2] == last_p1[3]):
                 final_v_score -= 500
 
-        # --- [KRITERIA ELIMINASI LANJUTAN] ---
-        # Hanya masukkan angka yang memiliki skor akhir benar-benar kuat (> 350)
-        # Angka yang skornya di bawah ini dianggap SAMPAH statistik.
         if final_v_score > 350: 
             final_jitu_2d.append((line, final_v_score))
             tail_counts[line[1]] += 1
 
-    # Sorting hasil akhir berdasarkan kekuatan verifikasi (Best of the Best)
-    # Tidak lagi memaksa harus 15 baris. Jika hanya 6 yang jitu, tampilkan 6.
     final_sorted_data = sorted(final_jitu_2d, key=lambda x: x[1], reverse=True)
     top2 = [x[0] for x in final_sorted_data]
 
-    # --- [G. 3D & 4D MATRIX POSITIONING] ---
-    top3, top4 = [], []
-    pos_candidates = [x[0] for x in sorted(scores.items(), key=lambda x: x[1], reverse=True)[:8]]
+    # --- [G. 4D VERIFIER LAYER (AS=AI, KOP=AM/AI MIX)] ---
+    top4 = []
+    as_pool = ai_final   # Prioritas AS dari AI
+    kop_pool = strict_pool # KOP Campuran AM/AI
 
     for i, l2 in enumerate(top2):
-        try:
-            kop = TY.get(p3_last[i % 4], pos_candidates[(i+1) % 8])
-            as_val = MB.get(all_res_data[1][0][0] if len(all_res_data) > 1 else last_p1[0], pos_candidates[(i+2) % 8])
+        best_4d = ""
+        max_v_score = -999
+        
+        for a, k in itertools.product(as_pool, kop_pool):
+            if a == k or a == l2[0] or k == l2[1]: continue
             
-            # Anti-Clash Logic: Kop tidak boleh sama dengan Kepala
-            if kop == l2[0]:
-                kop = ID.get(kop, pos_candidates[(i+3) % 8])
+            # Verifikasi Tier-3 (Shadow & Biji Alignment)
+            sum_4d_biji = (int(a) + int(k) + int(l2[0]) + int(l2[1])) % 9 or 9
+            if sum_4d_biji == biji_p1: continue # Hindari jumlah 4D yang sama dengan biji kemarin
             
-            top3.append(f"{kop}{l2}")
-            top4.append(f"{as_val}{kop}{l2}")
-        except:
-            top3.append(f"0{l2}")
-            top4.append(f"00{l2}")
+            v_score = scores[a] + scores[k]
+            if a in [last_p1[0], p2_last[0]]: v_score -= 100 # Anti-repeat AS
+            if k in shadow_targets: v_score += 150 # Bonus Shadow Alignment
+            
+            if v_score > max_v_score:
+                max_v_score = v_score
+                best_4d = f"{a}{k}{l2}"
+        
+        if best_4d:
+            top4.append(best_4d)
 
+    # --- [H. BBFS CADANGAN / INVESTASI] ---
     if top2:
-        combined_digits = "".join(top2)
+        combined_digits = "".join(top2[:5]) + ai_final
         top2_freq = Counter(combined_digits)
         refined_bbfs = "".join([x[0] for x in top2_freq.most_common(6)])
         if len(refined_bbfs) < 6:
@@ -267,18 +273,14 @@ def get_comprehensive_logic(all_res_data, market_name):
     refined_bbfs = "".join(sorted(refined_bbfs))
 
     return {
-        'version': 'V24.7 [ULTIMATE-SNIPER]',
+        'version': 'V25.0 [ELITE-VERIFIER]',
         'market': market_name,
         'last_res': last_p1,
-        'p2_last': p2_last,
-        'p3_last': p3_last,
-        'am': top_digits[:4], 
-        'ai': top_digits[4:7],
+        'am': am_final, 
+        'ai': ai_final,
         'bbfs': refined_bbfs,
         'top2': top2,
-        'top3': top3, 
         'top4': top4,
-        'shio': SHIO_MAP.get((int(last_p1[2:]) % 12) or 12, "N/A"),
         'shio_off': SHIO_MAP.get(shio_off_id, "N/A"),
         'macau': f"{top2[0]} - {top2[1]}" if len(top2) > 1 else (top2[0] if top2 else "-")
     }
@@ -296,7 +298,7 @@ def index():
             market_code = ALL_POOLS[selected]
             res_data = fetch_results(market_code, max_pages=3)
             if res_data and len(res_data) >= 8:
-                analysis = get_comprehensive_logic(res_data, selected)
+                analysis = get_comprehensive_logic_god(res_data, selected)
             else:
                 analysis = "ERROR: Data tidak ditemukan atau koneksi gagal."
     return render_template('index.html', markets=markets, analysis=analysis, selected=selected)
