@@ -114,9 +114,12 @@ from collections import Counter
 
 def get_dual_engine_analysis(all_res_data, market_name):
     """
-    MAMANG DUAL-CORE BRIDGE
-    Menggabungkan V24.7 [ULTIMATE-SNIPER] & V.26 [HYBRID-POS] secara utuh.
+    MAMANG DUAL-CORE BRIDGE [FIXED VERSION]
+    Menggabungkan V24.7 & V.26 secara utuh tanpa penambahan fitur twin.
     """
+    from collections import Counter
+    import itertools
+
     if not all_res_data:
         return {"error": "No data available"}
 
@@ -157,7 +160,7 @@ def get_dual_engine_analysis(all_res_data, market_name):
         scores = {str(i): 0 for i in range(10)}
         for d in scores:
             if d in hot_clusters: scores[d] += 220 
-            if d in [ID.get(x) for x in (p2_last + p3_last)]: scores[d] += 85
+            if d in [ID.get(x, x) for x in (p2_last + p3_last)]: scores[d] += 85
             if d in cold_digits: scores[d] += 150 
             scores[d] += gap_scores[d] 
 
@@ -178,7 +181,7 @@ def get_dual_engine_analysis(all_res_data, market_name):
         raw_2d = [''.join(p) for p in itertools.product(top_digits, repeat=2)]
         candidates_pool = []
         seen = set()
-        shadow_targets = [ML.get(last_p1[2]), TY.get(last_p1[3]), ID.get(last_p1[3])]
+        shadow_targets = [ML.get(last_p1[2], '0'), TY.get(last_p1[3], '0'), ID.get(last_p1[3], '0')]
 
         for line in raw_2d:
             if line in seen: continue
@@ -269,9 +272,19 @@ def get_dual_engine_analysis(all_res_data, market_name):
                     gap_count += 1
                 if gap_count > 10: gap_scores[str(digit)] += 180
 
+        # --- [NEURAL COLD-RESYNC TUNING] ---
         all_30d = "".join(p1_list[:30])
         freq_map = Counter(all_30d)
-        cold_digits = [d for d in "0123456789" if freq_map[d] < (len(all_30d)/10)]
+        
+        # Deteksi Cold Digits standar
+        cold_threshold = len(all_30d) / 10
+        cold_digits = [d for d in "0123456789" if freq_map[d] < cold_threshold]
+        
+        # Deteksi Deep Cold Digits (Sensitivity Boost)
+        deep_cold_threshold = cold_threshold * 0.7
+        deep_cold_digits = [d for d in "0123456789" if freq_map[d] <= deep_cold_threshold]
+        # ----------------------------------
+
         all_p_data = last_p1 + p2_last + p3_last
         cluster_map = Counter(all_p_data)
         hot_clusters = [num for num, count in cluster_map.items() if count >= 2]
@@ -279,8 +292,13 @@ def get_dual_engine_analysis(all_res_data, market_name):
         scores = {str(i): 0 for i in range(10)}
         for d in scores:
             if d in hot_clusters: scores[d] += 220 
-            if d in [ID.get(x) for x in (p2_last + p3_last)]: scores[d] += 85
+            if d in [ID.get(x, x) for x in (p2_last + p3_last)]: scores[d] += 85
+            
+            # --- [TUNED COLD SENSITIVITY] ---
             if d in cold_digits: scores[d] += 150 
+            if d in deep_cold_digits: scores[d] += 120 
+            # -------------------------------
+            
             scores[d] += gap_scores[d] 
             for pos in range(4):
                 if len(all_res_data) > 2:
@@ -299,7 +317,8 @@ def get_dual_engine_analysis(all_res_data, market_name):
         raw_2d = [''.join(p) for p in itertools.product(top_digits, repeat=2)]
         candidates_pool = []
         seen = set()
-        shadow_targets = [ML.get(last_p1[2]), TY.get(last_p1[3]), ID.get(last_p1[3])]
+        shadow_targets = [ML.get(last_p1[2], '0'), TY.get(last_p1[3], '0'), ID.get(last_p1[3], '0')]
+
         for line in raw_2d:
             if line in seen: continue
             h, t = line[0], line[1]
@@ -352,11 +371,11 @@ def get_dual_engine_analysis(all_res_data, market_name):
         else:
             refined_bbfs = top_digits[:6]
         
-        if front_seeds[0] not in refined_bbfs:
+        if front_seeds and front_seeds[0] not in refined_bbfs:
             refined_bbfs = refined_bbfs[:5] + front_seeds[0]
 
         return {
-            'version': 'V.26 [HYBRID-POS]',
+            'version': 'V.26 [HYBRID-POS-TUNED]',
             'market': market_name, 'last_res': last_p1,
             'am': am_pool, 'ai': ai_pool, 'bbfs': "".join(sorted(refined_bbfs)),
             'top2': top2, 'top3': top3, 'top4': top4,
@@ -364,7 +383,7 @@ def get_dual_engine_analysis(all_res_data, market_name):
             'macau': f"{top2[0]} - {top2[1]}" if len(top2) > 1 else (top2[0] if top2 else "-")
         }
 
-    # JALANKAN KEDUA CORE SECARA MANDIRI
+    # Jalankan Kedua Mesin
     core1_sniper = run_core_v24_7()
     core2_hybrid = run_core_v26_hybrid()
 
