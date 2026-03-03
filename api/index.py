@@ -37,7 +37,7 @@ TARGET_POOLS = {
 # URL: ux0sa.percaya4d.live
 SPECIAL_POOLS = {
     'TAIWAN': 'p12501','CHINA':'p12499','JAPAN':'p24128',
-    'PCSO':'p32340','MAGNUM 4D':'p14287','EIBAR POOLS':'p27493'
+    'PCSO':'p32340','MAGNUM 4D':'p14287','EIBAR POOLS':'p27493','OREGON 4':'p28048'
 }
 
 def fetch_results(market_code, max_pages=3):
