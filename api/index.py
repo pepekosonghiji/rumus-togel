@@ -38,7 +38,7 @@ TARGET_POOLS = {
 SPECIAL_POOLS = {
     'TAIWAN': 'p12501','CHINA':'p12499','JAPAN':'p24128',
     'PCSO':'p32340','MAGNUM 4D':'p14287','EIBAR POOLS':'p27493','OREGON 4':'p28048',
-    'OREGON 5':'p28049'
+    'OREGON 5':'p28049','OREGON 1':'p28046','OREGON 2':'p28047'
 }
 
 def fetch_results(market_code, max_pages=3):
