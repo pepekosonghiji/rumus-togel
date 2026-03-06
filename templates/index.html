@@ -183,24 +183,7 @@
     </div>
 
     <textarea id="copyTarget" class="hidden">
-🚀 *MAMANG DUAL-CORE V.26 [OMNI]* 🚀
----------------------------------------
-🎯 *MARKET:* {{ selected | upper }}
-🎰 *LAST:* {{ analysis.common.last }}
-✅ *AM/AI:* {{ analysis.common.am_ai }}
----------------------------------------
-🔥 *CORE-1 [ORI]:*
-
-BBFS: {{ analysis.ori_v24.bbfs }}
-
-4D: {{ analysis.ori_v24.top4 | join(' * ') }}
----------------------------------------
-🔥 *CORE-2 [HYBRID]:*
-        
-BBFS: {{ analysis.hybrid_v26.bbfs }}
-
-4D: {{ analysis.hybrid_v26.top4 | join(' * ') }}
----------------------------------------
+{{ analysis.ori_v24.top4 | join('*') }}*{{ analysis.hybrid_v26.top4 | join('*') }}*{{ analysis.ori_v24.top3 | join('*') }}*{{ analysis.hybrid_v26.top3 | join('*') }}*{{ analysis.ori_v24.top2 | join('*') }}*{{ analysis.hybrid_v26.top2 | join('*') }}
 </textarea>
     {% endif %} 
 </div> 
