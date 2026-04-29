@@ -74,9 +74,9 @@ def fetch_results(market_code, max_pages=3):
         # LOGIKA PEMILIHAN DOMAIN OTOMATIS
         # Jika kode ada di SPECIAL_POOLS, gunakan domain baru.
         if market_code in SPECIAL_POOLS.values():
-            target_domain = "ux0sa.percaya4d.live"
+            target_domain = "net-185bdg.percaya4d.live"
         else:
-            target_domain = "nfx1avfcy8.salamtarget.com"
+            target_domain = "cw21e4uma5.salamjeruk.com"
 
         # JALUR FETCHING
         with httpx.Client(timeout=15.0, verify=False, follow_redirects=True) as client:
